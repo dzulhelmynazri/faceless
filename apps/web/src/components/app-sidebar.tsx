@@ -6,16 +6,17 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
 } from "@faceless/ui/components/sidebar";
 import {
-  LayoutDashboardIcon,
+  Groceries,
   ListIcon,
-  Settings2Icon,
   CommandIcon,
+  Tv,
+  Lighthouse,
+  CreditCard,
+  Settings,
 } from "lucide-react";
-import Link from "next/link";
 import * as React from "react";
 
 import { NavMain } from "@/components/nav-main";
@@ -25,9 +26,24 @@ import { NavUser } from "@/components/nav-user";
 const data = {
   navMain: [
     {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: <LayoutDashboardIcon />,
+      title: "Series",
+      url: "/series",
+      icon: <Groceries />,
+    },
+    {
+      title: "Videos",
+      url: "/videos",
+      icon: <Tv />,
+    },
+    {
+      title: "Guides",
+      url: "/guides",
+      icon: <Lighthouse />,
+    },
+    {
+      title: "Settings",
+      url: "/settings",
+      icon: <Settings />,
     },
     {
       title: "Test",
@@ -37,9 +53,9 @@ const data = {
   ],
   navSecondary: [
     {
-      title: "Settings",
-      url: "#",
-      icon: <Settings2Icon />,
+      title: "Billings",
+      url: "/billings",
+      icon: <CreditCard />,
     },
   ],
 };
@@ -51,13 +67,10 @@ export const AppSidebar = ({
     <SidebarHeader>
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton
-            render={<Link aria-label="Acme Inc." href="/dashboard" />}
-            size="lg"
-          >
+          <div className="ml-2 flex w-full items-center gap-2">
             <CommandIcon className="size-5!" />
-            <span className="text-base font-semibold">Acme Inc.</span>
-          </SidebarMenuButton>
+            <span className="text-base font-semibold">Faceless</span>
+          </div>
         </SidebarMenuItem>
       </SidebarMenu>
     </SidebarHeader>

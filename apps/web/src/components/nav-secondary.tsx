@@ -7,6 +7,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@faceless/ui/components/sidebar";
+import Link from "next/link";
 import * as React from "react";
 
 export const NavSecondary = ({
@@ -25,7 +26,7 @@ export const NavSecondary = ({
         {items.map((item) => (
           <SidebarMenuItem key={item.title}>
             <SidebarMenuButton
-              render={<a aria-label={item.title} href={item.url} />}
+              render={<Link aria-label={item.title} href={item.url} />}
             >
               {item.icon}
               <span>{item.title}</span>
