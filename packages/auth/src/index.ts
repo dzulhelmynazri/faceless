@@ -4,7 +4,6 @@ import { autumn } from "autumn-js/better-auth";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
-import { organization } from "better-auth/plugins/organization";
 
 interface Env {
   BETTER_AUTH_URL: string;
@@ -23,10 +22,9 @@ export const createAuth = (env: Env, database: Database) =>
     emailAndPassword: { enabled: true },
     plugins: [
       expo(),
-      organization(),
       autumn({
+        customerScope: "user",
         secretKey: env.AUTUMN_SECRET_KEY,
-        customerScope: "user_and_organization",
       }),
       nextCookies(),
     ],

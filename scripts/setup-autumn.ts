@@ -12,8 +12,8 @@ const { env } = await import("../apps/web/src/env.server");
 const autumn = new Autumn({ secretKey: env.AUTUMN_SECRET_KEY });
 
 const plans = [
-  { id: "creator", name: "Creator", usd: 19, myr: 39, credits: 1600 },
-  { id: "business", name: "Business", usd: 39, myr: 129, credits: 7600 },
+  { id: "hobby", name: "Hobby", usd: 19, myr: 39, credits: 1600 },
+  { id: "daily", name: "Daily", usd: 39, myr: 129, credits: 7600 },
 ] as const;
 
 const setup = async () => {

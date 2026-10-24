@@ -1,4 +1,3 @@
-import { isNonEmptyString } from "@faceless/utils";
 import { TRPCError } from "@trpc/server";
 
 import type { Context } from "../context";
@@ -10,37 +9,17 @@ export interface BillingCustomer {
   email: string;
 }
 
-export const getBillingCustomer = async (ctx: {
-  db: Context["db"];
+export const getBillingCustomer = (ctx: {
   session: NonNullable<Context["session"]>;
-}): Promise<BillingCustomer> => {
-  const activeOrgId = ctx.session.session.activeOrganizationId;
-
-  if (isNonEmptyString(activeOrgId)) {
-    const org = await ctx.db.organization.findUnique({
-      where: { id: activeOrgId },
-      select: { id: true, name: true },
-    });
-
-    if (org) {
-      return {
-        customerId: org.id,
-        email: org.id,
-        name: org.name,
-      };
-    }
-  }
-
-  return {
-    customerId: ctx.session.user.id,
-    email: ctx.session.user.email,
-    name: ctx.session.user.name,
-  };
-};
+}): BillingCustomer => ({
+  customerId: ctx.session.user.id,
+  email: ctx.session.user.email,
+  name: ctx.session.user.name,
+});
 
 export const creditProcedure = (requiredCredits: number) =>
   protectedProcedure.use(async ({ ctx, next }) => {
-    const customer = await getBillingCustomer(ctx);
+    const customer = getBillingCustomer(ctx);
 
     await ctx.autumn.customers.getOrCreate({
       customerId: customer.customerId,

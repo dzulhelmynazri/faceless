@@ -13,7 +13,6 @@ import {
 import { FileList } from "@/components/files-sdk/file-list";
 import { Recovery } from "@/components/files-sdk/recovery";
 import { UploadProgress } from "@/components/files-sdk/upload-progress";
-import { OrgTestPanel } from "@/components/org-test-panel";
 import type { authClient } from "@/lib/auth-client";
 import { useAppFiles } from "@/lib/files-client";
 import { trpc } from "@/utils/trpc";
@@ -40,7 +39,6 @@ const Test = ({
 
       <div className="flex max-w-2xl flex-col gap-6">
         <AutumnBillingPanel />
-        <OrgTestPanel />
       </div>
 
       <div className="flex max-w-2xl flex-col gap-6">

@@ -15,7 +15,7 @@ export const billingRouter = router({
     .input(checkCreditsInputSchema)
     .output(checkCreditsOutputSchema)
     .query(async ({ ctx, input }) => {
-      const customer = await getBillingCustomer(ctx);
+      const customer = getBillingCustomer(ctx);
 
       await ctx.autumn.customers.getOrCreate({
         customerId: customer.customerId,
@@ -40,7 +40,7 @@ export const billingRouter = router({
     .input(consumeCreditsInputSchema)
     .output(consumeCreditsOutputSchema)
     .mutation(async ({ ctx, input }) => {
-      const customer = await getBillingCustomer(ctx);
+      const customer = getBillingCustomer(ctx);
 
       await ctx.autumn.customers.getOrCreate({
         customerId: customer.customerId,

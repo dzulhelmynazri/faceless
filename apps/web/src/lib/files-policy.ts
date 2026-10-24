@@ -3,7 +3,7 @@ import { FilesError } from "@faceless/storage";
 import { isNonEmptyString } from "@faceless/utils";
 import type { Authorize, FilesOperation } from "files-sdk/api";
 
-export interface SessionWithOrg {
+export interface SessionWithUser {
   user: {
     id: string;
     email: string;
@@ -12,7 +12,6 @@ export interface SessionWithOrg {
   session: {
     id: string;
     userId: string;
-    activeOrganizationId?: string | null;
   };
 }
 
@@ -33,21 +32,20 @@ export const ALLOWED_OPERATIONS = new Set<FilesOperation>([
   "restoreTrashed",
   "versions",
   "restoreVersion",
+  "purge",
 ]);
 
-export interface TenantContext {
-  user: SessionWithOrg["user"];
-  organizationId: string;
+export interface UserContext {
+  user: SessionWithUser["user"];
 }
 
-export interface TenantPolicyOptions {
+export interface UserPolicyOptions {
   files: Files;
-  getSession: (headers: Headers) => Promise<SessionWithOrg | null>;
-  getRole?: (userId: string, orgId: string) => Promise<string | null>;
+  getSession: (headers: Headers) => Promise<SessionWithUser | null>;
 }
 
-export const tenantPolicy =
-  (options: TenantPolicyOptions): Authorize<TenantContext> =>
+export const userPolicy =
+  (options: UserPolicyOptions): Authorize<UserContext> =>
   async ({ operation, key, req }) => {
     const session = await options.getSession(req.headers);
 
@@ -58,34 +56,11 @@ export const tenantPolicy =
       );
     }
 
-    const orgId = session.session.activeOrganizationId;
-
-    if (!isNonEmptyString(orgId)) {
-      throw new FilesError(
-        "Unauthorized",
-        "An active organization is required to access files."
-      );
-    }
-
-    // Role-based authorization for destructive / permanent purge operation
-    if (operation === "purge") {
-      const role = options.getRole
-        ? await options.getRole(session.user.id, orgId)
-        : null;
-
-      const isAdmin = role === "owner" || role === "admin";
-
-      if (!isAdmin) {
-        throw new FilesError(
-          "ReadOnly",
-          "Only organization owners or admins can permanently purge trashed files"
-        );
-      }
-    } else if (!ALLOWED_OPERATIONS.has(operation)) {
+    if (!ALLOWED_OPERATIONS.has(operation)) {
       throw new FilesError("ReadOnly", `${operation} is not allowed`);
     }
 
-    const keyPrefix = `orgs/${orgId}/`;
+    const keyPrefix = `users/${session.user.id}/`;
 
     // Refuse to restore over a file that exists again (from Files SDK restore guide)
     if (
@@ -106,7 +81,6 @@ export const tenantPolicy =
       ...(disposition !== undefined && { disposition }),
       context: {
         user: session.user,
-        organizationId: orgId,
       },
     };
   };
