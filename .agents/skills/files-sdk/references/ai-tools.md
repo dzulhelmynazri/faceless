@@ -1,0 +1,194 @@
+# AI tool bindings
+
+Three subpaths expose a configured `Files` instance as ready-made **in-process** tools for AI agents. They share the same eight operations (`listFiles`, `getFileMetadata`, `downloadFile`, `getFileUrl`, `uploadFile`, `deleteFile`, `copyFile`, `signUploadUrl`) and the same approval-gating defaults — only the _shape of the binding_ differs per SDK.
+
+The four writes (`uploadFile`, `deleteFile`, `copyFile`, `signUploadUrl`) are approval-gated by default. Reads are not. `downloadFile` accepts a `maxBytes` guard (and overrides are capped to a safe ceiling) so a model can't pull an unbounded object into context.
+
+> Not to be confused with the CLI's built-in MCP server (`files … mcp`), which is a separate, process-external binding — read-only by default, opt into writes with `--allow-writes`. See [cli-and-mcp.md](cli-and-mcp.md). The subpaths below are for embedding tools directly in your own agent code.
+
+## Vercel AI SDK — `files-sdk/ai-sdk`
+
+Tools are a record shaped for `tools: { ... }` on `generateText`/`streamText`/`ToolLoopAgent`.
+
+```ts
+import { Files } from "files-sdk";
+import { createFileTools } from "files-sdk/ai-sdk";
+import { s3 } from "files-sdk/s3";
+import { generateText, isStepCount } from "ai";
+
+const files = new Files({ adapter: s3({ bucket: "uploads" }) });
+
+await generateText({
+  model,
+  tools: createFileTools({ files }),
+  // generateText stops after one step by default; without this the run ends
+  // at the first tool call and never answers.
+  stopWhen: isStepCount(10),
+  prompt: "Find every CSV under reports/ and summarize the latest one.",
+});
+```
+
+### Read-only agent
+
+```ts
+createFileTools({ files, readOnly: true });
+// Result type is ReadOnlyFileTools — writes are not just gated, they don't exist.
+```
+
+### Granular approval
+
+```ts
+createFileTools({
+  files,
+  requireApproval: {
+    deleteFile: true,
+    uploadFile: false,
+    copyFile: false,
+    signUploadUrl: true,
+  },
+});
+```
+
+### Per-tool overrides
+
+```ts
+createFileTools({
+  files,
+  overrides: {
+    deleteFile: { needsApproval: false },
+    listFiles: { description: "List user uploads in the current tenant" },
+  },
+});
+```
+
+`execute`, `inputSchema`, and `outputSchema` cannot be overridden. If you need to change behavior, wrap the tool yourself or call the `Files` methods directly.
+
+### AI SDK 7 `toolApproval` overrides the gates
+
+`requireApproval` works through each tool's `needsApproval`. On AI SDK 7, a `toolApproval` passed to `generateText` / `streamText` / `ToolLoopAgent` takes precedence. The object form only replaces the tools it names. The **function** form replaces `needsApproval` for every tool, and returning `undefined` (or `"not-applicable"`) runs the call without approval, so a function must return `"user-approval"` for `uploadFile`, `deleteFile`, `copyFile`, and `signUploadUrl` itself or the writes become ungated.
+
+## OpenAI — `files-sdk/openai`
+
+Two surfaces: **Responses API** and **Agents SDK**. Pick whichever your codebase already uses.
+
+### Responses API
+
+```ts
+import { Files } from "files-sdk";
+import { createResponsesFileTools } from "files-sdk/openai";
+import { s3 } from "files-sdk/s3";
+import OpenAI from "openai";
+
+const openai = new OpenAI();
+const files = new Files({ adapter: s3({ bucket: "uploads" }) });
+const tools = createResponsesFileTools({ files });
+
+const response = await openai.responses.create({
+  model: "gpt-5",
+  tools: tools.definitions,
+  input: [{ role: "user", content: "List files under reports/." }],
+});
+
+// Run any function_calls the model emitted.
+const followUp: unknown[] = [];
+for (const item of response.output) {
+  if (item.type === "function_call") {
+    if (tools.needsApproval(item.name)) {
+      // Human-in-the-loop: pause, ask, then continue.
+      continue;
+    }
+    const output = await tools.execute(item);
+    followUp.push(item, output);
+  }
+}
+```
+
+Notes:
+
+- `tools.execute(call)` parses + validates `arguments`, runs the operation, returns a `function_call_output` item ready to push into the next turn's input.
+- JSON parse and Zod validation failures are returned **as the tool output** so the model can self-correct. `FilesError` from the SDK is rethrown — the caller decides how to surface it.
+- `tools.execute` enforces approval: an approval-gated call returns an `approvalRequired` error output instead of running. Check `tools.needsApproval(item.name)`, and pass `tools.execute(item, { approved: true })` only after your approval UX has approved that exact call.
+
+### Agents SDK
+
+```ts
+import { Files } from "files-sdk";
+import { createAgentsFileTools } from "files-sdk/openai";
+import { s3 } from "files-sdk/s3";
+import { Agent, run } from "@openai/agents";
+
+const files = new Files({ adapter: s3({ bucket: "uploads" }) });
+const tools = createAgentsFileTools({ files });
+
+const agent = new Agent({
+  name: "Bucket assistant",
+  tools: Object.values(tools),
+});
+
+await run(agent, "List files under reports/.");
+```
+
+The agents-shape returns a record keyed by tool name; spread or `Object.values()` to plug into the `tools` array. Its `uploadFile` takes **no `metadata`** argument — the Agents SDK runs tools in strict JSON-schema mode, which can't express a free-form map. Use the Responses surface (or call `files.upload` yourself) if the model must set metadata.
+
+## Anthropic Claude Agent SDK — `files-sdk/claude`
+
+Bridges to the Claude Agent SDK's in-process MCP server + `allowedTools` + `canUseTool` triad.
+
+```ts
+import { query } from "@anthropic-ai/claude-agent-sdk";
+import { Files } from "files-sdk";
+import { s3 } from "files-sdk/s3";
+import { createClaudeFileTools } from "files-sdk/claude";
+
+const files = new Files({ adapter: s3({ bucket: "uploads" }) });
+const tools = createClaudeFileTools({ files });
+
+for await (const message of query({
+  prompt: "List my files.",
+  options: {
+    mcpServers: tools.mcpServers,
+    allowedTools: tools.allowedTools,
+    canUseTool: tools.canUseTool,
+  },
+})) {
+  // handle messages
+}
+```
+
+What the bundle exposes:
+
+- `mcpServers` — pass into `query({ options: { mcpServers } })`.
+- `allowedTools` — strings of the form `mcp__<serverName>__<toolName>`, listing **only** the included tools that need no approval. The Agent SDK skips `canUseTool` for anything in `allowedTools`, so approval-gated writes are deliberately left out. Pass into `query({ options: { allowedTools } })`.
+- `canUseTool` — ready-made permission callback. Allows this server's (`mcp__<serverName>__*`) tools that need no approval, denies approval-gated writes with `"requires approval"`, and **denies every other tool** (`Bash`, `Write`, other MCP servers) with a message saying so. If the agent needs other tools too, compose it with your own callback (below).
+- `needsApproval(toolName)` — accepts both bare names (`"uploadFile"`) and prefixed (`"mcp__files__uploadFile"`).
+- `server` and `serverName` — the raw MCP server instance and its name, for callers composing into a larger `mcpServers` map.
+
+Override the server name when composing multiple MCP servers:
+
+```ts
+createClaudeFileTools({ files, serverName: "user-uploads" });
+// allowedTools entries become `mcp__user-uploads__listFiles`, etc.
+```
+
+To let the agent use other tools as well, route on the server prefix and hand everything else to your own policy:
+
+```ts
+const tools = createClaudeFileTools({ files });
+const filesPrefix = `mcp__${tools.serverName}__`;
+
+const canUseTool: typeof tools.canUseTool = (toolName, input, options) =>
+  toolName.startsWith(filesPrefix)
+    ? tools.canUseTool(toolName, input, options) // files-sdk's own gate
+    : myCanUseTool(toolName, input, options); // Bash, Write, other servers
+```
+
+The tools carry MCP annotations: reads are `readOnlyHint: true`; `uploadFile`, `deleteFile`, and `copyFile` are `destructiveHint: true` (a copy overwrites its destination); `signUploadUrl` is non-destructive.
+
+## Choosing across the three
+
+- **Vercel AI SDK** — simplest binding. The framework handles tool dispatch; you just pass `createFileTools({ files })`.
+- **OpenAI Responses** — most explicit. You loop the `function_call` items yourself, which is also where you decide whether to pause for approval. Good when you want full control of the agent loop.
+- **OpenAI Agents** — similar to AI SDK in spirit (framework loops for you), but inside the OpenAI Agents runtime.
+- **Claude Agent SDK** — driven by the MCP + `canUseTool` contract. Use this when the agent already lives inside Claude Code or another Claude Agent SDK harness.
+
+All four `requireApproval` shapes (`true`, `false`, `{ ... }`, `readOnly`) work identically across the three subpaths.

@@ -1,0 +1,30 @@
+{
+  "name": "@faceless/api",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@faceless/auth": "workspace:*",
+    "@faceless/contracts": "workspace:*",
+    "@faceless/db": "workspace:*",
+    "@faceless/storage": "workspace:*",
+    "@faceless/utils": "workspace:*",
+    "@trpc/client": "catalog:",
+    "@trpc/server": "catalog:",
+    "autumn-js": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@faceless/config": "workspace:*",
+    "typescript": "^6.0.3"
+  }
+}

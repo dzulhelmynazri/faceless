@@ -1,0 +1,27 @@
+[mcp_servers.hackhaton-space-stack]
+command = "bunx"
+args = ["create-hackhaton-space-stack@latest", "mcp"]
+
+[mcp_servers.context7]
+command = "npx"
+args = ["-y", "@upstash/context7-mcp"]
+
+[mcp_servers.shadcn]
+command = "npx"
+args = ["-y", "shadcn@latest", "mcp"]
+
+[mcp_servers.next-devtools]
+command = "npx"
+args = ["-y", "next-devtools-mcp@latest"]
+
+[mcp_servers.neon]
+type = "http"
+url = "https://mcp.neon.tech/mcp"
+
+[mcp_servers.better-auth]
+type = "http"
+url = "https://mcp.better-auth.com/mcp"
+
+[mcp_servers.expo-mcp]
+type = "http"
+url = "https://mcp.expo.dev/mcp"
