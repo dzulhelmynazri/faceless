@@ -17,33 +17,32 @@ export const getBillingCustomer = (ctx: {
   name: ctx.session.user.name,
 });
 
-export const creditProcedure = (requiredCredits: number) =>
-  protectedProcedure.use(async ({ ctx, next }) => {
-    const customer = getBillingCustomer(ctx);
+export const seriesProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  const customer = getBillingCustomer(ctx);
 
-    await ctx.autumn.customers.getOrCreate({
-      customerId: customer.customerId,
-      email: customer.email,
-      name: customer.name,
-    });
-
-    const checkRes = await ctx.autumn.check({
-      customerId: customer.customerId,
-      featureId: "credits",
-      requiredBalance: requiredCredits,
-      sendEvent: true,
-    });
-
-    if (!checkRes.allowed) {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: `Insufficient credits. Required: ${requiredCredits}, remaining: ${checkRes.balance?.remaining ?? 0}.`,
-      });
-    }
-
-    return await next({
-      ctx: {
-        remainingCredits: checkRes.balance?.remaining,
-      },
-    });
+  await ctx.autumn.customers.getOrCreate({
+    customerId: customer.customerId,
+    email: customer.email,
+    name: customer.name,
   });
+
+  const checkRes = await ctx.autumn.check({
+    customerId: customer.customerId,
+    featureId: "series",
+    requiredBalance: 1,
+  });
+
+  if (!checkRes.allowed) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message:
+        "Active series limit reached. Upgrade your plan or add more series to create another.",
+    });
+  }
+
+  return await next({
+    ctx: {
+      seriesBalance: checkRes.balance?.remaining,
+    },
+  });
+});

@@ -28,14 +28,14 @@ import {
 import { Skeleton } from "@faceless/ui/components/skeleton";
 import { Spinner } from "@faceless/ui/components/spinner";
 import { isNonEmptyString } from "@faceless/utils";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCustomer } from "autumn-js/react";
 import { AlertCircleIcon, ArrowUpRight } from "lucide-react";
 import { toast } from "sonner";
 
 import { trpc } from "@/utils/trpc";
 
-type PlanId = "creator" | "business";
+type PlanId = "hobby" | "daily" | "pro";
 
 interface AutumnOverdueAlertProps {
   isStripeCustomer: boolean;
@@ -53,7 +53,7 @@ const AutumnOverdueAlert = ({
     <AlertTitle>Payment Past Due</AlertTitle>
     <AlertDescription>
       Your recent subscription payment failed. Please update your payment method
-      to restore full credit allowances.
+      to restore your subscription features.
     </AlertDescription>
     {isStripeCustomer && (
       <AlertAction>
@@ -75,6 +75,11 @@ interface AutumnCustomerStatusProps {
   isLoading: boolean;
   activePlanId: string | null;
   isPastDue: boolean;
+  seriesEntitlement?: {
+    allowed: boolean;
+    seriesCount: number;
+    seriesLimit: number;
+  };
 }
 
 const AutumnCustomerStatus = ({
@@ -82,6 +87,7 @@ const AutumnCustomerStatus = ({
   isLoading,
   activePlanId,
   isPastDue,
+  seriesEntitlement,
 }: AutumnCustomerStatusProps) => {
   if (isLoading) {
     return <Skeleton className="h-24 w-full" />;
@@ -133,11 +139,25 @@ const AutumnCustomerStatus = ({
         </ItemActions>
       </Item>
 
+      {seriesEntitlement !== undefined && (
+        <Item size="xs">
+          <ItemContent>
+            <ItemTitle>Active Series</ItemTitle>
+          </ItemContent>
+          <ItemActions>
+            <span className="font-medium text-foreground">
+              {seriesEntitlement.seriesCount} / {seriesEntitlement.seriesLimit}{" "}
+              Series
+            </span>
+          </ItemActions>
+        </Item>
+      )}
+
       {customer?.balances !== undefined &&
         Object.keys(customer.balances).length > 0 && (
           <Item size="xs">
             <ItemContent>
-              <ItemTitle>Credits Balance</ItemTitle>
+              <ItemTitle>Entitlements</ItemTitle>
             </ItemContent>
             <ItemActions>
               <span className="font-medium text-foreground">
@@ -157,8 +177,6 @@ interface AutumnBillingActionsProps {
   onAttachPlan: (planId: PlanId) => void;
   isAttaching: boolean;
   attachingPlanId: PlanId | null;
-  onBurnCredits: () => void;
-  isBurning: boolean;
 }
 
 const AutumnBillingActions = ({
@@ -166,40 +184,46 @@ const AutumnBillingActions = ({
   onAttachPlan,
   isAttaching,
   attachingPlanId,
-  onBurnCredits,
-  isBurning,
 }: AutumnBillingActionsProps) => (
   <CardFooter>
     <div className="flex flex-wrap items-center gap-2">
       <Button
         variant="default"
         onClick={() => {
-          onAttachPlan("creator");
+          onAttachPlan("hobby");
         }}
-        disabled={isAttaching || activePlanId === "creator"}
+        disabled={isAttaching || activePlanId === "hobby"}
       >
-        {isAttaching && attachingPlanId === "creator" && (
+        {isAttaching && attachingPlanId === "hobby" && (
           <Spinner data-icon="inline-start" />
         )}
-        Creator (RM39 / $19/mo)
+        Hobby (RM39 / $19/mo)
       </Button>
 
       <Button
         variant="outline"
         onClick={() => {
-          onAttachPlan("business");
+          onAttachPlan("daily");
         }}
-        disabled={isAttaching || activePlanId === "business"}
+        disabled={isAttaching || activePlanId === "daily"}
       >
-        {isAttaching && attachingPlanId === "business" && (
+        {isAttaching && attachingPlanId === "daily" && (
           <Spinner data-icon="inline-start" />
         )}
-        Business (RM129 / $39/mo)
+        Daily (RM129 / $39/mo)
       </Button>
 
-      <Button variant="secondary" onClick={onBurnCredits} disabled={isBurning}>
-        {isBurning && <Spinner data-icon="inline-start" />}
-        Burn 25 Credits
+      <Button
+        variant="outline"
+        onClick={() => {
+          onAttachPlan("pro");
+        }}
+        disabled={isAttaching || activePlanId === "pro"}
+      >
+        {isAttaching && attachingPlanId === "pro" && (
+          <Spinner data-icon="inline-start" />
+        )}
+        Pro (RM229 / $69/mo)
       </Button>
     </div>
   </CardFooter>
@@ -214,10 +238,15 @@ export const AutumnBillingPanel = () => {
     openCustomerPortal,
   } = useCustomer();
 
-  const activeSubscription = customer?.subscriptions?.[0];
+  const seriesEntitlementQuery = useQuery(
+    trpc.billing.checkSeriesEntitlement.queryOptions()
+  );
 
-  const activePlanId =
-    activeSubscription?.planId ?? activeSubscription?.plan?.id ?? null;
+  const activeSubscription = customer?.subscriptions?.find(
+    (sub) => sub.status === "active" || sub.pastDue
+  );
+
+  const activePlanId = activeSubscription?.planId ?? null;
 
   const isPastDue = activeSubscription?.pastDue === true;
 
@@ -241,7 +270,7 @@ export const AutumnBillingPanel = () => {
       }
 
       toast.success(`Successfully attached plan "${planId}"!`);
-      await refetch();
+      await Promise.all([refetch(), seriesEntitlementQuery.refetch()]);
     },
   });
 
@@ -254,19 +283,6 @@ export const AutumnBillingPanel = () => {
       if (isNonEmptyString(res?.url)) {
         window.location.assign(res.url);
       }
-    },
-  });
-
-  const consumeCreditsMutation = useMutation({
-    ...trpc.billing.consumeCredits.mutationOptions(),
-    onError: (error) => {
-      toast.error(error.message);
-    },
-    onSuccess: async (data) => {
-      toast.success(
-        `Deducted ${data.consumed} credits on server! Remaining: ${data.remaining.toLocaleString()}`
-      );
-      await refetch();
     },
   });
 
@@ -313,9 +329,10 @@ export const AutumnBillingPanel = () => {
           )}
           <AutumnCustomerStatus
             customer={customer}
-            isLoading={isLoading}
+            isLoading={isLoading || seriesEntitlementQuery.isLoading}
             activePlanId={activePlanId}
             isPastDue={isPastDue}
+            seriesEntitlement={seriesEntitlementQuery.data}
           />
         </div>
       </CardContent>
@@ -327,10 +344,6 @@ export const AutumnBillingPanel = () => {
         }}
         isAttaching={attachPlanMutation.isPending}
         attachingPlanId={attachPlanMutation.variables ?? null}
-        onBurnCredits={() => {
-          consumeCreditsMutation.mutate({ amount: 25 });
-        }}
-        isBurning={consumeCreditsMutation.isPending}
       />
     </Card>
   );

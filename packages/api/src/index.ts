@@ -2,7 +2,7 @@ export type { Context } from "./context";
 
 export { authMiddleware, protectedProcedure } from "./middlewares/auth";
 
-export { creditProcedure } from "./middlewares/billing";
+export { seriesProcedure } from "./middlewares/billing";
 
 export { appRouter, type AppRouter } from "./routers/index";
 

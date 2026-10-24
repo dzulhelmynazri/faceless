@@ -12,21 +12,43 @@ const { env } = await import("../apps/web/src/env.server");
 const autumn = new Autumn({ secretKey: env.AUTUMN_SECRET_KEY });
 
 const plans = [
-  { id: "hobby", name: "Hobby", usd: 19, myr: 39, credits: 1600 },
-  { id: "daily", name: "Daily", usd: 39, myr: 129, credits: 7600 },
+  {
+    id: "hobby",
+    name: "Hobby",
+    usd: 19,
+    myr: 39,
+    series: 1,
+    postsPerWeek: "3 times per week",
+  },
+  {
+    id: "daily",
+    name: "Daily",
+    usd: 39,
+    myr: 129,
+    series: 1,
+    postsPerWeek: "every day",
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    usd: 69,
+    myr: 229,
+    series: 1,
+    postsPerWeek: "2 times per day",
+  },
 ] as const;
 
 const setup = async () => {
   try {
     await autumn.features.create({
-      featureId: "credits",
-      name: "Content Credits",
+      featureId: "series",
+      name: "Active Series",
       type: "metered",
-      consumable: true,
+      consumable: false,
     });
-    console.log("✅ Credits feature created");
+    console.log("✅ Series feature created");
   } catch {
-    console.log("ℹ️ Credits feature already configured");
+    console.log("ℹ️ Series feature already configured");
   }
 
   await Promise.all(
@@ -42,10 +64,13 @@ const setup = async () => {
           planId: plan.id,
           name: plan.name,
           price,
+          metadata: {
+            postsPerWeek: plan.postsPerWeek,
+          },
           items: [
             {
-              featureId: "credits",
-              included: plan.credits,
+              featureId: "series",
+              included: plan.series,
             },
           ],
         });
