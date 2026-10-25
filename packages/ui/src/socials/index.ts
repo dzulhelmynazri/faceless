@@ -1,8 +1,11 @@
 // svg sources:
 // https://thesvg.org/
 //
-export { Github } from "./github";
 
 export { Google } from "./google";
 
-export { Linkedin } from "./linkedin";
+export { Tiktok } from "./tiktok";
+
+export { Youtube } from "./youtube";
+
+export { Instagram } from "./instagram";
