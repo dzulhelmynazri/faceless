@@ -25,7 +25,8 @@
       "tailwindcss": "^4.3.3",
       "@better-auth/expo": "1.7.3",
       "autumn-js": "^1.5.18",
-      "files-sdk": "^3.1.1"
+      "files-sdk": "^3.1.1",
+      "@opencoredev/social-sdk": "^0.5.0"
     }
   },
   "type": "module",
@@ -67,7 +68,8 @@
     "turbo": "^2.11.10",
     "typescript": "^6.0.3",
     "ultracite": "8.0.2",
-    "varlock": "catalog:"
+    "varlock": "catalog:",
+    "vitest": "^5.0.5"
   },
   "overrides": {
     "@next/env": "npm:@varlock/nextjs-integration@1.2.2"

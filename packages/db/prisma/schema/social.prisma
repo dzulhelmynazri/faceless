@@ -1,0 +1,52 @@
+enum SocialPlatform {
+  TIKTOK
+  YOUTUBE
+  INSTAGRAM
+}
+
+enum ConnectionStatus {
+  CONNECTED
+  EXPIRED
+  REVOKED
+}
+
+model SocialConnection {
+  id               String           @id @default(cuid())
+  userId           String
+  platform         SocialPlatform
+  platformUserId   String
+  platformUserName String
+  avatarUrl        String?
+  accessToken      String
+  refreshToken     String?
+  expiresAt        DateTime?
+  scopes           String[]         @default([])
+  status           ConnectionStatus @default(CONNECTED)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  publications     SocialPublication[]
+
+  @@unique([userId, platform, platformUserId])
+  @@index([userId])
+  @@map("social_connection")
+}
+
+model SocialPublication {
+  id                 String           @id @default(cuid())
+  socialConnectionId String
+  platform           SocialPlatform
+  externalPostId     String?
+  status             String
+  error              String?
+  metadata           Json?
+  publishedAt        DateTime?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  connection         SocialConnection @relation(fields: [socialConnectionId], references: [id], onDelete: Cascade)
+
+  @@index([socialConnectionId])
+  @@map("social_publication")
+}

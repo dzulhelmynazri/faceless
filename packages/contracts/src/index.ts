@@ -1,2 +1,3 @@
-// oxlint-disable oxc/no-barrel-file
+// oxlint-disable oxc/no-barrel-file anti-slop/require-readable-spacing
 export * from "./billing";
+export * from "./social";

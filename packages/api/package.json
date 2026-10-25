@@ -16,6 +16,7 @@
     "@faceless/auth": "workspace:*",
     "@faceless/contracts": "workspace:*",
     "@faceless/db": "workspace:*",
+    "@faceless/socials": "workspace:*",
     "@faceless/storage": "workspace:*",
     "@faceless/utils": "workspace:*",
     "@trpc/client": "catalog:",

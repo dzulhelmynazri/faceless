@@ -61,6 +61,7 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 - Throw `Error` objects with descriptive messages, not strings or other values
 - Use `try-catch` blocks meaningfully - don't catch errors just to rethrow them
 - Prefer early returns over nested conditionals for error cases
+- **No verbose error extraction ceremony in HTTP endpoints**: Avoid boilerplate `catch (error) { const errorMessage = error instanceof Error ? error.message : "..." }`. Never leak internal error objects or stack messages to API responses. Use parameterless `catch` with static, secure error messages (e.g. 401 `"Invalid webhook signature"`, 500 `"Failed to initiate connection"`).
 
 ### Code Organization
 

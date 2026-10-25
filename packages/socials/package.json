@@ -1,0 +1,22 @@
+{
+  "name": "@faceless/socials",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@faceless/contracts": "workspace:*",
+    "@faceless/utils": "workspace:*",
+    "@opencoredev/social-sdk": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@faceless/config": "workspace:*",
+    "typescript": "^6.0.3"
+  }
+}

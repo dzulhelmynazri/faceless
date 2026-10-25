@@ -1,7 +1,8 @@
 import type { Context as ApiContext } from "@faceless/api";
 import type { NextRequest } from "next/server";
 
-import { auth, autumn, files, getDb } from "./services";
+import { env } from "./env.server";
+import { auth, autumn, files, getDb, socials } from "./services";
 
 export const createContext = async (req: NextRequest): Promise<ApiContext> => {
   const db = getDb();
@@ -13,9 +14,11 @@ export const createContext = async (req: NextRequest): Promise<ApiContext> => {
   return {
     auth,
     autumn,
+    baseUrl: env.BETTER_AUTH_URL,
     db,
     files,
     session,
+    socials,
   };
 };
 

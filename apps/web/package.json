@@ -19,6 +19,7 @@
     "@faceless/contracts": "workspace:*",
     "@faceless/db": "workspace:*",
     "@faceless/email": "workspace:*",
+    "@faceless/socials": "workspace:*",
     "@faceless/storage": "workspace:*",
     "@faceless/ui": "workspace:*",
     "@faceless/utils": "workspace:*",
