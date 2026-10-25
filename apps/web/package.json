@@ -40,6 +40,7 @@
     "lucide-react": "catalog:",
     "next": "^16.3.4",
     "next-themes": "catalog:",
+    "nuqs": "^2.10.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "recharts": "3.8.0",

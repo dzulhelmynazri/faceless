@@ -51,6 +51,9 @@ const itemVariants = cva(
         default: "border-transparent",
         muted: "border-transparent bg-muted/50",
         outline: "border-border",
+        interactive:
+          "cursor-pointer border-border transition-colors hover:border-primary/50",
+        selected: "cursor-pointer ring-1 ring-primary",
       },
     },
   }
@@ -90,6 +93,9 @@ const itemMediaVariants = cva(
       variant: {
         default: "bg-transparent",
         icon: "[&_svg:not([class*='size-'])]:size-4",
+        play: "size-9 rounded-full bg-primary/10 text-primary [&_svg]:size-3.5 [&_svg]:fill-current",
+        check:
+          "size-5 rounded-full bg-primary text-primary-foreground [&_svg]:size-3",
         image:
           "size-8 overflow-hidden rounded-sm group-data-[size=sm]/item:size-8 group-data-[size=xs]/item:size-6 [&_img]:size-full [&_img]:object-cover",
       },
@@ -130,7 +136,7 @@ function ItemTitle({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="item-title"
       className={cn(
-        "line-clamp-1 flex w-fit items-center gap-2 text-xs/relaxed leading-snug font-medium underline-offset-4",
+        "line-clamp-1 flex w-fit items-center gap-2 text-sm leading-snug font-medium",
         className
       )}
       {...props}
