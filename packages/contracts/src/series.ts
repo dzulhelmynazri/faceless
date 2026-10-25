@@ -301,246 +301,176 @@ export const SERIES_LANGUAGES: readonly SeriesLanguage[] = [
 ] as const;
 
 export const SERIES_VOICES: readonly SeriesVoice[] = [
-  // English - Male
+  // Male Narrators
   {
     gender: "male",
-    id: "8ec9973300874562962bbcb300f82213",
-    language: "en",
-    name: "Guyzo",
+    id: "pNInz6obpgDQGcFmaJgB",
+    name: "Adam",
     sampleUrl:
-      "https://platform.r2.fish.audio/tasks/2026-08-30/f2a5d881409d41ae961a20893a78073f.mp3",
-    tag: "Storyteller",
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/pNInz6obpgDQGcFmaJgB/d6905d7a-dd26-4187-bfff-1bd3a5ea7cac.mp3",
+    tag: "Viral Storyteller",
   },
   {
     gender: "male",
-    id: "bf322df2096a46f18c579d0baa36f41d",
-    language: "en",
-    name: "Adrian",
+    id: "nPczCjzI2devNBz1zQrb",
+    name: "Brian",
     sampleUrl:
-      "https://platform.r2.fish.audio/task/d730b09f4a484316a77ecc86137e85fb.mp3",
-    tag: "Storyteller",
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/nPczCjzI2devNBz1zQrb/2dd3e72c-4fd3-42f1-93ea-abc5d4e5aa1d.mp3",
+    tag: "Deep Documentary",
   },
   {
     gender: "male",
-    id: "c5f56a6cc2ec4fa8920cb4c5889a3fb7",
-    language: "en",
-    name: "Slax",
+    id: "JBFqnCBsd6RMkjVDRZzb",
+    name: "George",
     sampleUrl:
-      "https://platform.r2.fish.audio/task/a9826fbfc0b347ae807340493fe4ac1f.mp3",
-    tag: "Clear",
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/JBFqnCBsd6RMkjVDRZzb/e6206d1a-0721-4787-aafb-06a6e705cac5.mp3",
+    tag: "British Storyteller",
   },
   {
     gender: "male",
-    id: "4c6a6762e4ac4bdebdb4fa8525d054a2",
-    language: "en",
-    name: "Atomic",
+    id: "IKne3meq5aSn9XLyUdCD",
+    name: "Charlie",
     sampleUrl:
-      "https://platform.r2.fish.audio/task/7a589e43a70341999bb9b8eb29522f73.mp3",
-    tag: "Dramatic",
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/IKne3meq5aSn9XLyUdCD/102de6f2-22ed-43e0-a1f1-111fa75c5481.mp3",
+    tag: "Casual & Relatable",
   },
   {
     gender: "male",
-    id: "536d3a5e000945adb7038665781a4aca",
-    language: "en",
-    name: "Ethan",
+    id: "TX3LPaxmHKxFdv7VOQHJ",
+    name: "Liam",
     sampleUrl:
-      "https://platform.r2.fish.audio/task/bdd677ed767744fc91f166468786264b.mp3",
-    tag: "Authoritative",
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/TX3LPaxmHKxFdv7VOQHJ/63148076-6363-42db-aea8-31424308b92c.mp3",
+    tag: "Energetic Creator",
   },
   {
     gender: "male",
-    id: "e686ae649ee44f219a108aacba206c1a",
-    language: "en",
-    name: "Calm Storyteller",
+    id: "N2lVS1w4EtoT3dr4eOWO",
+    name: "Callum",
     sampleUrl:
-      "https://platform.r2.fish.audio/task/94872bb78886416993c4c0bb3e456a30.mp3",
-    tag: "Calm",
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/N2lVS1w4EtoT3dr4eOWO/ac833bd8-ffda-4938-9ebc-b0f99ca25481.mp3",
+    tag: "Dramatic Villain",
   },
   {
     gender: "male",
-    id: "ef9c79b62ef34530bf452c0e50e3c260",
-    language: "en",
-    name: "Horror Narrator",
+    id: "CwhRBWXzGAHq8TQ4Fs17",
+    name: "Roger",
     sampleUrl:
-      "https://platform.r2.fish.audio/task/20bc0df607cd466180e27001089378a8.mp3",
-    tag: "Suspenseful",
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/CwhRBWXzGAHq8TQ4Fs17/58ee3ff5-f6f2-4628-93b8-e38eb31806b0.mp3",
+    tag: "Resonant & Classy",
   },
   {
     gender: "male",
-    id: "711cf3ed00ab441a8f54a45058047b7a",
-    language: "en",
-    name: "Verity",
+    id: "onwK4e9ZLuTAKqWW03F9",
+    name: "Daniel",
     sampleUrl:
-      "https://platform.r2.fish.audio/task/2e3ba59461ca46a5bc5056e1a6af0ac8.mp3",
-    tag: "Expressive",
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/onwK4e9ZLuTAKqWW03F9/7eee0236-1a72-4b86-b303-5dcadc007ba9.mp3",
+    tag: "Broadcaster",
   },
   {
     gender: "male",
-    id: "1936333080804be19655c6749b2ae7b2",
-    language: "en",
-    name: "Voice DL",
+    id: "iP95p4xoKVk53GoZ742B",
+    name: "Chris",
     sampleUrl:
-      "https://platform.r2.fish.audio/task/1134b26cffe14a13b10e58e0fd8cefd9.mp3",
-    tag: "Deep",
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/iP95p4xoKVk53GoZ742B/3f4bde72-cc48-40dd-829f-57fbf906f4d7.mp3",
+    tag: "Charming & Natural",
   },
   {
     gender: "male",
-    id: "d13f84b987ad4f22b56d2b47f4eb838e",
-    language: "en",
-    name: "Cinematic Deep",
+    id: "cjVigY5qzO86Huf0OWal",
+    name: "Eric",
     sampleUrl:
-      "https://platform.r2.fish.audio/task/ba41215cabb3430b8f9a153fd720b385.mp3",
-    tag: "Cinematic",
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/cjVigY5qzO86Huf0OWal/d098fda0-6456-4030-b3d8-63aa048c9070.mp3",
+    tag: "Smooth & Trustworthy",
+  },
+  {
+    gender: "male",
+    id: "bIHbv24MWmeRgasZH58o",
+    name: "Will",
+    sampleUrl:
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/bIHbv24MWmeRgasZH58o/8caf8f3d-ad29-4980-af41-53f20c72d7a4.mp3",
+    tag: "Chill Optimist",
+  },
+  {
+    gender: "male",
+    id: "pqHfZKP75CvOlQylNhV4",
+    name: "Bill",
+    sampleUrl:
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/pqHfZKP75CvOlQylNhV4/d782b3ff-84ba-4029-848c-acf01285524d.mp3",
+    tag: "Wise & Mature",
+  },
+  {
+    gender: "male",
+    id: "SOYHLrjzK2X1ezoPC6cr",
+    name: "Harry",
+    sampleUrl:
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/SOYHLrjzK2X1ezoPC6cr/86d178f6-f4b6-4e0e-85be-3de19f490794.mp3",
+    tag: "Fierce & Rough",
+  },
+  {
+    gender: "male",
+    id: "SAz9YHcvj6GT2YYXdXww",
+    name: "River",
+    sampleUrl:
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/SAz9YHcvj6GT2YYXdXww/e6c95f0b-2227-491a-b3d7-2249240decb7.mp3",
+    tag: "Calm & Neutral",
   },
 
-  // English - Female
+  // Female Narrators
   {
     gender: "female",
-    id: "933563129e564b19a115bedd57b7406a",
-    language: "en",
+    id: "EXAVITQu4vr4xnSDxMaL",
     name: "Sarah",
     sampleUrl:
-      "https://platform.r2.fish.audio/task/4e204945670c460c86fdab57512cb308.mp3",
-    tag: "Conversational",
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/EXAVITQu4vr4xnSDxMaL/01a3e33c-6e99-4ee7-8543-ff2216a32186.mp3",
+    tag: "Confident Narrator",
   },
   {
     gender: "female",
-    id: "b347db033a6549378b48d00acb0d06cd",
-    language: "en",
-    name: "Selene",
+    id: "pFZP5JQG7iQjIQuC4Bku",
+    name: "Lily",
     sampleUrl:
-      "https://platform.r2.fish.audio/task/fcf629b4a0b343558f461338ba1b9da4.mp3",
-    tag: "Calm",
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/pFZP5JQG7iQjIQuC4Bku/89b68b35-b3dd-4348-a84a-a3c13a3c2b30.mp3",
+    tag: "Velvety & Warm",
   },
   {
     gender: "female",
-    id: "e9b134e4c0b547a3894793be502314f1",
-    language: "en",
-    name: "Jasphina",
+    id: "Xb7hH8MSUJpSbSDYk0k2",
+    name: "Alice",
     sampleUrl:
-      "https://platform.r2.fish.audio/task/ecb5c4f4738c46a6a44a9f37ec5c4193.mp3",
-    tag: "Energetic",
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/Xb7hH8MSUJpSbSDYk0k2/d10f7534-11f6-41fe-a012-2de1e482d336.mp3",
+    tag: "British Educator",
   },
   {
     gender: "female",
-    id: "98655a12fa944e26b274c535e5e03842",
-    language: "en",
-    name: "E-girl",
+    id: "XrExE9yKIg1WjnnlVkGX",
+    name: "Matilda",
     sampleUrl:
-      "https://platform.r2.fish.audio/task/8093cbd0201449f79d356cc9d2f42156.mp3",
-    tag: "Soft",
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/XrExE9yKIg1WjnnlVkGX/b930e18d-6b4d-466e-bab2-0ae97c6d8535.mp3",
+    tag: "Professional & Upbeat",
   },
   {
     gender: "female",
-    id: "85d6a6c915f545b399b0bfb358244fb9",
-    language: "en",
-    name: "Ezzy",
+    id: "cgSgspJ2msm6clMCkdW9",
+    name: "Jessica",
     sampleUrl:
-      "https://platform.r2.fish.audio/task/1d26a322b4194e5a848b1407b21942c8.mp3",
-    tag: "Playful",
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/cgSgspJ2msm6clMCkdW9/56a97bf8-b69b-448f-846c-c3a11683d45a.mp3",
+    tag: "Bright & Warm",
   },
   {
     gender: "female",
-    id: "f48d143a59a946ab87c0130fd081f349",
-    language: "en",
-    name: "Polo",
+    id: "FGY2WhTYpPnrIDTdsKH5",
+    name: "Laura",
     sampleUrl:
-      "https://platform.r2.fish.audio/task/20d1e405eb6342138da644b7827f387f.mp3",
-    tag: "Narrator",
-  },
-
-  // Malay (ms)
-  {
-    gender: "male",
-    id: "a90c819214d94da7bec3de8ba3a6ffba",
-    language: "ms",
-    name: "Pencerita Tegas",
-    sampleUrl:
-      "https://platform.r2.fish.audio/tasks/2026-09-10/87201dbe41184ee3859372195ecc9b3e.mp3",
-    tag: "Storyteller",
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/FGY2WhTYpPnrIDTdsKH5/67341759-ad08-41a5-be6e-de12fe448618.mp3",
+    tag: "Enthusiastic & Sassy",
   },
   {
     gender: "female",
-    id: "006ce9bb72c64e1788992c2e5442fbff",
-    language: "ms",
-    name: "Suara Santai",
+    id: "hpp4J3VqNfWAUOO0d1Us",
+    name: "Bella",
     sampleUrl:
-      "https://platform.r2.fish.audio/task/514d91703d8449bc91fc6190bf63528f.mp3",
-    tag: "Conversational",
-  },
-  {
-    gender: "male",
-    id: "afc03ec63be84f919c25372a7fddf014",
-    language: "ms",
-    name: "Rifki",
-    sampleUrl:
-      "https://platform.r2.fish.audio/task/7fe70b98ad7a4c709b42daae30c4dfff.mp3",
-    tag: "Warm",
-  },
-  {
-    gender: "female",
-    id: "d86ace6338db45488803f59874909bf4",
-    language: "ms",
-    name: "Wanita Mesra",
-    sampleUrl:
-      "https://platform.r2.fish.audio/task/2181c90904f3475387c7d041fa061e42.mp3",
-    tag: "Energetic",
-  },
-  {
-    gender: "female",
-    id: "97af820cf2014e0f89ed67aaaa02fb83",
-    language: "ms",
-    name: "Warga Emas",
-    sampleUrl:
-      "https://platform.r2.fish.audio/tasks/2026-07-31/405b4625b0ba4966918c9fd1257beda3.mp3",
-    tag: "Gentle",
-  },
-
-  // Indonesian (id)
-  {
-    gender: "male",
-    id: "bdb838c0b3fe4782acac358b10500594",
-    language: "id",
-    name: "Slax Indo",
-    sampleUrl:
-      "https://platform.r2.fish.audio/task/a2b883ea6f6f4c658ee21e7d6e9d7e56.mp3",
-    tag: "Deep",
-  },
-  {
-    gender: "male",
-    id: "b8d594e696694b499aa12e32d0c1b618",
-    language: "id",
-    name: "Prabowo",
-    sampleUrl:
-      "https://platform.r2.fish.audio/task/a72d685b3d374ed0bdfd00ea52c6f950.mp3",
-    tag: "Authoritative",
-  },
-  {
-    gender: "male",
-    id: "035f1218cdd44cf2a6bf2f646e813e8d",
-    language: "id",
-    name: "Simanjuntak",
-    sampleUrl:
-      "https://platform.r2.fish.audio/task/5d1c9231ce7b43b2a7b3bb49b0a42ed6.mp3",
-    tag: "Energetic",
-  },
-  {
-    gender: "male",
-    id: "c0c83f00b8f34f1b9bc2e644c3cf90be",
-    language: "id",
-    name: "Narasi Tenang",
-    sampleUrl:
-      "https://platform.r2.fish.audio/task/61bd8a912f694d24ad57716ffe2440ce.mp3",
-    tag: "Calm",
-  },
-  {
-    gender: "male",
-    id: "d3c79021d1a14e9db1119a1b74424456",
-    language: "id",
-    name: "Mamen",
-    sampleUrl:
-      "https://platform.r2.fish.audio/task/6648f9a73cad437480e120f6407b8179.mp3",
-    tag: "Conversational",
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/hpp4J3VqNfWAUOO0d1Us/dab0f5ba-3aa4-48a8-9fad-f138fea1126d.mp3",
+    tag: "Polished & Friendly",
   },
 ] as const;
 

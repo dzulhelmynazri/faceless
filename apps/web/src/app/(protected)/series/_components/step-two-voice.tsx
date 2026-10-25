@@ -52,22 +52,17 @@ export const StepTwoVoice = ({
 
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
-  const filteredVoices = React.useMemo(() => {
-    const list = SERIES_VOICES.filter((voice: SeriesVoice) => {
-      if (genderFilter !== "all" && voice.gender !== genderFilter) {
-        return false;
-      }
+  const filteredVoices = React.useMemo(
+    () =>
+      SERIES_VOICES.filter((voice: SeriesVoice) => {
+        if (genderFilter !== "all" && voice.gender !== genderFilter) {
+          return false;
+        }
 
-      return true;
-    });
-
-    return list.toSorted((a, b) => {
-      const aMatches = a.language === selectedLanguage ? 1 : 0;
-      const bMatches = b.language === selectedLanguage ? 1 : 0;
-
-      return bMatches - aMatches;
-    });
-  }, [genderFilter, selectedLanguage]);
+        return true;
+      }),
+    [genderFilter]
+  );
 
   const maleCount = React.useMemo(
     () =>
