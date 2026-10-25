@@ -20,6 +20,11 @@ export const createAuth = (env: Env, database: Database) =>
       provider: "postgresql",
     }),
     emailAndPassword: { enabled: true },
+    user: {
+      deleteUser: {
+        enabled: true,
+      },
+    },
     plugins: [
       expo(),
       autumn({
