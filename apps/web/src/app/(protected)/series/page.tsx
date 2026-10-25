@@ -92,8 +92,12 @@ const SeriesWizard = () => {
         onSelectLanguage={wizard.handleSelectLanguage}
         onSelectVoice={wizard.handleSelectVoice}
         selectedTrackId={wizard.selectedTrackId}
+        selectedTrackIds={wizard.selectedTrackIds}
         tiktokSounds={wizard.tiktokSounds}
         onSelectTrack={wizard.handleSelectTrack}
+        onToggleTrack={wizard.handleToggleTrack}
+        onSelectAllTracks={wizard.handleSelectAllTracks}
+        onClearTracks={wizard.handleClearTracks}
         onChangeTiktokSounds={wizard.handleChangeTiktokSounds}
         selectedStyleId={wizard.selectedStyleId}
         onSelectStyle={wizard.handleSelectStyle}

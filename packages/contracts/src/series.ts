@@ -1836,6 +1836,7 @@ export interface SeriesMusicTrack {
   id: string;
   title: string;
   description: string;
+  url: string;
 }
 
 export const SERIES_MUSIC_PRESETS: readonly SeriesMusicTrack[] = [
@@ -1843,31 +1844,37 @@ export const SERIES_MUSIC_PRESETS: readonly SeriesMusicTrack[] = [
     description: "Haunting and unsettling melody",
     id: "creepy-melody",
     title: "Creepy melody",
+    url: "/series/music/creepy-melody.mp3",
   },
   {
     description: "Dark and chilling piano keys",
     id: "horror-piano",
     title: "Horror piano",
+    url: "/series/music/horror-piano.mp3",
   },
   {
     description: "Suspenseful and intriguing atmosphere",
     id: "unsolved-mystery",
     title: "Unsolved mystery",
+    url: "/series/music/unsolved-mystery.mp3",
   },
   {
     description: "Eerie chiptune with a haunting retro feel",
     id: "8-bit-slowed",
     title: "8-bit slowed",
+    url: "/series/music/8-bit-slowed.mp3",
   },
   {
     description: "Building tension and anticipation for dramatic reveals",
     id: "quiet-before-storm",
     title: "Quiet before storm",
+    url: "/series/music/quiet-before-storm.mp3",
   },
   {
     description: "Orchestral and majestic for epic storytelling",
     id: "brilliant-symphony",
     title: "Brilliant symphony",
+    url: "/series/music/brilliant-symphony.mp3",
   },
 ] as const;
 

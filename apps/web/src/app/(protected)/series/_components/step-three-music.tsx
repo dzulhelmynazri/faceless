@@ -27,7 +27,7 @@ import {
   TabsTrigger,
 } from "@faceless/ui/components/tabs";
 import { Textarea } from "@faceless/ui/components/textarea";
-import { Layers, Play, Sparkles, Upload } from "lucide-react";
+import { Layers, Pause, Play, Sparkles, Upload } from "lucide-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import * as React from "react";
 
@@ -36,19 +36,43 @@ const MUSIC_TABS = ["presets", "custom"] as const;
 const musicTabParser = parseAsStringLiteral(MUSIC_TABS).withDefault("presets");
 
 interface StepThreeMusicProps {
-  selectedTrackId: string;
+  selectedTrackIds?: string[];
+  selectedTrackId?: string;
   tiktokSounds: string;
-  onSelectTrack: (trackId: string) => void;
+  onToggleTrack: (trackId: string) => void;
+  onSelectAllTracks?: (trackIds: string[]) => void;
+  onClearTracks?: () => void;
   onChangeTiktokSounds: (sounds: string) => void;
 }
 
 export const StepThreeMusic = ({
+  selectedTrackIds,
   selectedTrackId,
   tiktokSounds,
-  onSelectTrack,
+  onToggleTrack,
+  onSelectAllTracks,
+  onClearTracks,
   onChangeTiktokSounds,
 }: StepThreeMusicProps) => {
   const [tab, setTab] = useQueryState("musicTab", musicTabParser);
+
+  const [playingTrackId, setPlayingTrackId] = React.useState<string | null>(
+    null
+  );
+
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
+
+  const activeSelectedIds = React.useMemo(() => {
+    if (selectedTrackIds !== undefined) {
+      return selectedTrackIds;
+    }
+
+    if (selectedTrackId !== undefined && selectedTrackId !== "none") {
+      return selectedTrackId.split(",").filter(Boolean);
+    }
+
+    return [];
+  }, [selectedTrackIds, selectedTrackId]);
 
   const handleTabChange = React.useCallback(
     (value: string | null) => {
@@ -57,6 +81,68 @@ export const StepThreeMusic = ({
       }
     },
     [setTab]
+  );
+
+  const handleTogglePlay = React.useCallback(
+    (track: SeriesMusicTrack, event: React.MouseEvent) => {
+      event.stopPropagation();
+
+      const { url } = track;
+
+      if (url === "") {
+        return;
+      }
+
+      if (playingTrackId === track.id) {
+        if (audioRef.current !== null) {
+          audioRef.current.pause();
+        }
+
+        setPlayingTrackId(null);
+
+        return;
+      }
+
+      if (audioRef.current !== null) {
+        audioRef.current.pause();
+      }
+
+      const audio = new Audio(url);
+
+      audioRef.current = audio;
+
+      setPlayingTrackId(track.id);
+
+      audio.addEventListener(
+        "ended",
+        () => {
+          setPlayingTrackId(null);
+        },
+        { once: true }
+      );
+
+      audio.addEventListener(
+        "error",
+        () => {
+          setPlayingTrackId(null);
+        },
+        { once: true }
+      );
+
+      void audio.play().catch(() => {
+        setPlayingTrackId(null);
+      });
+    },
+    [playingTrackId]
+  );
+
+  React.useEffect(
+    () => () => {
+      if (audioRef.current !== null) {
+        audioRef.current.pause();
+      }
+    },
+    []
   );
 
   return (
@@ -71,7 +157,8 @@ export const StepThreeMusic = ({
           <span className="text-xs text-muted-foreground">Optional</span>
         </div>
         <p className="text-sm text-muted-foreground">
-          Choose a background music track for your video
+          Choose as many songs as you want, we&apos;ll pick a random one for
+          each video
         </p>
       </div>
 
@@ -81,6 +168,9 @@ export const StepThreeMusic = ({
           <TabsTrigger value="presets">
             <Layers data-icon="inline-start" />
             Preset music
+            {activeSelectedIds.length > 0 && (
+              <Badge variant="secondary">{activeSelectedIds.length}</Badge>
+            )}
           </TabsTrigger>
           <TabsTrigger value="custom">
             <Sparkles data-icon="inline-start" />
@@ -90,32 +180,75 @@ export const StepThreeMusic = ({
 
         {/* Preset music tab content */}
         <TabsContent value="presets" className="mt-4">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">
+              {activeSelectedIds.length} of {SERIES_MUSIC_PRESETS.length}{" "}
+              selected
+            </span>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  if (onSelectAllTracks) {
+                    onSelectAllTracks(SERIES_MUSIC_PRESETS.map((t) => t.id));
+                  }
+                }}
+              >
+                Select all
+              </Button>
+              <Button
+                variant="ghost"
+                disabled={activeSelectedIds.length === 0}
+                onClick={() => {
+                  if (onClearTracks) {
+                    onClearTracks();
+                  }
+                }}
+              >
+                Clear
+              </Button>
+            </div>
+          </div>
+
           <div className="flex flex-col gap-3">
             {SERIES_MUSIC_PRESETS.map((track: SeriesMusicTrack) => {
-              const isSelected = selectedTrackId === track.id;
+              const isSelected = activeSelectedIds.includes(track.id);
+
+              const isPlaying = playingTrackId === track.id;
 
               return (
                 <Item
                   key={track.id}
                   variant={isSelected ? "selected" : "interactive"}
                   onClick={() => {
-                    onSelectTrack(track.id);
+                    onToggleTrack(track.id);
                   }}
                 >
                   <ItemContent>
-                    <ItemTitle>{track.title}</ItemTitle>
+                    <div className="flex items-center gap-2">
+                      <ItemTitle>{track.title}</ItemTitle>
+                      {isSelected && (
+                        <Badge variant="secondary">Selected</Badge>
+                      )}
+                    </div>
                     <ItemDescription>{track.description}</ItemDescription>
                   </ItemContent>
 
                   <ItemActions>
                     <Button
-                      variant="outline"
+                      variant={isPlaying ? "default" : "outline"}
                       size="icon"
+                      disabled={track.url === ""}
                       onClick={(event) => {
-                        event.stopPropagation();
+                        handleTogglePlay(track, event);
                       }}
                     >
-                      <Play className="fill-current" />
+                      {isPlaying ? (
+                        <Pause className="fill-current" />
+                      ) : (
+                        <Play className="fill-current" />
+                      )}
                     </Button>
                   </ItemActions>
                 </Item>

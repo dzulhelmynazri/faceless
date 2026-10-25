@@ -66,10 +66,18 @@ export const useSeriesWizardState = () => {
   );
 
   // Step 3 state
-  const [selectedTrackId, setSelectedTrackId] = useQueryState(
+  const [selectedTracksParam, setSelectedTracksParam] = useQueryState(
     "music",
     parseAsString.withDefault(DEFAULT_TRACK.id)
   );
+
+  const selectedTrackIds = React.useMemo(() => {
+    if (selectedTracksParam === "none" || selectedTracksParam.length === 0) {
+      return [];
+    }
+
+    return selectedTracksParam.split(",").filter(Boolean);
+  }, [selectedTracksParam]);
 
   const [tiktokSounds, setTiktokSounds] = useQueryState(
     "tiktokSounds",
@@ -165,12 +173,35 @@ export const useSeriesWizardState = () => {
     [setSelectedVoiceId]
   );
 
-  const handleSelectTrack = React.useCallback(
+  const handleToggleTrack = React.useCallback(
     (trackId: string) => {
-      void setSelectedTrackId(trackId);
+      let currentList: string[] = [];
+
+      if (selectedTracksParam !== "none" && selectedTracksParam.length > 0) {
+        currentList = selectedTracksParam.split(",").filter(Boolean);
+      }
+
+      const next = currentList.includes(trackId)
+        ? currentList.filter((item) => item !== trackId)
+        : [...currentList, trackId];
+
+      const nextParam = next.length === 0 ? "none" : next.join(",");
+
+      void setSelectedTracksParam(nextParam);
     },
-    [setSelectedTrackId]
+    [selectedTracksParam, setSelectedTracksParam]
   );
+
+  const handleSelectAllTracks = React.useCallback(
+    (allTrackIds: string[]) => {
+      void setSelectedTracksParam(allTrackIds.join(","));
+    },
+    [setSelectedTracksParam]
+  );
+
+  const handleClearTracks = React.useCallback(() => {
+    void setSelectedTracksParam("none");
+  }, [setSelectedTracksParam]);
 
   const handleChangeTiktokSounds = React.useCallback(
     (sounds: string) => {
@@ -263,7 +294,10 @@ export const useSeriesWizardState = () => {
       exampleScript: customScript.length > 0 ? customScript : undefined,
       language: selectedLanguage,
       voiceId: selectedVoiceId,
-      musicTrackId: selectedTrackId.length > 0 ? selectedTrackId : undefined,
+      musicTrackId:
+        selectedTracksParam !== "none" && selectedTracksParam.length > 0
+          ? selectedTracksParam
+          : undefined,
       tiktokSounds: tiktokSounds.length > 0 ? tiktokSounds : undefined,
       artStyleId: selectedStyleId,
       captionStyleId: selectedCaptionId,
@@ -281,7 +315,7 @@ export const useSeriesWizardState = () => {
     customScript,
     selectedLanguage,
     selectedVoiceId,
-    selectedTrackId,
+    selectedTracksParam,
     tiktokSounds,
     selectedStyleId,
     selectedCaptionId,
@@ -319,9 +353,13 @@ export const useSeriesWizardState = () => {
     handleSelectLanguage,
     handleSelectVoice,
     // Step 3
-    selectedTrackId,
+    selectedTrackId: selectedTracksParam,
+    selectedTrackIds,
+    handleSelectTrack: handleToggleTrack,
+    handleToggleTrack,
+    handleSelectAllTracks,
+    handleClearTracks,
     tiktokSounds,
-    handleSelectTrack,
     handleChangeTiktokSounds,
     // Step 4
     selectedStyleId,

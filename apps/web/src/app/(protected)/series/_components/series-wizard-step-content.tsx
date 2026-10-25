@@ -27,8 +27,12 @@ interface SeriesWizardStepContentProps {
   onSelectVoice: (voiceId: string) => void;
   // Step 3
   selectedTrackId: string;
+  selectedTrackIds?: string[];
   tiktokSounds: string;
   onSelectTrack: (trackId: string) => void;
+  onToggleTrack?: (trackId: string) => void;
+  onSelectAllTracks?: (trackIds: string[]) => void;
+  onClearTracks?: () => void;
   onChangeTiktokSounds: (sounds: string) => void;
   // Step 4
   selectedStyleId: string;
@@ -64,8 +68,12 @@ export const SeriesWizardStepContent = ({
   onSelectLanguage,
   onSelectVoice,
   selectedTrackId,
+  selectedTrackIds,
   tiktokSounds,
   onSelectTrack,
+  onToggleTrack,
+  onSelectAllTracks,
+  onClearTracks,
   onChangeTiktokSounds,
   selectedStyleId,
   onSelectStyle,
@@ -110,8 +118,11 @@ export const SeriesWizardStepContent = ({
     return (
       <StepThreeMusic
         selectedTrackId={selectedTrackId}
+        selectedTrackIds={selectedTrackIds}
         tiktokSounds={tiktokSounds}
-        onSelectTrack={onSelectTrack}
+        onToggleTrack={onToggleTrack ?? onSelectTrack}
+        onSelectAllTracks={onSelectAllTracks}
+        onClearTracks={onClearTracks}
         onChangeTiktokSounds={onChangeTiktokSounds}
       />
     );
