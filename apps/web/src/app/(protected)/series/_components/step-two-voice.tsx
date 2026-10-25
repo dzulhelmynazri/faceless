@@ -46,36 +46,44 @@ export const StepTwoVoice = ({
     genderTabParser
   );
 
-  const [playingVoiceId, setPlayingVoiceId] = React.useState<string | null>(
+  const [playingVoiceKey, setPlayingVoiceKey] = React.useState<string | null>(
     null
   );
 
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
-  const filteredVoices = React.useMemo(
-    () =>
-      SERIES_VOICES.filter((voice: SeriesVoice) => {
-        if (genderFilter !== "all" && voice.gender !== genderFilter) {
-          return false;
-        }
+  const currentLanguageVoices = React.useMemo(() => {
+    const list = SERIES_VOICES.filter(
+      (voice: SeriesVoice) => voice.language === selectedLanguage
+    );
 
-        return true;
-      }),
-    [genderFilter]
-  );
+    return list.length > 0 ? list : SERIES_VOICES;
+  }, [selectedLanguage]);
+
+  const filteredVoices = React.useMemo(() => {
+    if (genderFilter === "all") {
+      return currentLanguageVoices;
+    }
+
+    return currentLanguageVoices.filter(
+      (voice: SeriesVoice) => voice.gender === genderFilter
+    );
+  }, [currentLanguageVoices, genderFilter]);
 
   const maleCount = React.useMemo(
     () =>
-      SERIES_VOICES.filter((voice: SeriesVoice) => voice.gender === "male")
-        .length,
-    []
+      currentLanguageVoices.filter(
+        (voice: SeriesVoice) => voice.gender === "male"
+      ).length,
+    [currentLanguageVoices]
   );
 
   const femaleCount = React.useMemo(
     () =>
-      SERIES_VOICES.filter((voice: SeriesVoice) => voice.gender === "female")
-        .length,
-    []
+      currentLanguageVoices.filter(
+        (voice: SeriesVoice) => voice.gender === "female"
+      ).length,
+    [currentLanguageVoices]
   );
 
   const handleGenderFilterChange = React.useCallback(
@@ -91,9 +99,17 @@ export const StepTwoVoice = ({
     (value: string | null) => {
       if (value !== null && value !== "") {
         onSelectLanguage(value);
+
+        const matchingVoice = SERIES_VOICES.find(
+          (voice: SeriesVoice) => voice.language === value
+        );
+
+        if (matchingVoice !== undefined) {
+          onSelectVoice(matchingVoice.id);
+        }
       }
     },
-    [onSelectLanguage]
+    [onSelectLanguage, onSelectVoice]
   );
 
   const handleTogglePlay = React.useCallback(
@@ -102,13 +118,15 @@ export const StepTwoVoice = ({
 
       const { sampleUrl } = voice;
 
-      if (sampleUrl === undefined || sampleUrl === "") {
+      if (sampleUrl === "") {
         return;
       }
 
-      if (playingVoiceId === voice.id) {
+      const voiceKey = `${voice.language}-${voice.name}`;
+
+      if (playingVoiceKey === voiceKey) {
         audioRef.current?.pause();
-        setPlayingVoiceId(null);
+        setPlayingVoiceKey(null);
 
         return;
       }
@@ -119,12 +137,12 @@ export const StepTwoVoice = ({
 
       const audio = new Audio(sampleUrl);
       audioRef.current = audio;
-      setPlayingVoiceId(voice.id);
+      setPlayingVoiceKey(voiceKey);
 
       audio.addEventListener(
         "ended",
         () => {
-          setPlayingVoiceId(null);
+          setPlayingVoiceKey(null);
         },
         { once: true }
       );
@@ -132,16 +150,16 @@ export const StepTwoVoice = ({
       audio.addEventListener(
         "error",
         () => {
-          setPlayingVoiceId(null);
+          setPlayingVoiceKey(null);
         },
         { once: true }
       );
 
       void audio.play().catch(() => {
-        setPlayingVoiceId(null);
+        setPlayingVoiceKey(null);
       });
     },
-    [playingVoiceId]
+    [playingVoiceKey]
   );
 
   React.useEffect(
@@ -209,7 +227,9 @@ export const StepTwoVoice = ({
         {/* Gender filter pill tabs */}
         <Tabs value={genderFilter} onValueChange={handleGenderFilterChange}>
           <TabsList>
-            <TabsTrigger value="all">All {SERIES_VOICES.length}</TabsTrigger>
+            <TabsTrigger value="all">
+              All {currentLanguageVoices.length}
+            </TabsTrigger>
             <TabsTrigger value="male">Male {maleCount}</TabsTrigger>
             <TabsTrigger value="female">Female {femaleCount}</TabsTrigger>
           </TabsList>
@@ -219,25 +239,25 @@ export const StepTwoVoice = ({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filteredVoices.map((voice: SeriesVoice) => {
             const isSelected = selectedVoiceId === voice.id;
-            const isPlaying = playingVoiceId === voice.id;
+
+            const isPlaying =
+              playingVoiceKey === `${voice.language}-${voice.name}`;
 
             return (
               <Item
-                key={voice.id}
+                key={`${voice.language}-${voice.id}-${voice.name}`}
                 variant={isSelected ? "selected" : "interactive"}
                 onClick={() => {
                   onSelectVoice(voice.id);
                 }}
               >
                 <ItemContent>
-                  <ItemTitle>{voice.name}</ItemTitle>
+                  <div className="flex items-center gap-1.5">
+                    <ItemTitle>{voice.name}</ItemTitle>
+                    <span className="text-sm">{voice.flag}</span>
+                  </div>
                   <div className="flex items-center gap-1.5">
                     <Badge variant="secondary">{voice.tag}</Badge>
-                    {voice.language !== undefined && voice.language !== "" ? (
-                      <Badge variant="outline">
-                        {voice.language.toUpperCase()}
-                      </Badge>
-                    ) : null}
                   </div>
                 </ItemContent>
 
@@ -245,9 +265,7 @@ export const StepTwoVoice = ({
                   <Button
                     variant={isPlaying ? "default" : "outline"}
                     size="icon"
-                    disabled={
-                      voice.sampleUrl === undefined || voice.sampleUrl === ""
-                    }
+                    disabled={voice.sampleUrl === ""}
                     onClick={(event) => {
                       handleTogglePlay(voice, event);
                     }}
