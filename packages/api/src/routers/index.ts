@@ -1,6 +1,7 @@
 import { protectedProcedure } from "../middlewares/auth";
 import { publicProcedure, router } from "../trpc";
 import { billingRouter } from "./billing";
+import { seriesRouter } from "./series";
 import { socialRouter } from "./social";
 
 export const appRouter = router({
@@ -13,6 +14,7 @@ export const appRouter = router({
 
   // Feature namespaces
   billing: billingRouter,
+  series: seriesRouter,
   social: socialRouter,
 });
 

@@ -1,0 +1,83 @@
+enum SeriesStatus {
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum EpisodeStatus {
+  PENDING
+  GENERATING
+  READY_FOR_REVIEW
+  APPROVED
+  PUBLISHED
+  FAILED
+}
+
+model Series {
+  id               String                @id @default(cuid())
+  userId           String
+  name             String
+  nichePresetId    String?
+  nichePrompt      String                @db.Text
+  exampleScript    String?               @db.Text
+  language         String                @default("en")
+  voiceId          String
+  musicTrackId     String?
+  tiktokSounds     String?
+  artStyleId       String
+  captionStyleId   String
+  glitchEffect     Boolean               @default(true)
+  videoDuration    String                @default("30-40")
+  publishTime      String                @default("12:00 PM")
+  status           SeriesStatus          @default(ACTIVE)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  user             User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  socialAccounts   SeriesSocialAccount[]
+  episodes         SeriesEpisode[]
+
+  @@index([userId])
+  @@map("series")
+}
+
+model SeriesSocialAccount {
+  id                 String           @id @default(cuid())
+  seriesId           String
+  socialConnectionId String
+  createdAt          DateTime         @default(now())
+
+  series             Series           @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  socialConnection   SocialConnection @relation(fields: [socialConnectionId], references: [id], onDelete: Cascade)
+
+  @@unique([seriesId, socialConnectionId])
+  @@index([seriesId])
+  @@index([socialConnectionId])
+  @@map("series_social_account")
+}
+
+model SeriesEpisode {
+  id            String              @id @default(cuid())
+  seriesId      String
+  episodeNumber Int
+  title         String
+  topic         String?
+  script        String              @db.Text
+  status        EpisodeStatus       @default(PENDING)
+  videoUrl      String?
+  audioUrl      String?
+  thumbnailUrl  String?
+  scheduledFor  DateTime?
+  publishedAt   DateTime?
+  error         String?
+  metadata      Json?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  series        Series              @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  publications  SocialPublication[]
+
+  @@index([seriesId])
+  @@index([status])
+  @@map("series_episode")
+}

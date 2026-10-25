@@ -74,44 +74,19 @@ const SUPPORTED_PLATFORMS: readonly SupportedPlatformOption[] = [
   },
 ] as const;
 
-const getPlatformIcon = (platform: SocialPlatform) => {
-  switch (platform) {
-    case "INSTAGRAM": {
-      return Instagram;
-    }
-
-    case "TIKTOK": {
-      return Tiktok;
-    }
-
-    case "YOUTUBE": {
-      return Youtube;
-    }
-
-    default: {
-      return Instagram;
-    }
-  }
+const PLATFORM_ICONS: Record<
+  SocialPlatform,
+  React.ComponentType<{ className?: string }>
+> = {
+  INSTAGRAM: Instagram,
+  TIKTOK: Tiktok,
+  YOUTUBE: Youtube,
 };
 
-const getPlatformName = (platform: SocialPlatform) => {
-  switch (platform) {
-    case "INSTAGRAM": {
-      return "Instagram";
-    }
-
-    case "TIKTOK": {
-      return "TikTok";
-    }
-
-    case "YOUTUBE": {
-      return "YouTube";
-    }
-
-    default: {
-      return platform;
-    }
-  }
+const PLATFORM_NAMES: Record<SocialPlatform, string> = {
+  INSTAGRAM: "Instagram",
+  TIKTOK: "TikTok",
+  YOUTUBE: "YouTube",
 };
 
 export const StepSevenSocialAccounts = ({
@@ -123,9 +98,7 @@ export const StepSevenSocialAccounts = ({
   const [selectedPlatform, setSelectedPlatform] =
     React.useState<SocialPlatform>("INSTAGRAM");
 
-  const connectionsQuery = useQuery({
-    ...trpc.social.getConnections.queryOptions(),
-  });
+  const connectionsQuery = useQuery(trpc.social.getConnections.queryOptions());
 
   const connectMutation = useMutation(
     trpc.social.getOAuthUrl.mutationOptions({
@@ -244,8 +217,8 @@ export const StepSevenSocialAccounts = ({
           }
 
           return connections.map((conn: SocialConnectionItem) => {
-            const Icon = getPlatformIcon(conn.platform);
-            const platformName = getPlatformName(conn.platform);
+            const Icon = PLATFORM_ICONS[conn.platform];
+            const platformName = PLATFORM_NAMES[conn.platform];
             const isSelected = selectedIdSet.has(conn.id);
 
             return (

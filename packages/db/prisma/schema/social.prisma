@@ -27,6 +27,7 @@ model SocialConnection {
 
   user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   publications     SocialPublication[]
+  seriesAccounts   SeriesSocialAccount[]
 
   @@unique([userId, platform, platformUserId])
   @@index([userId])
@@ -36,6 +37,7 @@ model SocialConnection {
 model SocialPublication {
   id                 String           @id @default(cuid())
   socialConnectionId String
+  episodeId          String?
   platform           SocialPlatform
   externalPostId     String?
   status             String
@@ -46,7 +48,9 @@ model SocialPublication {
   updatedAt          DateTime         @updatedAt
 
   connection         SocialConnection @relation(fields: [socialConnectionId], references: [id], onDelete: Cascade)
+  episode            SeriesEpisode?   @relation(fields: [episodeId], references: [id], onDelete: SetNull)
 
   @@index([socialConnectionId])
+  @@index([episodeId])
   @@map("social_publication")
 }

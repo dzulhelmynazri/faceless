@@ -269,14 +269,6 @@ Mochi learned to always stay close to Mama. And Mama never stopped listening for
   },
 ] as const;
 
-export const selectNicheSchema = z.object({
-  customDescription: z.string().optional(),
-  mode: z.enum(["preset", "custom"]),
-  presetId: z.string().optional(),
-});
-
-export type SelectNicheInput = z.infer<typeof selectNicheSchema>;
-
 export interface SeriesVoice {
   id: string;
   name: string;
@@ -576,3 +568,128 @@ export const SERIES_DURATIONS: readonly SeriesDurationOption[] = [
     monetizable: true,
   },
 ] as const;
+
+export const createSeriesInputSchema = z.object({
+  name: z.string().trim().min(1, "Series name is required").max(100),
+  nichePresetId: z.string().optional(),
+  nichePrompt: z.string().trim().min(1, "Niche prompt is required"),
+  exampleScript: z.string().optional(),
+  language: z.string().default("en"),
+  voiceId: z.string().min(1, "Voice is required"),
+  musicTrackId: z.string().optional(),
+  tiktokSounds: z.string().optional(),
+  artStyleId: z.string().min(1, "Art style is required"),
+  captionStyleId: z.string().min(1, "Caption style is required"),
+  glitchEffect: z.boolean().default(true),
+  videoDuration: z.string().default("30-40"),
+  publishTime: z.string().default("12:00 PM"),
+  socialConnectionIds: z.array(z.string()).default([]),
+});
+
+export type CreateSeriesInput = z.infer<typeof createSeriesInputSchema>;
+
+export const createSeriesOutputSchema = z.object({
+  success: z.boolean(),
+  seriesId: z.string(),
+  name: z.string(),
+});
+
+export type CreateSeriesOutput = z.infer<typeof createSeriesOutputSchema>;
+
+export const SERIES_STATUSES = ["ACTIVE", "PAUSED", "ARCHIVED"] as const;
+
+export type SeriesStatus = (typeof SERIES_STATUSES)[number];
+
+export const EPISODE_STATUSES = [
+  "PENDING",
+  "GENERATING",
+  "READY_FOR_REVIEW",
+  "APPROVED",
+  "PUBLISHED",
+  "FAILED",
+] as const;
+
+export type EpisodeStatus = (typeof EPISODE_STATUSES)[number];
+
+export const getSeriesListOutputSchema = z.array(
+  z.object({
+    id: z.string(),
+    name: z.string(),
+    language: z.string(),
+    voiceId: z.string(),
+    artStyleId: z.string(),
+    captionStyleId: z.string(),
+    videoDuration: z.string(),
+    publishTime: z.string(),
+    status: z.enum(SERIES_STATUSES),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    episodeCount: z.number().int(),
+    socialAccountCount: z.number().int(),
+  })
+);
+
+export type GetSeriesListOutput = z.infer<typeof getSeriesListOutputSchema>;
+
+export const getSeriesByIdInputSchema = z.object({
+  id: z.string().min(1),
+});
+
+export type GetSeriesByIdInput = z.infer<typeof getSeriesByIdInputSchema>;
+
+export const getSeriesByIdOutputSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  nichePresetId: z.string().nullable(),
+  nichePrompt: z.string(),
+  exampleScript: z.string().nullable(),
+  language: z.string(),
+  voiceId: z.string(),
+  musicTrackId: z.string().nullable(),
+  tiktokSounds: z.string().nullable(),
+  artStyleId: z.string(),
+  captionStyleId: z.string(),
+  glitchEffect: z.boolean(),
+  videoDuration: z.string(),
+  publishTime: z.string(),
+  status: z.enum(SERIES_STATUSES),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  socialAccounts: z.array(
+    z.object({
+      id: z.string(),
+      socialConnectionId: z.string(),
+      platform: z.enum(["TIKTOK", "YOUTUBE", "INSTAGRAM"]),
+      platformUserName: z.string(),
+      avatarUrl: z.string().nullable(),
+    })
+  ),
+  episodes: z.array(
+    z.object({
+      id: z.string(),
+      episodeNumber: z.number().int(),
+      title: z.string(),
+      topic: z.string().nullable(),
+      status: z.enum(EPISODE_STATUSES),
+      videoUrl: z.string().nullable(),
+      thumbnailUrl: z.string().nullable(),
+      scheduledFor: z.string().nullable(),
+      publishedAt: z.string().nullable(),
+      createdAt: z.string(),
+    })
+  ),
+});
+
+export type GetSeriesByIdOutput = z.infer<typeof getSeriesByIdOutputSchema>;
+
+export const deleteSeriesInputSchema = z.object({
+  id: z.string().min(1),
+});
+
+export type DeleteSeriesInput = z.infer<typeof deleteSeriesInputSchema>;
+
+export const deleteSeriesOutputSchema = z.object({
+  success: z.boolean(),
+});
+
+export type DeleteSeriesOutput = z.infer<typeof deleteSeriesOutputSchema>;
