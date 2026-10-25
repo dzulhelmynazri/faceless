@@ -274,6 +274,8 @@ export interface SeriesVoice {
   name: string;
   gender: "male" | "female";
   tag: string;
+  sampleUrl?: string;
+  language?: string;
 }
 
 export interface SeriesLanguage {
@@ -284,6 +286,8 @@ export interface SeriesLanguage {
 
 export const SERIES_LANGUAGES: readonly SeriesLanguage[] = [
   { code: "en", flag: "🇬🇧", label: "English" },
+  { code: "id", flag: "🇮🇩", label: "Indonesian" },
+  { code: "ms", flag: "🇲🇾", label: "Malay" },
   { code: "es", flag: "🇪🇸", label: "Spanish" },
   { code: "fr", flag: "🇫🇷", label: "French" },
   { code: "de", flag: "🇩🇪", label: "German" },
@@ -291,112 +295,253 @@ export const SERIES_LANGUAGES: readonly SeriesLanguage[] = [
   { code: "it", flag: "🇮🇹", label: "Italian" },
   { code: "ja", flag: "🇯🇵", label: "Japanese" },
   { code: "ko", flag: "🇰🇷", label: "Korean" },
-  { code: "ms", flag: "🇲🇾", label: "Malay" },
   { code: "pl", flag: "🇵🇱", label: "Polish" },
   { code: "pt", flag: "🇵🇹", label: "Portuguese" },
   { code: "tr", flag: "🇹🇷", label: "Turkish" },
 ] as const;
 
 export const SERIES_VOICES: readonly SeriesVoice[] = [
-  // Row 1
-  { gender: "male", id: "adam", name: "Adam", tag: "Confident" },
-  { gender: "female", id: "brittney", name: "Brittney", tag: "Energetic" },
-  { gender: "male", id: "jonah", name: "Jonah", tag: "Storyteller" },
+  // English - Male
+  {
+    gender: "male",
+    id: "8ec9973300874562962bbcb300f82213",
+    language: "en",
+    name: "Guyzo",
+    sampleUrl:
+      "https://platform.r2.fish.audio/tasks/2026-08-30/f2a5d881409d41ae961a20893a78073f.mp3",
+    tag: "Storyteller",
+  },
+  {
+    gender: "male",
+    id: "bf322df2096a46f18c579d0baa36f41d",
+    language: "en",
+    name: "Adrian",
+    sampleUrl:
+      "https://platform.r2.fish.audio/task/d730b09f4a484316a77ecc86137e85fb.mp3",
+    tag: "Storyteller",
+  },
+  {
+    gender: "male",
+    id: "c5f56a6cc2ec4fa8920cb4c5889a3fb7",
+    language: "en",
+    name: "Slax",
+    sampleUrl:
+      "https://platform.r2.fish.audio/task/a9826fbfc0b347ae807340493fe4ac1f.mp3",
+    tag: "Clear",
+  },
+  {
+    gender: "male",
+    id: "4c6a6762e4ac4bdebdb4fa8525d054a2",
+    language: "en",
+    name: "Atomic",
+    sampleUrl:
+      "https://platform.r2.fish.audio/task/7a589e43a70341999bb9b8eb29522f73.mp3",
+    tag: "Dramatic",
+  },
+  {
+    gender: "male",
+    id: "536d3a5e000945adb7038665781a4aca",
+    language: "en",
+    name: "Ethan",
+    sampleUrl:
+      "https://platform.r2.fish.audio/task/bdd677ed767744fc91f166468786264b.mp3",
+    tag: "Authoritative",
+  },
+  {
+    gender: "male",
+    id: "e686ae649ee44f219a108aacba206c1a",
+    language: "en",
+    name: "Calm Storyteller",
+    sampleUrl:
+      "https://platform.r2.fish.audio/task/94872bb78886416993c4c0bb3e456a30.mp3",
+    tag: "Calm",
+  },
+  {
+    gender: "male",
+    id: "ef9c79b62ef34530bf452c0e50e3c260",
+    language: "en",
+    name: "Horror Narrator",
+    sampleUrl:
+      "https://platform.r2.fish.audio/task/20bc0df607cd466180e27001089378a8.mp3",
+    tag: "Suspenseful",
+  },
+  {
+    gender: "male",
+    id: "711cf3ed00ab441a8f54a45058047b7a",
+    language: "en",
+    name: "Verity",
+    sampleUrl:
+      "https://platform.r2.fish.audio/task/2e3ba59461ca46a5bc5056e1a6af0ac8.mp3",
+    tag: "Expressive",
+  },
+  {
+    gender: "male",
+    id: "1936333080804be19655c6749b2ae7b2",
+    language: "en",
+    name: "Voice DL",
+    sampleUrl:
+      "https://platform.r2.fish.audio/task/1134b26cffe14a13b10e58e0fd8cefd9.mp3",
+    tag: "Deep",
+  },
+  {
+    gender: "male",
+    id: "d13f84b987ad4f22b56d2b47f4eb838e",
+    language: "en",
+    name: "Cinematic Deep",
+    sampleUrl:
+      "https://platform.r2.fish.audio/task/ba41215cabb3430b8f9a153fd720b385.mp3",
+    tag: "Cinematic",
+  },
 
-  // Row 2
-  { gender: "female", id: "hope", name: "Hope", tag: "Bright" },
-  { gender: "male", id: "jamal", name: "Jamal", tag: "Chill" },
-  { gender: "female", id: "zara", name: "Zara", tag: "Conversational" },
+  // English - Female
+  {
+    gender: "female",
+    id: "933563129e564b19a115bedd57b7406a",
+    language: "en",
+    name: "Sarah",
+    sampleUrl:
+      "https://platform.r2.fish.audio/task/4e204945670c460c86fdab57512cb308.mp3",
+    tag: "Conversational",
+  },
+  {
+    gender: "female",
+    id: "b347db033a6549378b48d00acb0d06cd",
+    language: "en",
+    name: "Selene",
+    sampleUrl:
+      "https://platform.r2.fish.audio/task/fcf629b4a0b343558f461338ba1b9da4.mp3",
+    tag: "Calm",
+  },
+  {
+    gender: "female",
+    id: "e9b134e4c0b547a3894793be502314f1",
+    language: "en",
+    name: "Jasphina",
+    sampleUrl:
+      "https://platform.r2.fish.audio/task/ecb5c4f4738c46a6a44a9f37ec5c4193.mp3",
+    tag: "Energetic",
+  },
+  {
+    gender: "female",
+    id: "98655a12fa944e26b274c535e5e03842",
+    language: "en",
+    name: "E-girl",
+    sampleUrl:
+      "https://platform.r2.fish.audio/task/8093cbd0201449f79d356cc9d2f42156.mp3",
+    tag: "Soft",
+  },
+  {
+    gender: "female",
+    id: "85d6a6c915f545b399b0bfb358244fb9",
+    language: "en",
+    name: "Ezzy",
+    sampleUrl:
+      "https://platform.r2.fish.audio/task/1d26a322b4194e5a848b1407b21942c8.mp3",
+    tag: "Playful",
+  },
+  {
+    gender: "female",
+    id: "f48d143a59a946ab87c0130fd081f349",
+    language: "en",
+    name: "Polo",
+    sampleUrl:
+      "https://platform.r2.fish.audio/task/20d1e405eb6342138da644b7827f387f.mp3",
+    tag: "Narrator",
+  },
 
-  // Row 3
-  { gender: "male", id: "peter", name: "Peter", tag: "Confident" },
-  { gender: "female", id: "jessica", name: "Jessica", tag: "Conversational" },
-  { gender: "male", id: "james", name: "James", tag: "Husky" },
+  // Malay (ms)
+  {
+    gender: "male",
+    id: "a90c819214d94da7bec3de8ba3a6ffba",
+    language: "ms",
+    name: "Pencerita Tegas",
+    sampleUrl:
+      "https://platform.r2.fish.audio/tasks/2026-09-10/87201dbe41184ee3859372195ecc9b3e.mp3",
+    tag: "Storyteller",
+  },
+  {
+    gender: "female",
+    id: "006ce9bb72c64e1788992c2e5442fbff",
+    language: "ms",
+    name: "Suara Santai",
+    sampleUrl:
+      "https://platform.r2.fish.audio/task/514d91703d8449bc91fc6190bf63528f.mp3",
+    tag: "Conversational",
+  },
+  {
+    gender: "male",
+    id: "afc03ec63be84f919c25372a7fddf014",
+    language: "ms",
+    name: "Rifki",
+    sampleUrl:
+      "https://platform.r2.fish.audio/task/7fe70b98ad7a4c709b42daae30c4dfff.mp3",
+    tag: "Warm",
+  },
+  {
+    gender: "female",
+    id: "d86ace6338db45488803f59874909bf4",
+    language: "ms",
+    name: "Wanita Mesra",
+    sampleUrl:
+      "https://platform.r2.fish.audio/task/2181c90904f3475387c7d041fa061e42.mp3",
+    tag: "Energetic",
+  },
+  {
+    gender: "female",
+    id: "97af820cf2014e0f89ed67aaaa02fb83",
+    language: "ms",
+    name: "Warga Emas",
+    sampleUrl:
+      "https://platform.r2.fish.audio/tasks/2026-07-31/405b4625b0ba4966918c9fd1257beda3.mp3",
+    tag: "Gentle",
+  },
 
-  // Row 4
-  { gender: "female", id: "jessa", name: "Jessa", tag: "Casual" },
-  { gender: "male", id: "brian", name: "Brian", tag: "Deep" },
-  { gender: "female", id: "danielle", name: "Danielle", tag: "Canadian" },
-
-  // Row 5
-  { gender: "male", id: "michael", name: "Michael", tag: "Conversational" },
-  { gender: "female", id: "lily", name: "Lily", tag: "Expressive" },
-  { gender: "male", id: "hunter", name: "Hunter", tag: "Gritty" },
-
-  // Row 6
-  { gender: "female", id: "victoria", name: "Victoria", tag: "Upbeat" },
-  { gender: "male", id: "archer", name: "Archer", tag: "British" },
-  { gender: "female", id: "veda", name: "Veda", tag: "Eerie" },
-
-  // Row 7
-  { gender: "male", id: "ian", name: "Ian", tag: "Mysterious" },
-  { gender: "female", id: "freya", name: "Freya", tag: "Australian" },
-  { gender: "male", id: "liam", name: "Liam", tag: "Warm" },
-
-  // Row 8
-  { gender: "female", id: "lauren", name: "Lauren", tag: "Mysterious" },
-  { gender: "male", id: "sully", name: "Sully", tag: "Deep" },
-  { gender: "female", id: "riley", name: "Riley", tag: "Energetic" },
-
-  // Row 9
-  { gender: "male", id: "vincent", name: "Vincent", tag: "Suspenseful" },
-  { gender: "female", id: "laura", name: "Laura", tag: "Irish" },
-  { gender: "male", id: "titan", name: "Titan", tag: "Powerful" },
-
-  // Row 10
-  { gender: "female", id: "autumn", name: "Autumn", tag: "Calm" },
-  { gender: "male", id: "knox", name: "Knox", tag: "Serious" },
-  { gender: "female", id: "lorraine", name: "Lorraine", tag: "Wise" },
-
-  // Row 11
-  { gender: "male", id: "tom", name: "Tom", tag: "Australian" },
-  { gender: "female", id: "misha", name: "Misha", tag: "Bold" },
-  { gender: "male", id: "declan", name: "Declan", tag: "Eerie" },
-
-  // Row 12
-  { gender: "female", id: "isla", name: "Isla", tag: "Scottish" },
-  { gender: "male", id: "spuds", name: "Spuds", tag: "Grandpa" },
-  { gender: "female", id: "nayva", name: "Nayva", tag: "Intense" },
-
-  // Row 13
-  { gender: "male", id: "chuck", name: "Chuck", tag: "Raspy" },
-  { gender: "female", id: "empress", name: "Empress", tag: "Smoky" },
-  { gender: "male", id: "david", name: "David", tag: "Cinematic" },
-
-  // Row 14
-  { gender: "female", id: "mae", name: "Mae", tag: "Southern" },
-  { gender: "male", id: "matt", name: "Matt", tag: "Casual" },
-  { gender: "female", id: "vanessa", name: "Vanessa", tag: "Soft" },
-
-  // Row 15
-  { gender: "male", id: "edwin", name: "Edwin", tag: "Warm" },
-  { gender: "female", id: "ravenna", name: "Ravenna", tag: "Villain" },
-  { gender: "male", id: "jedediah", name: "Jedediah", tag: "Southern" },
-
-  // Row 16
-  { gender: "male", id: "angus", name: "Angus", tag: "Scottish" },
-  { gender: "male", id: "wyatt", name: "Wyatt", tag: "Cowboy" },
-  { gender: "male", id: "astro", name: "Astro", tag: "Smooth" },
-
-  // Row 17
-  { gender: "male", id: "alex", name: "Alex", tag: "Upbeat" },
-  { gender: "male", id: "nassim", name: "Nassim", tag: "Powerful" },
-  { gender: "male", id: "john", name: "John", tag: "Storyteller" },
-
-  // Row 18
-  { gender: "male", id: "justin", name: "Justin", tag: "Clear" },
-  { gender: "female", id: "monika", name: "Monika", tag: "Indian" },
-  { gender: "male", id: "olaniyi", name: "Olaniyi", tag: "Nigerian" },
-
-  // Row 19
-  { gender: "female", id: "thandi", name: "Thandi", tag: "South African" },
-  { gender: "male", id: "ruhaan", name: "Ruhaan", tag: "Indian" },
-  { gender: "female", id: "tolani", name: "Tolani", tag: "Nigerian" },
-
-  // Row 20
-  { gender: "male", id: "denzel", name: "Denzel", tag: "Jamaican" },
-  { gender: "female", id: "annakay", name: "Annakay", tag: "Jamaican" },
-  { gender: "male", id: "ren", name: "Ren", tag: "South African" },
+  // Indonesian (id)
+  {
+    gender: "male",
+    id: "bdb838c0b3fe4782acac358b10500594",
+    language: "id",
+    name: "Slax Indo",
+    sampleUrl:
+      "https://platform.r2.fish.audio/task/a2b883ea6f6f4c658ee21e7d6e9d7e56.mp3",
+    tag: "Deep",
+  },
+  {
+    gender: "male",
+    id: "b8d594e696694b499aa12e32d0c1b618",
+    language: "id",
+    name: "Prabowo",
+    sampleUrl:
+      "https://platform.r2.fish.audio/task/a72d685b3d374ed0bdfd00ea52c6f950.mp3",
+    tag: "Authoritative",
+  },
+  {
+    gender: "male",
+    id: "035f1218cdd44cf2a6bf2f646e813e8d",
+    language: "id",
+    name: "Simanjuntak",
+    sampleUrl:
+      "https://platform.r2.fish.audio/task/5d1c9231ce7b43b2a7b3bb49b0a42ed6.mp3",
+    tag: "Energetic",
+  },
+  {
+    gender: "male",
+    id: "c0c83f00b8f34f1b9bc2e644c3cf90be",
+    language: "id",
+    name: "Narasi Tenang",
+    sampleUrl:
+      "https://platform.r2.fish.audio/task/61bd8a912f694d24ad57716ffe2440ce.mp3",
+    tag: "Calm",
+  },
+  {
+    gender: "male",
+    id: "d3c79021d1a14e9db1119a1b74424456",
+    language: "id",
+    name: "Mamen",
+    sampleUrl:
+      "https://platform.r2.fish.audio/task/6648f9a73cad437480e120f6407b8179.mp3",
+    tag: "Conversational",
+  },
 ] as const;
 
 export interface SeriesMusicTrack {

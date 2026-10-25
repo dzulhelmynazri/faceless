@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@faceless/ui/components/select";
 import { Tabs, TabsList, TabsTrigger } from "@faceless/ui/components/tabs";
-import { Play } from "lucide-react";
+import { Pause, Play } from "lucide-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import * as React from "react";
 
@@ -46,15 +46,28 @@ export const StepTwoVoice = ({
     genderTabParser
   );
 
-  const filteredVoices = React.useMemo(() => {
-    if (genderFilter === "all") {
-      return SERIES_VOICES;
-    }
+  const [playingVoiceId, setPlayingVoiceId] = React.useState<string | null>(
+    null
+  );
 
-    return SERIES_VOICES.filter(
-      (voice: SeriesVoice) => voice.gender === genderFilter
-    );
-  }, [genderFilter]);
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
+
+  const filteredVoices = React.useMemo(() => {
+    const list = SERIES_VOICES.filter((voice: SeriesVoice) => {
+      if (genderFilter !== "all" && voice.gender !== genderFilter) {
+        return false;
+      }
+
+      return true;
+    });
+
+    return list.toSorted((a, b) => {
+      const aMatches = a.language === selectedLanguage ? 1 : 0;
+      const bMatches = b.language === selectedLanguage ? 1 : 0;
+
+      return bMatches - aMatches;
+    });
+  }, [genderFilter, selectedLanguage]);
 
   const maleCount = React.useMemo(
     () =>
@@ -86,6 +99,63 @@ export const StepTwoVoice = ({
       }
     },
     [onSelectLanguage]
+  );
+
+  const handleTogglePlay = React.useCallback(
+    (voice: SeriesVoice, event: React.MouseEvent) => {
+      event.stopPropagation();
+
+      const { sampleUrl } = voice;
+
+      if (sampleUrl === undefined || sampleUrl === "") {
+        return;
+      }
+
+      if (playingVoiceId === voice.id) {
+        audioRef.current?.pause();
+        setPlayingVoiceId(null);
+
+        return;
+      }
+
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+
+      const audio = new Audio(sampleUrl);
+      audioRef.current = audio;
+      setPlayingVoiceId(voice.id);
+
+      audio.addEventListener(
+        "ended",
+        () => {
+          setPlayingVoiceId(null);
+        },
+        { once: true }
+      );
+
+      audio.addEventListener(
+        "error",
+        () => {
+          setPlayingVoiceId(null);
+        },
+        { once: true }
+      );
+
+      void audio.play().catch(() => {
+        setPlayingVoiceId(null);
+      });
+    },
+    [playingVoiceId]
+  );
+
+  React.useEffect(
+    () => () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    },
+    []
   );
 
   const selectedLang = React.useMemo(
@@ -154,6 +224,7 @@ export const StepTwoVoice = ({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filteredVoices.map((voice: SeriesVoice) => {
             const isSelected = selectedVoiceId === voice.id;
+            const isPlaying = playingVoiceId === voice.id;
 
             return (
               <Item
@@ -165,18 +236,32 @@ export const StepTwoVoice = ({
               >
                 <ItemContent>
                   <ItemTitle>{voice.name}</ItemTitle>
-                  <Badge variant="secondary">{voice.tag}</Badge>
+                  <div className="flex items-center gap-1.5">
+                    <Badge variant="secondary">{voice.tag}</Badge>
+                    {voice.language !== undefined && voice.language !== "" ? (
+                      <Badge variant="outline">
+                        {voice.language.toUpperCase()}
+                      </Badge>
+                    ) : null}
+                  </div>
                 </ItemContent>
 
                 <ItemActions>
                   <Button
-                    variant="outline"
+                    variant={isPlaying ? "default" : "outline"}
                     size="icon"
+                    disabled={
+                      voice.sampleUrl === undefined || voice.sampleUrl === ""
+                    }
                     onClick={(event) => {
-                      event.stopPropagation();
+                      handleTogglePlay(voice, event);
                     }}
                   >
-                    <Play className="fill-current" />
+                    {isPlaying ? (
+                      <Pause className="fill-current" />
+                    ) : (
+                      <Play className="fill-current" />
+                    )}
                   </Button>
                 </ItemActions>
               </Item>
