@@ -27,6 +27,9 @@
     },
     "autumn": {
       "url": "https://mcp.useautumn.com/mcp"
+    },
+    "fish-audio": {
+      "url": "https://api.fish.audio/mcp"
     }
   }
 }
