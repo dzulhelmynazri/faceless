@@ -106,13 +106,19 @@ Creators can adjust styles in real time before finalizing:
 
 ---
 
-### D. Interactive Scene Breakdown & Granular Regeneration
+### D. Interactive Scene Breakdown & Granular On-Demand Regeneration
 
-Each scene card in the breakdown allows granular adjustments:
+Each scene card in the breakdown allows granular adjustments with zero wasted API spend:
 
 - **Timestamp & Narration**: Shows the spoken time range and narration chunk.
-- **Visual Prompt Editor**: Creators can edit the prompt (e.g. adding _"Include an eerie full moon"_).
-- **Single-Scene Regeneration**: Calls `trpc.series.regenerateSceneImage.useMutation()`. Runs FLUX Schnell for that scene only (~1.5s), uploads the new WebP to R2, and updates `SeriesEpisodeScene.imageUrl`. The Remotion player updates that scene immediately while preserving audio and other scenes.
+- **Dialogue Editing & Audio Stale State**:
+  - Creators can edit the narration text directly.
+  - Editing dialogue marks the scene's audio as **"Stale (Modified)"**.
+  - A single-click **"Re-generate Audio"** button calls ElevenLabs TTS for that specific segment or re-aligns word timestamps without having to re-render unaffected scenes.
+- **Visual Prompt Editor & Image Stale State**:
+  - Creators can edit the prompt (e.g. adding _"Include an eerie full moon"_).
+  - Editing prompt marks the scene image as **"Stale (Prompt Edited)"**.
+  - A single-click **"Re-generate Image"** button calls `trpc.series.regenerateSceneImage.useMutation()`. Runs FLUX Schnell for that scene only (~1.5s), uploads the new WebP to R2, and updates `SeriesEpisodeScene.imageUrl`. The Remotion player updates that scene immediately while preserving audio and other scenes.
 
 ---
 
@@ -122,12 +128,12 @@ Each scene card in the breakdown allows granular adjustments:
 | :-- | :-- | :-- |
 | **`GENERATING`** | Eve scriptwriting, ElevenLabs TTS, or FLUX image generation in progress. | Displays animated loading progress skeletons. |
 | **`READY_FOR_REVIEW`** | Assets generated; awaiting creator review. | Full interactive player, scene editor, and approval action bar. |
-| **`APPROVED`** | Creator approved the episode. | Marked for scheduled publishing by background worker at `publishTime`. |
+| **`APPROVED`** | Creator approved the episode. | Pre-renders MP4 immediately; marked for scheduled publishing by background worker at `publishTime`. |
 | **`PUBLISHED`** | Rendered to MP4 and posted to social platforms. | Displays live links to TikTok, YouTube Shorts, and Instagram Reels. |
 
 **Action Bar Controls**:
 
-1. **"Approve & Schedule"** (Primary): Sets status to `APPROVED`.
+1. **"Approve & Schedule"** (Primary): Sets status to `APPROVED`, immediately triggers Phase 7 pre-rendering in background.
 2. **"Publish Immediately"** (Secondary): Triggers Phase 7 server-side rendering and immediate multi-platform posting.
 3. **"Regenerate Entire Episode"** (Dropdown): Re-runs Phase 2–4 pipeline if a complete rewrite is needed.
 
@@ -137,6 +143,7 @@ Each scene card in the breakdown allows granular adjustments:
 
 - **`series.getEpisodeById`**: Input: `{ episodeId: string }`. Returns full episode record, scenes, series configuration, and publications.
 - **`series.regenerateSceneImage`**: Input: `{ sceneId: string, customPrompt?: string }`. Re-generates single scene image with FLUX Schnell, uploads to R2, updates `SeriesEpisodeScene`.
+- **`series.regenerateSceneAudio`**: Input: `{ sceneId: string, updatedNarration: string }`. Re-generates speech segment and updates timestamps.
 - **`series.updateEpisodeStatus`**: Input: `{ episodeId: string, status: "READY_FOR_REVIEW" | "APPROVED" | "PUBLISHED" }`.
 
 ---
@@ -146,7 +153,7 @@ Each scene card in the breakdown allows granular adjustments:
 - [ ] Create `apps/web/src/app/(protected)/series/[id]/episodes/[episodeId]/page.tsx`.
 - [ ] Implement `EpisodeVideoPreview` component wrapping `@remotion/player`.
 - [ ] Build Live Style Customizer for instant caption and BGM previewing.
-- [ ] Build `SceneBreakdownList` component with prompt editing and single-scene regeneration.
-- [ ] Add `getEpisodeById`, `regenerateSceneImage`, and `updateEpisodeStatus` to tRPC `seriesRouter`.
+- [ ] Build `SceneBreakdownList` component with prompt/dialogue editing and granular single-scene regeneration.
+- [ ] Add `getEpisodeById`, `regenerateSceneImage`, `regenerateSceneAudio`, and `updateEpisodeStatus` to tRPC `seriesRouter`.
 - [ ] Implement responsive 2-column layout (sticky player on left, scrollable scenes on right).
 - [ ] Run `bunx ultracite check` and `bun run check-types` to ensure zero regressions.

@@ -128,6 +128,14 @@ flowchart TD
          where: { id: input.seriesId, userId: ctx.session.user.id },
        });
 
+       // Fetch previous episode titles to prevent duplicate story angles
+       const previousEpisodes = await ctx.db.seriesEpisode.findMany({
+         where: { seriesId: series.id },
+         select: { title: true, topic: true },
+         orderBy: { createdAt: "desc" },
+         take: 20,
+       });
+
        // Execute Eve scriptwriter agent
        const script = await runScriptwriterAgent({
          nichePrompt: series.nichePrompt,
@@ -135,6 +143,8 @@ flowchart TD
          language: series.language,
          duration: series.videoDuration,
          artStyleId: series.artStyleId,
+         topicOverride: input.topicOverride,
+         previousTitles: previousEpisodes.map((e) => e.title),
        });
 
        // Create episode in Neon DB with status "GENERATING"

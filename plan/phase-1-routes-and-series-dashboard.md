@@ -44,9 +44,14 @@ apps/web/src/app/(protected)/series/
 ### B. Relocate Wizard to `/series/new/page.tsx`
 
 - Move wizard layout from `series/page.tsx` into `series/new/page.tsx`.
+- **Wizard State Persistence**:
+  - Automatically persist form state to `localStorage` (`faceless_series_wizard_draft`).
+  - If existing draft is detected on mount, show a subtle banner: _"Draft restored from your last session. [Clear Draft]"_.
+  - Clear draft upon successful creation.
 - Update `createSeriesMutation` in `use-series-wizard-state.ts`:
   ```ts
   onSuccess: async ({ seriesId, name }) => {
+    localStorage.removeItem("faceless_series_wizard_draft");
     toast.success(`Series "${name}" created successfully!`);
     await Promise.all([
       queryClient.invalidateQueries(trpc.series.list.queryFilter()),
@@ -63,10 +68,11 @@ apps/web/src/app/(protected)/series/
 - **Query**: Fetch series by ID using `trpc.series.byId.useQuery({ id })`.
 - **Header**:
   - Series Name (editable inline or via dialog).
-  - Status toggle (`ACTIVE` / `PAUSED`).
-  - Summary badges: Niche, Voice, Art Style, Caption Style, Duration, Publish Time.
+  - Status toggle (`ACTIVE` / `PAUSED` / `ARCHIVED`).
+  - Auto-Pilot toggle (`AUTO_PILOT` enabled / disabled for fully autonomous generation & publishing).
+  - Summary badges: Niche, Voice, Art Style, Caption Style, Duration, Publish Time (with next scheduled generation indicator: 2 hours prior to publish time).
   - Connected Social Accounts with connection status.
-  - Action buttons: "Generate Episode Now" (triggers Phase 2 pipeline), "Settings", "Delete".
+  - Action buttons: "Generate Episode Now" (triggers Phase 2 pipeline), "Settings", "Archive Series".
 - **Episode Pipeline Section**:
   - Tabbed or filtered list of episodes:
     - **All Episodes**
@@ -85,8 +91,9 @@ apps/web/src/app/(protected)/series/
 ## 4. API & Mutation Updates (`packages/api/src/routers/series.ts`)
 
 - **Add `updateStatus` procedure**:
-  - Allows toggling series status between `ACTIVE` and `PAUSED`.
-  - Input: `{ id: string, status: "ACTIVE" | "PAUSED" }`.
+  - Allows toggling series status between `ACTIVE`, `PAUSED`, and `ARCHIVED`.
+  - When marked `ARCHIVED` (soft delete), background crons ignore the series, and it is excluded from the active dashboard view while preserving published history.
+  - Input: `{ id: string, status: "ACTIVE" | "PAUSED" | "ARCHIVED" }`.
 - **Add `updateDetails` procedure**:
   - Allows editing name, publish time, or connected social accounts after creation.
 
@@ -94,9 +101,9 @@ apps/web/src/app/(protected)/series/
 
 ## 5. Implementation Checklist
 
-- [ ] Create `apps/web/src/app/(protected)/series/new/page.tsx` with the existing `SeriesWizard`.
+- [ ] Create `apps/web/src/app/(protected)/series/new/page.tsx` with the existing `SeriesWizard` and `localStorage` draft restore.
 - [ ] Update `use-series-wizard-state.ts` router redirect to navigate to `/series/${seriesId}` on success.
-- [ ] Build `apps/web/src/app/(protected)/series/page.tsx` (Series Dashboard List & Empty State).
+- [ ] Build `apps/web/src/app/(protected)/series/page.tsx` (Series Dashboard List, Filters for Active/Archived, & Empty State).
 - [ ] Build `apps/web/src/app/(protected)/series/[id]/page.tsx` (Series Hub & Episodes Table).
-- [ ] Add `updateStatus` to tRPC `seriesRouter` and `@faceless/contracts`.
+- [ ] Add `updateStatus` (supporting `ARCHIVED` soft delete) to tRPC `seriesRouter` and `@faceless/contracts`.
 - [ ] Run `bunx ultracite check` and `bun run check-types` to ensure 0 lint errors and 100% type safety.

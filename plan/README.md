@@ -70,6 +70,26 @@ flowchart TD
 
 ---
 
+## Key Architectural Decisions (Grill-Me Outcomes)
+
+Through an exhaustive `/grill-me` architectural review, the following 11 core design decisions have been locked:
+
+| Area | Decision | Rationale |
+| :-- | :-- | :-- |
+| **1. Routing Architecture** | Dedicated routes: `/series` (Dashboard), `/series/new` (Wizard), `/series/[id]` (Hub), `/series/[id]/episodes/[episodeId]` (Studio). | Clean separation of concerns; empty state on `/series` guides first-time users to `/series/new`. |
+| **2. Generation Policy** | Hybrid with "Auto-Pilot" toggle in Series settings. | Default requires manual review in Studio (`READY_FOR_REVIEW`); turning Auto-Pilot ON enables 100% autonomous post-and-publish. |
+| **3. Topic Deduplication** | Autonomous topic ideation checking past DB titles, plus optional manual override. | Keeps the series fresh and non-repetitive while allowing creator intervention whenever desired. |
+| **4. Render Timing** | Pre-render MP4 immediately upon `APPROVED` status. | Video is uploaded and CDN-ready ahead of time, ensuring instant release at exact `publishTime`. |
+| **5. Publishing Failures** | Independent platform status in `SocialPublication`, up to 3 automatic retries, in-UI retry button. | Isolates platform-specific network hiccups without failing the entire publication run. |
+| **6. Schedule Lead Time** | Pipeline triggers 2 hours prior to `publishTime` (e.g. at 10:00 AM for a 12:00 PM release). | Gives creators ample time to review and tweak before the scheduled broadcast. |
+| **7. Series Deletion** | Soft delete (`ARCHIVED` status) with unarchive capability. | Stops recurring crons while preserving historical episode analytics, published links, and media assets. |
+| **8. Wizard Drafts** | Scoped `localStorage` draft restore with reset indicator at `/series/new`. | Protects creator from losing multi-step wizard choices on accidental reload or browser crash. |
+| **9. Asset Regeneration** | Granular on-demand: modifying text/prompts marks scene as "Stale" with single-click scene re-gen buttons. | Eliminates unnecessary API spend by only re-synthesizing affected audio or image segments. |
+| **10. Video Rendering** | `VideoRendererService` adapter pattern (Direct `@remotion/renderer` local, swappable for `@remotion/lambda`). | Enables frictionless local testing while cleanly separating compute scaling for production. |
+| **11. Quota & Credits** | Reserve 1 credit at generation start; auto-refund upon fatal pipeline failure. | Fair billing model that prevents double-charging creators on third-party API outages. |
+
+---
+
 ## Tech Stack & Core Dependencies
 
 | Domain | Technology / Service | Role |

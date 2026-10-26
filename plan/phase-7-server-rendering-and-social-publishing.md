@@ -10,30 +10,20 @@ Execute server-side video rendering using **`@remotion/renderer`** to export pro
 
 ```mermaid
 flowchart TD
-    Trigger["Publish Trigger<br/>(Vercel Cron /api/cron/publish or manual 'Publish Now')"] --> CheckStatus{"Is Episode Approved?"}
+    Approval["Episode Marked APPROVED<br/>(Manual in Studio or via Auto-Pilot)"] --> PreRender["Pre-Render Video Engine<br/>@remotion/renderer compiles MP4 immediately"]
+    PreRender --> R2Upload["Upload MP4 to Cloudflare R2 via Files SDK<br/>users/{userId}/series/{seriesId}/episodes/{episodeId}/video.mp4"]
+    R2Upload --> SaveVideo["Update SeriesEpisode.videoUrl (Ready on CDN)"]
 
-    CheckStatus -->|"No"| Abort["Abort (Status must be APPROVED)"]
-    CheckStatus -->|"Yes"| CheckRendered{"Has MP4 been rendered?"}
-
-    CheckRendered -->|"Already rendered"| Dispatch["Dispatch to Social Accounts"]
-    CheckRendered -->|"Needs rendering"| ServerRender["@remotion/renderer (renderMedia)<br/>Headless Chromium, H.264 1080x1920 30fps"]
-
-    subgraph "Render & Storage"
-        ServerRender --> R2Upload["Upload MP4 via Files SDK (@faceless/storage)<br/>users/{userId}/series/{seriesId}/episodes/{episodeId}/video.mp4"]
-        R2Upload --> VideoUrl["Public R2 Video CDN URL"]
-    end
-
-    VideoUrl --> Dispatch
+    CronTrigger["Vercel Cron (/api/cron/publish)<br/>Matches publishTime & checks APPROVED episodes"] --> Dispatch["Dispatch Pre-Rendered Video to Socials"]
 
     subgraph "Multi-Platform Social Distribution (@faceless/socials)"
-        Dispatch --> SocialQuery["Query Connected SeriesSocialAccounts"]
-        SocialQuery --> SocialSDK["@faceless/socials (publisher.ts)<br/>@opencoredev/social-sdk"]
+        Dispatch --> SocialSDK["@faceless/socials (publisher.ts)<br/>@opencoredev/social-sdk"]
         SocialSDK --> DispatchTikTok["TikTok Content Posting API"]
         SocialSDK --> DispatchYouTube["YouTube Data API v3 (#shorts)"]
         SocialSDK --> DispatchInstagram["Instagram Graph API (Reels)"]
     end
 
-    DispatchTikTok --> RecordOutcomes["Create SocialPublication Records<br/>(platform, externalPostId, status)"]
+    DispatchTikTok --> RecordOutcomes["Create/Update SocialPublication Records<br/>- Independent Status per platform<br/>- Auto-retry up to 3x on failure<br/>- In-UI 'Retry' button"]
     DispatchYouTube --> RecordOutcomes
     DispatchInstagram --> RecordOutcomes
     RecordOutcomes --> UpdateEpisode["Update SeriesEpisode<br/>status: 'PUBLISHED', publishedAt: now()"]
@@ -43,55 +33,75 @@ flowchart TD
 
 ## 3. Detailed Component Plan
 
-### A. Remotion Server Renderer (`packages/api/src/services/video/renderer.ts`)
+### A. Video Renderer Architecture (`VideoRendererService` Adapter Pattern)
 
-- Bundles the composition via `@remotion/bundler` and renders the video via `@remotion/renderer`:
-  ```ts
-  import { bundle } from "@remotion/bundler";
-  import { renderMedia, selectComposition } from "@remotion/renderer";
-  import { files } from "@faceless/storage";
+To ensure zero vendor lock-in and seamless transition between local development and high-throughput serverless rendering, we employ an adapter pattern:
 
-  export async function renderAndUploadEpisodeVideo({
-    userId,
-    seriesId,
-    episodeId,
-    compositionProps,
-  }: RenderParams): Promise<string> {
-    const bundleLocation = await bundle({
-      entryPoint: "apps/web/src/remotion/index.ts",
-    });
+```ts
+export interface VideoRendererService {
+  renderVideo(params: RenderParams): Promise<{ videoUrl: string }>;
+}
+```
 
-    const composition = await selectComposition({
-      serveUrl: bundleLocation,
-      id: "MainVideo",
-      inputProps: compositionProps,
-    });
+- **`LocalRemotionRenderer`** (Default for local development & staging):
+  - Uses `@remotion/bundler` and `@remotion/renderer` in-process.
+  - Generates `.mp4` into `/tmp`, streams upload to Cloudflare R2 via Files SDK, and unlinks temporary files.
+- **`RemotionLambdaRenderer`** (Production ready):
+  - Offloads rendering to AWS Lambda via `@remotion/lambda` for sub-15s distributed rendering without container memory/timeout constraints.
 
-    const tempOutputPath = `/tmp/episode_${episodeId}.mp4`;
+```ts
+import { bundle } from "@remotion/bundler";
+import { renderMedia, selectComposition } from "@remotion/renderer";
+import { files } from "@faceless/storage";
 
-    await renderMedia({
-      composition,
-      serveUrl: bundleLocation,
-      codec: "h264",
-      outputLocation: tempOutputPath,
-      inputProps: compositionProps,
-      concurrency: 4,
-    });
+export async function renderAndUploadEpisodeVideo({
+  userId,
+  seriesId,
+  episodeId,
+  compositionProps,
+}: RenderParams): Promise<string> {
+  const bundleLocation = await bundle({
+    entryPoint: "apps/web/src/remotion/index.ts",
+  });
 
-    // Upload to Cloudflare R2 via Files SDK
-    const videoKey = `users/${userId}/series/${seriesId}/episodes/${episodeId}/video.mp4`;
-    const videoBuffer = await fs.promises.readFile(tempOutputPath);
+  const composition = await selectComposition({
+    serveUrl: bundleLocation,
+    id: "MainVideo",
+    inputProps: compositionProps,
+  });
 
-    await files.upload(videoKey, videoBuffer, {
-      contentType: "video/mp4",
-    });
+  const tempOutputPath = `/tmp/episode_${episodeId}.mp4`;
 
-    // Cleanup temp file
-    await fs.promises.unlink(tempOutputPath);
+  await renderMedia({
+    composition,
+    serveUrl: bundleLocation,
+    codec: "h264",
+    outputLocation: tempOutputPath,
+    inputProps: compositionProps,
+    concurrency: 4,
+  });
 
-    return await files.url(videoKey);
-  }
-  ```
+  // Upload to Cloudflare R2 via Files SDK
+  const videoKey = `users/${userId}/series/${seriesId}/episodes/${episodeId}/video.mp4`;
+  const videoBuffer = await fs.promises.readFile(tempOutputPath);
+
+  await files.upload(videoKey, videoBuffer, {
+    contentType: "video/mp4",
+  });
+
+  // Cleanup temp file
+  await fs.promises.unlink(tempOutputPath);
+
+  return await files.url(videoKey);
+}
+```
+
+---
+
+### B. Credit & Quota Consumption Policy
+
+- **Reserve at Trigger**: When an episode generation is initiated (either via automated cron or manual "Generate Episode Now"), 1 episode quota is reserved from the user's active billing period.
+- **Automatic Refund on Fatal Failure**: If the generation pipeline fails after all retries (e.g. downstream ElevenLabs/FLUX outage), the reserved credit is immediately refunded to the user's quota, and the episode is marked `FAILED` with actionable error details.
 
 ---
 
