@@ -1,9 +1,10 @@
 "use client";
 
-import * as React from "react";
+import { Suspense } from "react";
 
 import { SeriesProgressBar } from "./_components/series-progress-bar";
 import { SeriesWizardFooter } from "./_components/series-wizard-footer";
+import { SeriesWizardSkeleton } from "./_components/series-wizard-skeleton";
 import { SeriesWizardStepContent } from "./_components/series-wizard-step-content";
 import { SeriesWizardProvider } from "./_context/series-wizard-context";
 
@@ -18,9 +19,9 @@ const SeriesWizard = () => (
 );
 
 const SeriesPage = () => (
-  <React.Suspense fallback={null}>
+  <Suspense fallback={<SeriesWizardSkeleton />}>
     <SeriesWizard />
-  </React.Suspense>
+  </Suspense>
 );
 
 export default SeriesPage;

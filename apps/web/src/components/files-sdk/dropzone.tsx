@@ -458,7 +458,7 @@ export const DropzoneEmptyState = ({
       {isUploading ? (
         <Loader2Icon className="size-6 animate-spin text-muted-foreground" />
       ) : (
-        <UploadIcon className="size-6 text-muted-foreground" />
+        <UploadIcon className="size-6" />
       )}
       <span className="text-sm font-medium">
         {isUploading ? "Uploading…" : prompt}

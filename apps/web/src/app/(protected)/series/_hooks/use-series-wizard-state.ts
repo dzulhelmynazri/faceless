@@ -142,7 +142,7 @@ export const useSeriesWizardState = () => {
 
   const createSeriesMutation = useMutation(
     trpc.series.create.mutationOptions({
-      onSuccess: async ({ name }) => {
+      onSuccess: async ({ seriesId, name }) => {
         toast.success(`Series "${name}" created successfully!`);
         await Promise.all([
           queryClient.invalidateQueries(trpc.series.list.queryFilter()),
@@ -150,7 +150,7 @@ export const useSeriesWizardState = () => {
             trpc.billing.checkSeriesEntitlement.queryFilter()
           ),
         ]);
-        router.push("/series");
+        router.push(`/series/${seriesId}`);
       },
       onError: (error) => {
         toast.error(error.message);

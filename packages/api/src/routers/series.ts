@@ -6,6 +6,10 @@ import {
   getSeriesByIdInputSchema,
   getSeriesByIdOutputSchema,
   getSeriesListOutputSchema,
+  updateSeriesInputSchema,
+  updateSeriesOutputSchema,
+  updateSeriesStatusInputSchema,
+  updateSeriesStatusOutputSchema,
 } from "@faceless/contracts/series";
 import { TRPCError } from "@trpc/server";
 
@@ -81,6 +85,15 @@ export const seriesRouter = router({
           userId: ctx.session.user.id,
         },
         include: {
+          socialAccounts: {
+            include: {
+              socialConnection: {
+                select: {
+                  platform: true,
+                },
+              },
+            },
+          },
           _count: {
             select: {
               episodes: true,
@@ -96,6 +109,7 @@ export const seriesRouter = router({
       return seriesList.map((item) => ({
         id: item.id,
         name: item.name,
+        nichePresetId: item.nichePresetId,
         language: item.language,
         voiceId: item.voiceId,
         artStyleId: item.artStyleId,
@@ -107,6 +121,9 @@ export const seriesRouter = router({
         updatedAt: item.updatedAt.toISOString(),
         episodeCount: item._count.episodes,
         socialAccountCount: item._count.socialAccounts,
+        platforms: item.socialAccounts.map(
+          (sa) => sa.socialConnection.platform
+        ),
       }));
     }),
 
@@ -179,6 +196,85 @@ export const seriesRouter = router({
           publishedAt: ep.publishedAt ? ep.publishedAt.toISOString() : null,
           createdAt: ep.createdAt.toISOString(),
         })),
+      };
+    }),
+
+  updateStatus: protectedProcedure
+    .input(updateSeriesStatusInputSchema)
+    .output(updateSeriesStatusOutputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.db.series.findFirst({
+        where: {
+          id: input.id,
+          userId: ctx.session.user.id,
+        },
+      });
+
+      if (!existing) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Series not found",
+        });
+      }
+
+      const updated = await ctx.db.series.update({
+        where: {
+          id: input.id,
+        },
+        data: {
+          status: input.status,
+        },
+      });
+
+      return {
+        success: true,
+        id: updated.id,
+        status: updated.status,
+      };
+    }),
+
+  update: protectedProcedure
+    .input(updateSeriesInputSchema)
+    .output(updateSeriesOutputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.db.series.findFirst({
+        where: {
+          id: input.id,
+          userId: ctx.session.user.id,
+        },
+      });
+
+      if (!existing) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Series not found",
+        });
+      }
+
+      type SeriesUpdateData = Parameters<
+        typeof ctx.db.series.update
+      >[0]["data"];
+
+      const updateData: SeriesUpdateData = {};
+
+      if (input.name !== undefined) {
+        updateData.name = input.name;
+      }
+
+      if (input.publishTime !== undefined) {
+        updateData.publishTime = input.publishTime;
+      }
+
+      await ctx.db.series.update({
+        where: {
+          id: input.id,
+        },
+        data: updateData,
+      });
+
+      return {
+        success: true,
+        id: input.id,
       };
     }),
 

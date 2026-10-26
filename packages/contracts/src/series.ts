@@ -2134,6 +2134,7 @@ export const getSeriesListOutputSchema = z.array(
   z.object({
     id: z.string(),
     name: z.string(),
+    nichePresetId: z.string().nullable().optional(),
     language: z.string(),
     voiceId: z.string(),
     artStyleId: z.string(),
@@ -2145,6 +2146,7 @@ export const getSeriesListOutputSchema = z.array(
     updatedAt: z.string(),
     episodeCount: z.number().int(),
     socialAccountCount: z.number().int(),
+    platforms: z.array(z.enum(["TIKTOK", "YOUTUBE", "INSTAGRAM"])).optional(),
   })
 );
 
@@ -2202,6 +2204,40 @@ export const getSeriesByIdOutputSchema = z.object({
 });
 
 export type GetSeriesByIdOutput = z.infer<typeof getSeriesByIdOutputSchema>;
+
+export const updateSeriesStatusInputSchema = z.object({
+  id: z.string().min(1),
+  status: z.enum(SERIES_STATUSES),
+});
+
+export type UpdateSeriesStatusInput = z.infer<
+  typeof updateSeriesStatusInputSchema
+>;
+
+export const updateSeriesStatusOutputSchema = z.object({
+  success: z.boolean(),
+  id: z.string(),
+  status: z.enum(SERIES_STATUSES),
+});
+
+export type UpdateSeriesStatusOutput = z.infer<
+  typeof updateSeriesStatusOutputSchema
+>;
+
+export const updateSeriesInputSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1).optional(),
+  publishTime: z.string().optional(),
+});
+
+export type UpdateSeriesInput = z.infer<typeof updateSeriesInputSchema>;
+
+export const updateSeriesOutputSchema = z.object({
+  success: z.boolean(),
+  id: z.string(),
+});
+
+export type UpdateSeriesOutput = z.infer<typeof updateSeriesOutputSchema>;
 
 export const deleteSeriesInputSchema = z.object({
   id: z.string().min(1),
