@@ -51,6 +51,12 @@
       "skillPath": "packages/server/skills/error-handling/SKILL.md",
       "computedHash": "5816a0b5e2e7a33b2bf5b130201bba4251b0865688f4c647a780f39af277c6b8"
     },
+    "eve": {
+      "source": "vercel/eve",
+      "sourceType": "github",
+      "skillPath": "skills/eve/SKILL.md",
+      "computedHash": "4833349453c45c606f79202e495b7bbc42ea380f329f3beee36b9927763f19ef"
+    },
     "expo-data-fetching": {
       "source": "expo/skills",
       "sourceType": "github",
@@ -92,6 +98,12 @@
       "sourceType": "github",
       "skillPath": "skills/find-skills/SKILL.md",
       "computedHash": "b146008599c31057cef1c145774cea5d5afb30e8f43fa802e47a4b461419aaaf"
+    },
+    "grill-me": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/productivity/grill-me/SKILL.md",
+      "computedHash": "9cdbb4b8f7a3aeaef82e6230c9e823500d4a8a1214c726cf342cf9829d34fc7d"
     },
     "heroui-native": {
       "source": "heroui-inc/heroui",
@@ -171,6 +183,12 @@
       "sourceType": "github",
       "skillPath": "skills/tanstack-query/SKILL.md",
       "computedHash": "8e5a7e3cdc6900c3967945658aa277629ba7b5264ddadc017ee2b76359456719"
+    },
+    "technical-writing": {
+      "source": "vercel/eve",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/technical-writing/SKILL.md",
+      "computedHash": "e68d761175ac08217c1619470a34930cb8d33b6f980459949aed69da9db74d55"
     },
     "trpc-router": {
       "source": "trpc/trpc",
