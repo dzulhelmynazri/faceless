@@ -39,10 +39,7 @@ import { toast } from "sonner";
 
 import { trpc } from "@/utils/trpc";
 
-interface StepSevenSocialAccountsProps {
-  selectedAccountsParam: string;
-  onToggleAccount: (id: string, checked: boolean, allIds: string[]) => void;
-}
+import { useSeriesWizard } from "../_context/series-wizard-context";
 
 interface SupportedPlatformOption {
   id: SocialPlatform;
@@ -89,10 +86,8 @@ const PLATFORM_NAMES: Record<SocialPlatform, string> = {
   YOUTUBE: "YouTube",
 };
 
-export const StepSevenSocialAccounts = ({
-  selectedAccountsParam,
-  onToggleAccount,
-}: StepSevenSocialAccountsProps) => {
+export const StepSevenSocialAccounts = () => {
+  const { selectedAccountsParam, handleToggleAccount } = useSeriesWizard();
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 
   const [selectedPlatform, setSelectedPlatform] =
@@ -238,7 +233,7 @@ export const StepSevenSocialAccounts = ({
                   <Switch
                     checked={isSelected}
                     onCheckedChange={(checked) => {
-                      onToggleAccount(conn.id, checked, allConnectionIds);
+                      handleToggleAccount(conn.id, checked, allConnectionIds);
                     }}
                   />
                 </ItemActions>

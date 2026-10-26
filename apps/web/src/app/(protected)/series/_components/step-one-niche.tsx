@@ -22,6 +22,8 @@ import { Check, Layers, Paintbrush } from "lucide-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import * as React from "react";
 
+import { useSeriesWizard } from "../_context/series-wizard-context";
+
 const NICHE_MAX_LENGTH = 5000;
 const SCRIPT_MAX_LENGTH = 2000;
 
@@ -29,23 +31,16 @@ const NICHE_TABS = ["presets", "custom"] as const;
 
 const nicheTabParser = parseAsStringLiteral(NICHE_TABS).withDefault("presets");
 
-interface StepOneNicheProps {
-  selectedPresetId: string;
-  customNiche: string;
-  customScript: string;
-  onSelectPreset: (id: string) => void;
-  onChangeNiche: (value: string) => void;
-  onChangeScript: (value: string) => void;
-}
+export const StepOneNiche = () => {
+  const {
+    selectedPresetId,
+    customNiche,
+    customScript,
+    handleSelectPreset,
+    handleChangeNiche,
+    handleChangeScript,
+  } = useSeriesWizard();
 
-export const StepOneNiche = ({
-  selectedPresetId,
-  customNiche,
-  customScript,
-  onSelectPreset,
-  onChangeNiche,
-  onChangeScript,
-}: StepOneNicheProps) => {
   const [tab, setTab] = useQueryState("tab", nicheTabParser);
 
   const handleTabChange = React.useCallback(
@@ -97,7 +92,7 @@ export const StepOneNiche = ({
                   className="relative"
                   variant={isSelected ? "selected" : "interactive"}
                   onClick={() => {
-                    onSelectPreset(preset.id);
+                    handleSelectPreset(preset.id);
                   }}
                 >
                   <CardHeader>
@@ -130,7 +125,7 @@ export const StepOneNiche = ({
                 rows={7}
                 value={customNiche}
                 onChange={(event) => {
-                  onChangeNiche(event.target.value);
+                  handleChangeNiche(event.target.value);
                 }}
               />
               <div className="flex items-center justify-between">
@@ -153,7 +148,7 @@ export const StepOneNiche = ({
                 rows={7}
                 value={customScript}
                 onChange={(event) => {
-                  onChangeScript(event.target.value);
+                  handleChangeScript(event.target.value);
                 }}
               />
               <div className="flex items-center justify-between">

@@ -24,23 +24,20 @@ import { Pause, Play } from "lucide-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import * as React from "react";
 
+import { useSeriesWizard } from "../_context/series-wizard-context";
+
 const GENDER_TABS = ["all", "male", "female"] as const;
 
 const genderTabParser = parseAsStringLiteral(GENDER_TABS).withDefault("all");
 
-interface StepTwoVoiceProps {
-  selectedLanguage: string;
-  selectedVoiceId: string;
-  onSelectLanguage: (language: string) => void;
-  onSelectVoice: (voiceId: string) => void;
-}
+export const StepTwoVoice = () => {
+  const {
+    selectedLanguage,
+    selectedVoiceId,
+    handleSelectLanguage,
+    handleSelectVoice,
+  } = useSeriesWizard();
 
-export const StepTwoVoice = ({
-  selectedLanguage,
-  selectedVoiceId,
-  onSelectLanguage,
-  onSelectVoice,
-}: StepTwoVoiceProps) => {
   const [genderFilter, setGenderFilter] = useQueryState(
     "gender",
     genderTabParser
@@ -98,18 +95,18 @@ export const StepTwoVoice = ({
   const handleLanguageChange = React.useCallback(
     (value: string | null) => {
       if (value !== null && value !== "") {
-        onSelectLanguage(value);
+        handleSelectLanguage(value);
 
         const matchingVoice = SERIES_VOICES.find(
           (voice: SeriesVoice) => voice.language === value
         );
 
         if (matchingVoice !== undefined) {
-          onSelectVoice(matchingVoice.id);
+          handleSelectVoice(matchingVoice.id);
         }
       }
     },
-    [onSelectLanguage, onSelectVoice]
+    [handleSelectLanguage, handleSelectVoice]
   );
 
   const handleTogglePlay = React.useCallback(
@@ -248,7 +245,7 @@ export const StepTwoVoice = ({
                 key={`${voice.language}-${voice.id}-${voice.name}`}
                 variant={isSelected ? "selected" : "interactive"}
                 onClick={() => {
-                  onSelectVoice(voice.id);
+                  handleSelectVoice(voice.id);
                 }}
               >
                 <ItemContent>

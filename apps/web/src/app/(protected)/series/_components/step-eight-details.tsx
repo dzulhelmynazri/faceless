@@ -30,14 +30,7 @@ import { Tiktok } from "@faceless/ui/socials";
 import { Clock, Info } from "lucide-react";
 import * as React from "react";
 
-interface StepEightDetailsProps {
-  seriesName: string;
-  duration: string;
-  publishTime: string;
-  onChangeSeriesName: (name: string) => void;
-  onChangeDuration: (duration: string) => void;
-  onChangePublishTime: (time: string) => void;
-}
+import { useSeriesWizard } from "../_context/series-wizard-context";
 
 const POPULAR_TIMES: readonly string[] = [
   "08:00 AM",
@@ -225,14 +218,16 @@ const TimePickerPopover = ({
   );
 };
 
-export const StepEightDetails = ({
-  seriesName,
-  duration,
-  publishTime,
-  onChangeSeriesName,
-  onChangeDuration,
-  onChangePublishTime,
-}: StepEightDetailsProps) => {
+export const StepEightDetails = () => {
+  const {
+    seriesName,
+    duration,
+    publishTime,
+    handleChangeSeriesName,
+    handleChangeDuration,
+    handleChangePublishTime,
+  } = useSeriesWizard();
+
   const selectedDurationOption = React.useMemo(
     () =>
       SERIES_DURATIONS.find((opt: SeriesDurationOption) => opt.id === duration),
@@ -261,7 +256,7 @@ export const StepEightDetails = ({
           id="series-name"
           value={seriesName}
           onChange={(event) => {
-            onChangeSeriesName(event.target.value);
+            handleChangeSeriesName(event.target.value);
           }}
           placeholder="Enter series name"
         />
@@ -288,7 +283,7 @@ export const StepEightDetails = ({
           value={duration}
           onValueChange={(val) => {
             if (val !== null && val.length > 0) {
-              onChangeDuration(val);
+              handleChangeDuration(val);
             }
           }}
         >
@@ -344,7 +339,7 @@ export const StepEightDetails = ({
           </span>
           <TimePickerPopover
             currentTime={publishTime}
-            onSelectTime={onChangePublishTime}
+            onSelectTime={handleChangePublishTime}
           />
           <span className="text-sm text-muted-foreground">
             (Your local time)

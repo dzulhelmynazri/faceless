@@ -35,6 +35,8 @@ import { toast } from "sonner";
 
 import { useAppFiles } from "@/lib/files-client";
 
+import { useSeriesWizard } from "../_context/series-wizard-context";
+
 /** 10MB maximum audio upload limit */
 const MAX_AUDIO_SIZE_BYTES = 10 * 1024 * 1024;
 
@@ -384,31 +386,20 @@ const StepThreeCustomMusicTab = ({
   );
 };
 
-interface StepThreeMusicProps {
-  selectedTrackIds: string[];
-  tiktokSounds: string;
-  customMusicKey: string;
-  customMusicUrl: string;
-  onToggleTrack: (trackId: string) => void;
-  onSelectAllTracks: (trackIds: string[]) => void;
-  onClearTracks: () => void;
-  onChangeTiktokSounds: (sounds: string) => void;
-  onChangeCustomMusic: (data: { key: string; url: string }) => void;
-  onClearCustomMusic: () => void;
-}
+export const StepThreeMusic = () => {
+  const {
+    selectedTrackIds,
+    handleToggleTrack,
+    handleSelectAllTracks,
+    handleClearTracks,
+    tiktokSounds,
+    handleChangeTiktokSounds,
+    customMusicKey,
+    customMusicUrl,
+    handleChangeCustomMusic,
+    handleClearCustomMusic,
+  } = useSeriesWizard();
 
-export const StepThreeMusic = ({
-  selectedTrackIds,
-  tiktokSounds,
-  customMusicKey,
-  customMusicUrl,
-  onToggleTrack,
-  onSelectAllTracks,
-  onClearTracks,
-  onChangeTiktokSounds,
-  onChangeCustomMusic,
-  onClearCustomMusic,
-}: StepThreeMusicProps) => {
   const [tab, setTab] = useQueryState("musicTab", musicTabParser);
 
   const [playingTrackId, setPlayingTrackId] = React.useState<string | null>(
@@ -537,7 +528,7 @@ export const StepThreeMusic = ({
               <Button
                 variant="ghost"
                 onClick={() => {
-                  onSelectAllTracks(SERIES_MUSIC_PRESETS.map((t) => t.id));
+                  handleSelectAllTracks(SERIES_MUSIC_PRESETS.map((t) => t.id));
                 }}
               >
                 Select all
@@ -545,7 +536,7 @@ export const StepThreeMusic = ({
               <Button
                 variant="ghost"
                 disabled={selectedTrackIds.length === 0}
-                onClick={onClearTracks}
+                onClick={handleClearTracks}
               >
                 Clear
               </Button>
@@ -563,7 +554,7 @@ export const StepThreeMusic = ({
                   key={track.id}
                   variant={isSelected ? "selected" : "interactive"}
                   onClick={() => {
-                    onToggleTrack(track.id);
+                    handleToggleTrack(track.id);
                   }}
                 >
                   <ItemContent>
@@ -602,9 +593,9 @@ export const StepThreeMusic = ({
           tiktokSounds={tiktokSounds}
           customMusicKey={customMusicKey}
           customMusicUrl={customMusicUrl}
-          onChangeTiktokSounds={onChangeTiktokSounds}
-          onChangeCustomMusic={onChangeCustomMusic}
-          onClearCustomMusic={onClearCustomMusic}
+          onChangeTiktokSounds={handleChangeTiktokSounds}
+          onChangeCustomMusic={handleChangeCustomMusic}
+          onClearCustomMusic={handleClearCustomMusic}
         />
       </Tabs>
     </div>

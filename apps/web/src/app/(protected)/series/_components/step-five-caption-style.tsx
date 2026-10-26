@@ -7,10 +7,7 @@ import { Card, CardContent } from "@faceless/ui/components/card";
 import { Check } from "lucide-react";
 import * as React from "react";
 
-interface StepFiveCaptionStyleProps {
-  selectedCaptionId: string;
-  onSelectCaptionStyle: (captionId: string) => void;
-}
+import { useSeriesWizard } from "../_context/series-wizard-context";
 
 interface CaptionPhrase {
   top: string;
@@ -601,10 +598,8 @@ const renderCaptionPreview = (styleId: string, beat: number) => {
   }
 };
 
-export const StepFiveCaptionStyle = ({
-  selectedCaptionId,
-  onSelectCaptionStyle,
-}: StepFiveCaptionStyleProps) => {
+export const StepFiveCaptionStyle = () => {
+  const { selectedCaptionId, handleSelectCaptionStyle } = useSeriesWizard();
   const [beat, setBeat] = React.useState(0);
 
   React.useEffect(() => {
@@ -643,7 +638,7 @@ export const StepFiveCaptionStyle = ({
               size="sm"
               variant={isSelected ? "selected" : "interactive"}
               onClick={() => {
-                onSelectCaptionStyle(style.id);
+                handleSelectCaptionStyle(style.id);
               }}
             >
               <CardContent>
