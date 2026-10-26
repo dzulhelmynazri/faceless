@@ -524,6 +524,83 @@ export const SERIES_VOICES: readonly SeriesVoice[] = [
       "https://storage.googleapis.com/eleven-public-prod/premade/voices/hpp4J3VqNfWAUOO0d1Us/dab0f5ba-3aa4-48a8-9fad-f138fea1126d.mp3",
     tag: "Polished & Friendly",
   },
+  {
+    category: "storytelling",
+    flag: "🇺🇸",
+    gender: "female",
+    id: "21m00Tcm4TlvDq8ikWAM",
+    language: "en",
+    name: "Rachel",
+    sampleUrl:
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/21m00Tcm4TlvDq8ikWAM/df6788f9-5c96-470d-8312-aab3b3d8f50a.mp3",
+    tag: "Calm & Expressive",
+  },
+  {
+    category: "social",
+    flag: "🇺🇸",
+    gender: "female",
+    id: "9BWtsMINqrJLrRacOk9x",
+    language: "en",
+    name: "Aria",
+    sampleUrl:
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/9BWtsMINqrJLrRacOk9x/405766b8-1f4e-4d3c-aba1-6f25333823ec.mp3",
+    tag: "Expressive & Dynamic",
+  },
+  {
+    category: "conversational",
+    flag: "🇺🇸",
+    gender: "female",
+    id: "AZnzlk1XvdvUeBnXmlld",
+    language: "en",
+    name: "Domi",
+    sampleUrl:
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/AZnzlk1XvdvUeBnXmlld/508e12d0-a7f7-4d86-a0d3-f3884ff353ed.mp3",
+    tag: "Strong & Confident",
+  },
+  {
+    category: "storytelling",
+    flag: "🇺🇸",
+    gender: "female",
+    id: "MF3mGyEYCl7XYWbV9V6O",
+    language: "en",
+    name: "Elli",
+    sampleUrl:
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/MF3mGyEYCl7XYWbV9V6O/d8ecadea-9e48-4e5d-868a-2ec3d7397861.mp3",
+    tag: "Emotional & Engaging",
+  },
+  {
+    category: "conversational",
+    flag: "🇺🇸",
+    gender: "male",
+    id: "ErXwobaYiN019PkySvjV",
+    language: "en",
+    name: "Antoni",
+    sampleUrl:
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/ErXwobaYiN019PkySvjV/ee9ac367-91ee-4a56-818a-2bd1a9dbe83a.mp3",
+    tag: "Well-Rounded",
+  },
+  {
+    category: "character",
+    flag: "🇺🇸",
+    gender: "male",
+    id: "2EiwWnXFnvU5JabPnv8n",
+    language: "en",
+    name: "Clyde",
+    sampleUrl:
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/2EiwWnXFnvU5JabPnv8n/65d80f52-703f-4cae-a91d-75d4e200ed02.mp3",
+    tag: "Gritty Veteran",
+  },
+  {
+    category: "conversational",
+    flag: "🇺🇸",
+    gender: "male",
+    id: "yoZ06aMxZJJ28mfd3POQ",
+    language: "en",
+    name: "Sam",
+    sampleUrl:
+      "https://storage.googleapis.com/eleven-public-prod/premade/voices/yoZ06aMxZJJ28mfd3POQ/ac9d1c91-92ce-4b20-8cc2-3187a7da49ec.mp3",
+    tag: "Raspy & Casual",
+  },
 
   // English (UK) 🇬🇧
   {
