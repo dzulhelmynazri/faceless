@@ -1,3 +1,4 @@
+// oxlint-disable shadcn/no-restyle
 "use client";
 
 import { SERIES_PRESETS } from "@faceless/contracts";
@@ -124,6 +125,7 @@ export const StepOneNiche = ({
               <FieldLabel htmlFor="custom-niche">Niche</FieldLabel>
               <Textarea
                 id="custom-niche"
+                className="font-mono text-xs/relaxed"
                 maxLength={NICHE_MAX_LENGTH}
                 rows={7}
                 value={customNiche}
@@ -146,6 +148,7 @@ export const StepOneNiche = ({
               </div>
               <Textarea
                 id="custom-script"
+                className="font-mono text-xs/relaxed"
                 maxLength={SCRIPT_MAX_LENGTH}
                 rows={7}
                 value={customScript}

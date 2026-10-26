@@ -340,6 +340,8 @@ const StepThreeCustomMusicTab = ({
           <Textarea
             id="tiktok-sounds"
             rows={4}
+            // oxlint-disable-next-line shadcn/no-restyle
+            className="font-mono text-xs/relaxed"
             placeholder="Enter TikTok sound URLs, one per line"
             value={tiktokSounds}
             onChange={(event) => {
