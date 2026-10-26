@@ -17,7 +17,7 @@ import {
   TabsTrigger,
 } from "@faceless/ui/components/tabs";
 import { Textarea } from "@faceless/ui/components/textarea";
-import { Check, Layers, Sparkles } from "lucide-react";
+import { Check, Layers, Paintbrush } from "lucide-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import * as React from "react";
 
@@ -79,7 +79,7 @@ export const StepOneNiche = ({
             Presets
           </TabsTrigger>
           <TabsTrigger value="custom">
-            <Sparkles data-icon="inline-start" />
+            <Paintbrush data-icon="inline-start" />
             Custom
           </TabsTrigger>
         </TabsList>

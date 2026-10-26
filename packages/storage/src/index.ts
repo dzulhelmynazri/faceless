@@ -7,7 +7,7 @@ import { softDelete } from "files-sdk/soft-delete";
 import { validation } from "files-sdk/validation";
 import { versioning } from "files-sdk/versioning";
 
-export interface StorageConfig {
+export interface Env {
   R2_BUCKET: string;
   R2_ACCOUNT_ID: string;
   R2_ACCESS_KEY_ID: string;
@@ -19,7 +19,7 @@ export interface StorageOptions {
   prefix?: string;
 }
 
-export const createFiles = (env: StorageConfig, options?: StorageOptions) =>
+export const createFiles = (env: Env, options?: StorageOptions) =>
   createFilesInstance({
     prefix: options?.prefix,
     adapter: r2({
@@ -38,7 +38,7 @@ export const createFiles = (env: StorageConfig, options?: StorageOptions) =>
       validation({
         maxSize: 15 * 1024 * 1024,
         minSize: 1,
-        allowedTypes: ["image/*", "video/*", "application/pdf"],
+        allowedTypes: ["image/*", "video/*", "audio/*"],
       }),
       versioning({ ignore: [".trash"], limit: 20 }),
       softDelete(),

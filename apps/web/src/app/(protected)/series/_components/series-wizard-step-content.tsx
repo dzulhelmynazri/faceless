@@ -26,14 +26,16 @@ interface SeriesWizardStepContentProps {
   onSelectLanguage: (lang: string) => void;
   onSelectVoice: (voiceId: string) => void;
   // Step 3
-  selectedTrackId: string;
-  selectedTrackIds?: string[];
+  selectedTrackIds: string[];
   tiktokSounds: string;
-  onSelectTrack: (trackId: string) => void;
-  onToggleTrack?: (trackId: string) => void;
-  onSelectAllTracks?: (trackIds: string[]) => void;
-  onClearTracks?: () => void;
+  customMusicKey: string;
+  customMusicUrl: string;
+  onToggleTrack: (trackId: string) => void;
+  onSelectAllTracks: (trackIds: string[]) => void;
+  onClearTracks: () => void;
   onChangeTiktokSounds: (sounds: string) => void;
+  onChangeCustomMusic: (data: { key: string; url: string }) => void;
+  onClearCustomMusic: () => void;
   // Step 4
   selectedStyleId: string;
   onSelectStyle: (styleId: string) => void;
@@ -67,14 +69,16 @@ export const SeriesWizardStepContent = ({
   selectedVoiceId,
   onSelectLanguage,
   onSelectVoice,
-  selectedTrackId,
   selectedTrackIds,
   tiktokSounds,
-  onSelectTrack,
+  customMusicKey,
+  customMusicUrl,
   onToggleTrack,
   onSelectAllTracks,
   onClearTracks,
   onChangeTiktokSounds,
+  onChangeCustomMusic,
+  onClearCustomMusic,
   selectedStyleId,
   onSelectStyle,
   selectedCaptionId,
@@ -117,13 +121,16 @@ export const SeriesWizardStepContent = ({
   if (currentStep === 3) {
     return (
       <StepThreeMusic
-        selectedTrackId={selectedTrackId}
         selectedTrackIds={selectedTrackIds}
         tiktokSounds={tiktokSounds}
-        onToggleTrack={onToggleTrack ?? onSelectTrack}
+        customMusicKey={customMusicKey}
+        customMusicUrl={customMusicUrl}
+        onToggleTrack={onToggleTrack}
         onSelectAllTracks={onSelectAllTracks}
         onClearTracks={onClearTracks}
         onChangeTiktokSounds={onChangeTiktokSounds}
+        onChangeCustomMusic={onChangeCustomMusic}
+        onClearCustomMusic={onClearCustomMusic}
       />
     );
   }

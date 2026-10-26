@@ -23,6 +23,8 @@ model Series {
   language         String                @default("en")
   voiceId          String
   musicTrackId     String?
+  customMusicKey   String?
+  customMusicUrl   String?
   tiktokSounds     String?
   artStyleId       String
   captionStyleId   String

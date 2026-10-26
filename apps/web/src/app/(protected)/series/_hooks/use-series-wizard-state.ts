@@ -7,6 +7,7 @@ import {
   SERIES_PRESETS,
   SERIES_VOICES,
 } from "@faceless/contracts";
+import { isNonEmptyString } from "@faceless/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import {
@@ -72,7 +73,10 @@ export const useSeriesWizardState = () => {
   );
 
   const selectedTrackIds = React.useMemo(() => {
-    if (selectedTracksParam === "none" || selectedTracksParam.length === 0) {
+    if (
+      !isNonEmptyString(selectedTracksParam) ||
+      selectedTracksParam === "none"
+    ) {
       return [];
     }
 
@@ -81,6 +85,16 @@ export const useSeriesWizardState = () => {
 
   const [tiktokSounds, setTiktokSounds] = useQueryState(
     "tiktokSounds",
+    parseAsString.withDefault("")
+  );
+
+  const [customMusicKey, setCustomMusicKey] = useQueryState(
+    "customMusicKey",
+    parseAsString.withDefault("")
+  );
+
+  const [customMusicUrl, setCustomMusicUrl] = useQueryState(
+    "customMusicUrl",
     parseAsString.withDefault("")
   );
 
@@ -210,6 +224,19 @@ export const useSeriesWizardState = () => {
     [setTiktokSounds]
   );
 
+  const handleChangeCustomMusic = React.useCallback(
+    ({ key, url }: { key: string; url: string }) => {
+      void setCustomMusicKey(key);
+      void setCustomMusicUrl(url);
+    },
+    [setCustomMusicKey, setCustomMusicUrl]
+  );
+
+  const handleClearCustomMusic = React.useCallback(() => {
+    void setCustomMusicKey("");
+    void setCustomMusicUrl("");
+  }, [setCustomMusicKey, setCustomMusicUrl]);
+
   const handleSelectStyle = React.useCallback(
     (styleId: string) => {
       void setSelectedStyleId(styleId);
@@ -291,14 +318,20 @@ export const useSeriesWizardState = () => {
       name: seriesName,
       nichePresetId: selectedPresetId,
       nichePrompt: customNiche,
-      exampleScript: customScript.length > 0 ? customScript : undefined,
+      exampleScript: isNonEmptyString(customScript) ? customScript : undefined,
       language: selectedLanguage,
       voiceId: selectedVoiceId,
       musicTrackId:
-        selectedTracksParam !== "none" && selectedTracksParam.length > 0
+        isNonEmptyString(selectedTracksParam) && selectedTracksParam !== "none"
           ? selectedTracksParam
           : undefined,
-      tiktokSounds: tiktokSounds.length > 0 ? tiktokSounds : undefined,
+      tiktokSounds: isNonEmptyString(tiktokSounds) ? tiktokSounds : undefined,
+      customMusicKey: isNonEmptyString(customMusicKey)
+        ? customMusicKey
+        : undefined,
+      customMusicUrl: isNonEmptyString(customMusicUrl)
+        ? customMusicUrl
+        : undefined,
       artStyleId: selectedStyleId,
       captionStyleId: selectedCaptionId,
       glitchEffect,
@@ -317,6 +350,8 @@ export const useSeriesWizardState = () => {
     selectedVoiceId,
     selectedTracksParam,
     tiktokSounds,
+    customMusicKey,
+    customMusicUrl,
     selectedStyleId,
     selectedCaptionId,
     glitchEffect,
@@ -353,14 +388,16 @@ export const useSeriesWizardState = () => {
     handleSelectLanguage,
     handleSelectVoice,
     // Step 3
-    selectedTrackId: selectedTracksParam,
     selectedTrackIds,
-    handleSelectTrack: handleToggleTrack,
     handleToggleTrack,
     handleSelectAllTracks,
     handleClearTracks,
     tiktokSounds,
     handleChangeTiktokSounds,
+    customMusicKey,
+    customMusicUrl,
+    handleChangeCustomMusic,
+    handleClearCustomMusic,
     // Step 4
     selectedStyleId,
     handleSelectStyle,

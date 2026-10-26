@@ -27,32 +27,385 @@ import {
   TabsTrigger,
 } from "@faceless/ui/components/tabs";
 import { Textarea } from "@faceless/ui/components/textarea";
-import { Layers, Pause, Play, Sparkles, Upload } from "lucide-react";
+import { isNonEmptyString } from "@faceless/utils";
+import { Layers, Loader2, Paintbrush, Pause, Play, Upload } from "lucide-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import * as React from "react";
+import { toast } from "sonner";
+
+import { useAppFiles } from "@/lib/files-client";
+
+/** 10MB maximum audio upload limit */
+const MAX_AUDIO_SIZE_BYTES = 10 * 1024 * 1024;
 
 const MUSIC_TABS = ["presets", "custom"] as const;
 
 const musicTabParser = parseAsStringLiteral(MUSIC_TABS).withDefault("presets");
 
-interface StepThreeMusicProps {
-  selectedTrackIds?: string[];
-  selectedTrackId?: string;
+interface CustomMusicUploadCardProps {
+  hasUploaded: boolean;
+  displayName: string;
+  displaySize: string;
+  isUploading: boolean;
+  isPlaying: boolean;
+  onBrowse: () => void;
+  onRemove: () => void;
+  onTogglePlay: () => void;
+}
+
+const CustomMusicUploadCard = ({
+  hasUploaded,
+  displayName,
+  displaySize,
+  isUploading,
+  isPlaying,
+  onBrowse,
+  onRemove,
+  onTogglePlay,
+}: CustomMusicUploadCardProps) => (
+  <Card>
+    {hasUploaded ? (
+      <div className="flex items-center justify-between p-4">
+        <div className="flex items-center gap-3">
+          <Button
+            variant={isPlaying ? "default" : "outline"}
+            size="icon"
+            disabled={isUploading}
+            onClick={onTogglePlay}
+          >
+            {isPlaying ? (
+              <Pause className="fill-current" />
+            ) : (
+              <Play className="fill-current" />
+            )}
+          </Button>
+          <div className="flex flex-col">
+            <span className="text-sm font-medium text-foreground">
+              {displayName}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {isUploading ? "Uploading to storage..." : displaySize}
+            </span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {isUploading && (
+            <Loader2 className="size-4 animate-spin text-muted-foreground" />
+          )}
+          <Button variant="ghost" disabled={isUploading} onClick={onRemove}>
+            Remove
+          </Button>
+        </div>
+      </div>
+    ) : (
+      <Empty>
+        <EmptyMedia variant="icon">
+          {isUploading ? <Loader2 className="animate-spin" /> : <Upload />}
+        </EmptyMedia>
+        <EmptyHeader>
+          <EmptyDescription>
+            Upload your own audio tracks (MP3, WAV, AAC, max 10MB) to use as
+            background music
+          </EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <Button variant="outline" disabled={isUploading} onClick={onBrowse}>
+            {isUploading ? "Uploading..." : "Browse files"}
+          </Button>
+        </EmptyContent>
+      </Empty>
+    )}
+  </Card>
+);
+
+interface StepThreeCustomMusicTabProps {
   tiktokSounds: string;
-  onToggleTrack: (trackId: string) => void;
-  onSelectAllTracks?: (trackIds: string[]) => void;
-  onClearTracks?: () => void;
+  customMusicKey: string;
+  customMusicUrl: string;
   onChangeTiktokSounds: (sounds: string) => void;
+  onChangeCustomMusic: (data: { key: string; url: string }) => void;
+  onClearCustomMusic: () => void;
+}
+
+const StepThreeCustomMusicTab = ({
+  tiktokSounds,
+  customMusicKey,
+  customMusicUrl,
+  onChangeTiktokSounds,
+  onChangeCustomMusic,
+  onClearCustomMusic,
+}: StepThreeCustomMusicTabProps) => {
+  const files = useAppFiles();
+
+  const [localFile, setLocalFile] = React.useState<File | null>(null);
+
+  const [isUploading, setIsUploading] = React.useState(false);
+
+  const [isPlayingCustom, setIsPlayingCustom] = React.useState(false);
+
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  const customAudioRef = React.useRef<HTMLAudioElement | null>(null);
+
+  const localPreviewUrlRef = React.useRef<string | null>(null);
+
+  const handleFileChange = React.useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+
+      if (!file) {
+        return;
+      }
+
+      if (file.size > MAX_AUDIO_SIZE_BYTES) {
+        toast.error("File is too large. Maximum size is 10MB.");
+
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+
+        return;
+      }
+
+      if (localPreviewUrlRef.current !== null) {
+        URL.revokeObjectURL(localPreviewUrlRef.current);
+      }
+
+      const previewUrl = URL.createObjectURL(file);
+
+      localPreviewUrlRef.current = previewUrl;
+
+      setLocalFile(file);
+      setIsUploading(true);
+
+      const safeName = file.name.replaceAll(/[^a-zA-Z0-9.-]/gu, "_");
+
+      const storageKey = `music/${Date.now()}-${safeName}`;
+
+      try {
+        const uploadResult = await files.upload(storageKey, file, {
+          contentType: file.type === "" ? "audio/mpeg" : file.type,
+        });
+
+        let downloadUrl = "";
+
+        try {
+          downloadUrl = await files.url(uploadResult.key);
+        } catch {
+          downloadUrl = "";
+        }
+
+        onChangeCustomMusic({
+          key: uploadResult.key,
+          url: downloadUrl,
+        });
+
+        toast.success(
+          `Uploaded "${file.name}" (${(file.size / (1024 * 1024)).toFixed(1)}MB)`
+        );
+
+        setIsUploading(false);
+      } catch {
+        toast.error("Failed to upload audio file. Please try again.");
+
+        setLocalFile(null);
+
+        if (localPreviewUrlRef.current !== null) {
+          URL.revokeObjectURL(localPreviewUrlRef.current);
+          localPreviewUrlRef.current = null;
+        }
+
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+
+        setIsUploading(false);
+      }
+    },
+    [files, onChangeCustomMusic]
+  );
+
+  const handleRemoveUploadedFile = React.useCallback(async () => {
+    if (customAudioRef.current !== null) {
+      customAudioRef.current.pause();
+    }
+
+    setIsPlayingCustom(false);
+
+    if (localPreviewUrlRef.current !== null) {
+      URL.revokeObjectURL(localPreviewUrlRef.current);
+      localPreviewUrlRef.current = null;
+    }
+
+    setLocalFile(null);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+
+    const previousKey = customMusicKey;
+
+    onClearCustomMusic();
+
+    if (isNonEmptyString(previousKey)) {
+      try {
+        await files.delete(previousKey);
+      } catch {
+        // Ignore remote deletion failure
+      }
+    }
+  }, [customMusicKey, files, onClearCustomMusic]);
+
+  const handleTogglePlayCustom = React.useCallback(() => {
+    const audioSource = localPreviewUrlRef.current ?? customMusicUrl;
+
+    if (!isNonEmptyString(audioSource)) {
+      return;
+    }
+
+    if (isPlayingCustom) {
+      if (customAudioRef.current !== null) {
+        customAudioRef.current.pause();
+      }
+
+      setIsPlayingCustom(false);
+
+      return;
+    }
+
+    if (customAudioRef.current !== null) {
+      customAudioRef.current.pause();
+    }
+
+    const audio = new Audio(audioSource);
+
+    customAudioRef.current = audio;
+
+    setIsPlayingCustom(true);
+
+    audio.addEventListener(
+      "ended",
+      () => {
+        setIsPlayingCustom(false);
+      },
+      { once: true }
+    );
+
+    audio.addEventListener(
+      "error",
+      () => {
+        setIsPlayingCustom(false);
+      },
+      { once: true }
+    );
+
+    void audio.play().catch(() => {
+      setIsPlayingCustom(false);
+    });
+  }, [customMusicUrl, isPlayingCustom]);
+
+  React.useEffect(
+    () => () => {
+      if (customAudioRef.current !== null) {
+        customAudioRef.current.pause();
+      }
+
+      if (localPreviewUrlRef.current !== null) {
+        URL.revokeObjectURL(localPreviewUrlRef.current);
+      }
+    },
+    []
+  );
+
+  const hasUploaded = localFile !== null || isNonEmptyString(customMusicKey);
+
+  const displayName =
+    localFile?.name ??
+    (isNonEmptyString(customMusicKey)
+      ? (customMusicKey.split("/").pop() ?? "Custom audio track")
+      : "Custom audio track");
+
+  const displaySize =
+    localFile === null
+      ? "Uploaded audio"
+      : `${(localFile.size / (1024 * 1024)).toFixed(2)} MB`;
+
+  return (
+    <TabsContent value="custom" className="mt-4">
+      <div className="flex flex-col gap-6">
+        <Field>
+          <FieldLabel htmlFor="tiktok-sounds">
+            TikTok Sound URLs (copy+paste link to TikTok sound)
+          </FieldLabel>
+          <Textarea
+            id="tiktok-sounds"
+            rows={4}
+            placeholder="Enter TikTok sound URLs, one per line"
+            value={tiktokSounds}
+            onChange={(event) => {
+              onChangeTiktokSounds(event.target.value);
+            }}
+          />
+        </Field>
+
+        <Field>
+          <FieldLabel>Upload custom music</FieldLabel>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="audio/mp3,audio/wav,audio/aac,audio/mpeg,audio/*"
+            className="hidden"
+            disabled={isUploading}
+            onChange={(event) => {
+              void handleFileChange(event);
+            }}
+          />
+          <CustomMusicUploadCard
+            hasUploaded={hasUploaded}
+            displayName={displayName}
+            displaySize={displaySize}
+            isUploading={isUploading}
+            isPlaying={isPlayingCustom}
+            onBrowse={() => {
+              if (fileInputRef.current) {
+                fileInputRef.current.click();
+              }
+            }}
+            onRemove={() => {
+              void handleRemoveUploadedFile();
+            }}
+            onTogglePlay={handleTogglePlayCustom}
+          />
+        </Field>
+      </div>
+    </TabsContent>
+  );
+};
+
+interface StepThreeMusicProps {
+  selectedTrackIds: string[];
+  tiktokSounds: string;
+  customMusicKey: string;
+  customMusicUrl: string;
+  onToggleTrack: (trackId: string) => void;
+  onSelectAllTracks: (trackIds: string[]) => void;
+  onClearTracks: () => void;
+  onChangeTiktokSounds: (sounds: string) => void;
+  onChangeCustomMusic: (data: { key: string; url: string }) => void;
+  onClearCustomMusic: () => void;
 }
 
 export const StepThreeMusic = ({
   selectedTrackIds,
-  selectedTrackId,
   tiktokSounds,
+  customMusicKey,
+  customMusicUrl,
   onToggleTrack,
   onSelectAllTracks,
   onClearTracks,
   onChangeTiktokSounds,
+  onChangeCustomMusic,
+  onClearCustomMusic,
 }: StepThreeMusicProps) => {
   const [tab, setTab] = useQueryState("musicTab", musicTabParser);
 
@@ -62,21 +415,15 @@ export const StepThreeMusic = ({
 
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
-  const activeSelectedIds = React.useMemo(() => {
-    if (selectedTrackIds !== undefined) {
-      return selectedTrackIds;
-    }
-
-    if (selectedTrackId !== undefined && selectedTrackId !== "none") {
-      return selectedTrackId.split(",").filter(Boolean);
-    }
-
-    return [];
-  }, [selectedTrackIds, selectedTrackId]);
-
   const handleTabChange = React.useCallback(
     (value: string | null) => {
       if (value === "presets" || value === "custom") {
+        if (audioRef.current !== null) {
+          audioRef.current.pause();
+        }
+
+        setPlayingTrackId(null);
+
         void setTab(value);
       }
     },
@@ -87,9 +434,7 @@ export const StepThreeMusic = ({
     (track: SeriesMusicTrack, event: React.MouseEvent) => {
       event.stopPropagation();
 
-      const { url } = track;
-
-      if (url === "") {
+      if (!isNonEmptyString(track.url)) {
         return;
       }
 
@@ -107,7 +452,7 @@ export const StepThreeMusic = ({
         audioRef.current.pause();
       }
 
-      const audio = new Audio(url);
+      const audio = new Audio(track.url);
 
       audioRef.current = audio;
 
@@ -168,12 +513,12 @@ export const StepThreeMusic = ({
           <TabsTrigger value="presets">
             <Layers data-icon="inline-start" />
             Preset music
-            {activeSelectedIds.length > 0 && (
-              <Badge variant="secondary">{activeSelectedIds.length}</Badge>
+            {selectedTrackIds.length > 0 && (
+              <Badge variant="secondary">{selectedTrackIds.length}</Badge>
             )}
           </TabsTrigger>
           <TabsTrigger value="custom">
-            <Sparkles data-icon="inline-start" />
+            <Paintbrush data-icon="inline-start" />
             Custom
           </TabsTrigger>
         </TabsList>
@@ -182,7 +527,7 @@ export const StepThreeMusic = ({
         <TabsContent value="presets" className="mt-4">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-xs text-muted-foreground">
-              {activeSelectedIds.length} of {SERIES_MUSIC_PRESETS.length}{" "}
+              {selectedTrackIds.length} of {SERIES_MUSIC_PRESETS.length}{" "}
               selected
             </span>
 
@@ -190,21 +535,15 @@ export const StepThreeMusic = ({
               <Button
                 variant="ghost"
                 onClick={() => {
-                  if (onSelectAllTracks) {
-                    onSelectAllTracks(SERIES_MUSIC_PRESETS.map((t) => t.id));
-                  }
+                  onSelectAllTracks(SERIES_MUSIC_PRESETS.map((t) => t.id));
                 }}
               >
                 Select all
               </Button>
               <Button
                 variant="ghost"
-                disabled={activeSelectedIds.length === 0}
-                onClick={() => {
-                  if (onClearTracks) {
-                    onClearTracks();
-                  }
-                }}
+                disabled={selectedTrackIds.length === 0}
+                onClick={onClearTracks}
               >
                 Clear
               </Button>
@@ -213,7 +552,7 @@ export const StepThreeMusic = ({
 
           <div className="flex flex-col gap-3">
             {SERIES_MUSIC_PRESETS.map((track: SeriesMusicTrack) => {
-              const isSelected = activeSelectedIds.includes(track.id);
+              const isSelected = selectedTrackIds.includes(track.id);
 
               const isPlaying = playingTrackId === track.id;
 
@@ -257,45 +596,14 @@ export const StepThreeMusic = ({
           </div>
         </TabsContent>
 
-        {/* Custom music tab content */}
-        <TabsContent value="custom" className="mt-4">
-          <div className="flex flex-col gap-6">
-            <Field>
-              <FieldLabel htmlFor="tiktok-sounds">
-                TikTok Sound URLs (copy+paste link to TikTok sound)
-              </FieldLabel>
-              <Textarea
-                id="tiktok-sounds"
-                rows={4}
-                placeholder="Enter TikTok sound URLs, one per line"
-                value={tiktokSounds}
-                onChange={(event) => {
-                  onChangeTiktokSounds(event.target.value);
-                }}
-              />
-            </Field>
-
-            <Field>
-              <FieldLabel>Upload custom music</FieldLabel>
-              <Card>
-                <Empty>
-                  <EmptyMedia variant="icon">
-                    <Upload />
-                  </EmptyMedia>
-                  <EmptyHeader>
-                    <EmptyDescription>
-                      Upload your own audio tracks (MP3, WAV, AAC) to use as
-                      background music
-                    </EmptyDescription>
-                  </EmptyHeader>
-                  <EmptyContent>
-                    <Button variant="outline">Browse files</Button>
-                  </EmptyContent>
-                </Empty>
-              </Card>
-            </Field>
-          </div>
-        </TabsContent>
+        <StepThreeCustomMusicTab
+          tiktokSounds={tiktokSounds}
+          customMusicKey={customMusicKey}
+          customMusicUrl={customMusicUrl}
+          onChangeTiktokSounds={onChangeTiktokSounds}
+          onChangeCustomMusic={onChangeCustomMusic}
+          onClearCustomMusic={onClearCustomMusic}
+        />
       </Tabs>
     </div>
   );
