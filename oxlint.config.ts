@@ -5,7 +5,9 @@ import gdp from "ultracite/oxlint/gdp";
 import { jsPluginSettings, selectJsPlugins } from "ultracite/oxlint/js-plugins";
 import next from "ultracite/oxlint/next";
 import nextJsPlugins from "ultracite/oxlint/next/js-plugins";
+import playwright from "ultracite/oxlint/playwright";
 import react from "ultracite/oxlint/react";
+import reactNative from "ultracite/oxlint/react-native";
 import shadcn from "ultracite/oxlint/shadcn";
 import tanstack from "ultracite/oxlint/tanstack";
 import tanstackJsPlugins from "ultracite/oxlint/tanstack/js-plugins";
@@ -20,7 +22,9 @@ export default defineConfig({
     core,
     gdp,
     next,
+    playwright,
     react,
+    reactNative,
     shadcn,
     tanstack,
     vitest,
