@@ -124,5 +124,17 @@ export default defineConfig({
         "shadcn/require-static-classes": "off",
       },
     },
+    {
+      files: ["packages/remotion/**"],
+      rules: {
+        "shadcn/no-inline-styles": "off",
+        "shadcn/no-raw-colors": "off",
+        "shadcn/no-unknown-classes": "off",
+        "shadcn/no-arbitrary-values": "off",
+        "shadcn/no-restyle": "off",
+        "shadcn/require-static-classes": "off",
+        "react-doctor/no-inline-exhaustive-style": "off",
+      },
+    },
   ],
 });

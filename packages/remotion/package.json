@@ -1,0 +1,34 @@
+{
+  "name": "@faceless/remotion",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./compositions/*": "./src/compositions/*.tsx",
+    "./core/*": "./src/core/*.ts",
+    "./styles/*": "./src/styles/*.ts",
+    "./types": "./src/types.ts"
+  },
+  "scripts": {
+    "build": "remotion bundle src/index.ts",
+    "check-types": "tsc --noEmit",
+    "dev": "remotion studio src/index.ts"
+  },
+  "dependencies": {
+    "@faceless/contracts": "workspace:*",
+    "@faceless/utils": "workspace:*",
+    "@remotion/google-fonts": "^4.0.539",
+    "@remotion/media-utils": "^4.0.539",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "remotion": "^4.0.539"
+  },
+  "devDependencies": {
+    "@faceless/config": "workspace:*",
+    "@remotion/cli": "^4.0.539",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "catalog:",
+    "typescript": "^6.0.3"
+  }
+}

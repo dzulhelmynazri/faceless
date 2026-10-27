@@ -43,21 +43,33 @@ flowchart TD
 
 ## 3. Detailed Component Plan
 
-### A. Folder Organization (Client & Player Safe)
+### A. Folder Organization (Dedicated `@faceless/remotion` Package)
 
-To avoid bundling conflicts between client components and Node.js rendering:
+To ensure clean unidirectional leverage across the monorepo, avoid cross-boundary imports between `apps/web` and backend renderers, and provide an isolated test surface:
 
 ```
-apps/web/src/remotion/
-├── compositions/
-│   ├── main-video.tsx           # Root composition orchestrating all layers
-│   ├── scene-sequence.tsx       # Alternating Ken Burns pan/zoom on scene images
-│   ├── caption-layer.tsx        # 2-4 word sliding window caption renderer
-│   ├── audio-mixer.tsx          # Dynamic audio ducking controller
-│   └── glitch-shader.tsx        # Chromatic aberration & scanline overlay
-├── styles/
-│   └── caption-presets.ts       # CSS & spring definitions for 9 caption styles
-└── types.ts                     # Remotion composition input props interface
+packages/remotion/
+├── package.json                 # Name: @faceless/remotion
+├── remotion.config.ts           # Standalone Remotion studio config
+├── src/
+│   ├── index.ts                 # Package entry point exporting compositions, types & helpers
+│   ├── root.tsx                 # Remotion Root definition with <Composition> registration
+│   ├── compositions/
+│   │   ├── main-video.tsx       # Root composition orchestrating scene, audio, caption, and glitch layers
+│   │   ├── scene-sequence.tsx   # Alternating Ken Burns pan/zoom on scene images with hard cuts
+│   │   ├── caption-layer.tsx    # 2-4 word sliding window caption renderer
+│   │   ├── audio-mixer.tsx      # Pre-computed envelope audio ducking controller
+│   │   └── glitch-shader.tsx    # Chromatic aberration & micro-shake overlay
+│   ├── core/
+│   │   ├── caption-window.ts    # Pure punctuation-aware 2-4 word sliding window calculator
+│   │   └── speech-envelope.ts   # Pure speech interval merger and volume curve generator
+│   ├── styles/
+│   │   ├── caption-presets.ts   # Typography & animation definitions for 9 caption styles
+│   │   └── fonts.ts             # Deterministic font loaders via @remotion/google-fonts
+│   ├── types.ts                 # VideoCompositionProps & layer interface contracts
+│   └── __tests__/
+│       ├── caption-window.test.ts # Vitest suite for punctuation breaks & sliding windows
+│       └── speech-envelope.test.ts # Vitest suite for speech interval merging & ducking
 ```
 
 ---
@@ -72,7 +84,7 @@ apps/web/src/remotion/
 
 ### C. Alternating Ken Burns Camera Motion (`scene-sequence.tsx`)
 
-To keep viewer retention high and eliminate static image fatigue, each scene applies an alternating directional camera motion:
+To keep viewer retention high and eliminate static image fatigue, each scene applies an alternating directional camera motion with instant hard cuts:
 
 - **Scene 1 (Even index)**: Slow zoom-in ($1.0 \rightarrow 1.15$) with slight downward drift.
 - **Scene 2 (Odd index)**: Slow zoom-out ($1.15 \rightarrow 1.0$) with slight upward pan.
@@ -98,49 +110,43 @@ const translateY = interpolate(
 
 ---
 
-### D. Caption Engine: 2–4 Word Sliding Window (`caption-layer.tsx`)
+### D. Caption Engine: Punctuation-Aware 2–4 Word Sliding Window (`caption-layer.tsx`)
 
-Rather than flashing a single word (too jumpy) or displaying a full paragraph (too cluttered), captions render in **2 to 4 word phrases**:
+Rather than flashing a single word (too jumpy) or displaying a full paragraph (too cluttered), captions render in **2 to 4 word natural speech phrases**:
 
-1. **Window Calculation**: Find the active word based on `currentSeconds = frame / 30`. Compute the current phrase chunk (the active word plus 1–2 surrounding words).
-2. **Preset Styling (`SERIES_CAPTION_STYLES`)**:
+1. **Punctuation-Aware Window Calculation (`caption-window.ts`)**:
+   - Segments text at sentence and clause punctuation boundaries (`.`, `?`, `!`, `,`).
+   - Ensures no phrase awkwardly straddles across sentence boundaries (e.g. "he vanished. And then").
+   - Computes active word highlighting index and phrase start/end timestamps.
+2. **Deterministic Font Loading (`fonts.ts`)**:
+   - Uses `@remotion/google-fonts` to load typography (Montserrat, Anton, Cinzel, Press Start 2P) upfront to guarantee zero FOIT and pixel-perfect rendering across browser player and server renderers.
+3. **Preset Styling (`SERIES_CAPTION_STYLES`)**:
 
-| Preset ID | Style Name | Visual Styling & Animation |
-| :-- | :-- | :-- |
-| **`bold-stroke`** | Bold Stroke | Heavy black outline (`-webkit-text-stroke: 3px #000`), active word scales with spring bounce (`scale: 1.18`). |
-| **`red-highlight`** | Red Highlight | Spoken word illuminates in glowing crimson (`#ef4444`) with drop shadow; surrounding words remain white. |
-| **`sleek`** | Sleek | Clean minimalist typography with soft fade-in and smooth slide entrance. |
-| **`karaoke`** | Karaoke | Horizontal wipe gradient filling each word from left to right in sync with syllable duration. |
-| **`majestic`** | Majestic | Elegant serif with golden glow and subtle royal gold particle accents. |
-| **`beast`** | Beast | Massive, all-caps centered high-impact typography with subtle screen shake on emphasis. |
-| **`elegant`** | Elegant | Clean letter-spacing, cinematic tracking, and soft blur entrance. |
-| **`pixel`** | Pixel | Retro 8-bit monospace font with neon cyan and magenta outlines. |
-| **`clarity`** | Clarity | Dark translucent pill backdrop behind the active phrase for maximum legibility over complex backgrounds. |
+| Preset ID | Style Name | Visual Styling & Animation | Font Family |
+| :-- | :-- | :-- | :-- |
+| **`bold-stroke`** | Bold Stroke | Heavy black outline (`-webkit-text-stroke: 3px #000`), active word scales with spring bounce (`scale: 1.18`). | Montserrat Black |
+| **`red-highlight`** | Red Highlight | Spoken word illuminates in glowing crimson (`#ef4444`) with drop shadow; surrounding words remain white. | Montserrat ExtraBold |
+| **`sleek`** | Sleek | Clean minimalist typography with soft fade-in and smooth slide entrance. | Inter Bold |
+| **`karaoke`** | Karaoke | Horizontal wipe gradient filling each word from left to right in sync with syllable duration. | Montserrat Bold |
+| **`majestic`** | Majestic | Elegant serif with golden glow and subtle royal gold particle accents. | Cinzel Decorative |
+| **`beast`** | Beast | Massive, all-caps centered high-impact typography with subtle screen shake on emphasis. | Anton |
+| **`elegant`** | Elegant | Clean letter-spacing, cinematic tracking, and soft blur entrance. | Cormorant Garamond |
+| **`pixel`** | Pixel | Retro 8-bit monospace font with neon cyan and magenta outlines. | Press Start 2P |
+| **`clarity`** | Clarity | Dark translucent pill backdrop behind the active phrase for maximum legibility over complex backgrounds. | Inter SemiBold |
 
 ---
 
-### E. Dynamic Audio Ducking Mixer (`audio-mixer.tsx`)
+### E. Pre-Computed Audio Ducking Envelope (`audio-mixer.tsx`)
 
-Automatically prioritizes `series.customMusicUrl` if uploaded, or falls back to `SERIES_MUSIC_PRESETS`:
+To avoid running $O(N)$ timestamp scans on every single frame ($1,800$ checks per 60s video), speech intervals are merged into a continuous envelope once upfront:
 
-- **Voiceover**: `<Audio src={voiceUrl} volume={1.0} />`
-- **Background Music**: Dynamic volume calculation:
-  ```tsx
-  // Check if speech is currently active
-  const isSpeaking = wordTimestamps.some(
-    (w) => currentTime >= w.start - 0.1 && currentTime <= w.end + 0.1
-  );
-
-  // Smoothly duck volume during speech, ramp up during pauses (> 0.4s)
-  const bgmVolume = interpolate(
-    isSpeaking ? 1 : 0,
-    [0, 1],
-    [0.32, 0.12], // 0.32 during pauses, 0.12 during voiceover
-    { extrapolateRight: "clamp" }
-  );
-
-  <Audio src={bgmUrl} volume={bgmVolume} loop />;
-  ```
+1. **`computeSpeechIntervals(wordTimestamps)`**: Merges adjacent word timestamps separated by $< 0.35$s into contiguous speech ranges.
+2. **`resolveDuckingVolume(currentTime, intervals)`**: Lookups in $O(\log M)$ time:
+   - Voiceover speech active: smooth ducking to `0.12`.
+   - Voiceover pause ($> 0.35$s): gentle swell to `0.32`.
+3. **Audio Tracks**:
+   - Voiceover track: `<Audio src={voiceUrl} volume={1.0} />`
+   - Background music track: `<Audio src={bgmUrl} volume={duckedVolume} loop />`
 
 ---
 
@@ -148,7 +154,7 @@ Automatically prioritizes `series.customMusicUrl` if uploaded, or falls back to 
 
 When `glitchEffect: true` is selected:
 
-- **Scene Transition Triggers**: During frames $0{-}6$ of every scene cut, applies an SVG chromatic aberration filter (shifting Red and Cyan channels horizontally by 8–14px).
+- **Scene Transition Flash**: During frames $0{-}6$ of every scene cut, applies an SVG chromatic aberration filter (shifting Red and Cyan channels horizontally by 8–14px).
 - **Scanlines**: Light horizontal CRT scanline overlay with subtle vignette.
 - **Shake**: Micro-jitter on the scene camera using `spring()`.
 
@@ -156,12 +162,15 @@ When `glitchEffect: true` is selected:
 
 ## 4. Implementation Checklist
 
-- [ ] Install Remotion dependencies (`remotion`, `@remotion/player`, `@remotion/media-utils`).
-- [ ] Scaffold `apps/web/src/remotion/compositions/` directory.
-- [ ] Implement `MainVideo` root composition with dynamic frame duration prop.
-- [ ] Build `SceneSequence` with alternating Ken Burns zoom/pan transitions.
-- [ ] Build `CaptionLayer` with 2–4 word sliding window supporting all 9 presets.
-- [ ] Build `AudioMixer` with real-time speech ducking.
-- [ ] Build `GlitchShader` chromatic aberration overlay.
-- [ ] Test composition in browser using `@remotion/player`.
-- [ ] Run `bunx ultracite check` and `bun run check-types` to ensure zero regressions.
+- [x] Scaffold `packages/remotion` package with `package.json`, `tsconfig.json`, and Turborepo integration.
+- [x] Install Remotion core dependencies (`remotion`, `@remotion/media-utils`, `@remotion/google-fonts`, and dev dependencies).
+- [x] Implement pure `speech-envelope.ts` and add unit tests (`speech-envelope.test.ts`).
+- [x] Implement pure `caption-window.ts` with punctuation-aware chunking and add unit tests (`caption-window.test.ts`).
+- [x] Implement `fonts.ts` and `caption-presets.ts` supporting all 9 caption presets.
+- [x] Build `SceneSequence` with alternating Ken Burns camera pan/zoom and hard cut transitions.
+- [x] Build `AudioMixer` with pre-computed envelope audio ducking.
+- [x] Build `GlitchShader` chromatic aberration overlay.
+- [x] Build `MainVideo` root composition orchestrating all layers.
+- [x] Configure `remotion preview` standalone studio script in `packages/remotion`.
+- [x] Integrate `@faceless/remotion` into `apps/web`.
+- [x] Run `bunx vitest run`, `bun run check-types`, and `bunx ultracite check`.

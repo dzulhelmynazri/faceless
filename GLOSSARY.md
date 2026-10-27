@@ -37,3 +37,13 @@ This document defines the core domain terms and concepts across the Faceless pla
 - **Style Enricher**: Pure transformation layer that injects art-style-specific visual tokens, vertical framing parameters, and anti-text/watermark suppression directives into raw scene visual prompts.
 - **Scene Duration Calibration**: Synchronization step mapping each scene's spoken `narrationChunk` to ElevenLabs word timestamps to derive the exact start and end time boundaries for Remotion video composition.
 - **Episode Scene Record**: The relational database entity (`SeriesEpisodeScene`) linking an episode, scene number, narration text, prompt, image asset URL, and calibrated duration.
+
+---
+
+## 5. Video Composition Domain
+
+- **Video Composition Module (`@faceless/remotion`)**: The deep module responsible for programmatically composing vertical short-form videos. Encapsulates Ken Burns motion choreography, punctuation-aware sliding caption windowing, dynamic speech-aware audio ducking, and chromatic glitch shaders.
+- **Ken Burns Choreography**: Directional camera motion (alternating zoom-in and zoom-out with subtle vertical pan drifts) applied to static 9:16 scene keyframes to eliminate visual fatigue and maximize viewer retention.
+- **Caption Phrase Window**: A 2–4 word sliding text segment derived from syllable timestamps and bounded by sentence punctuation, highlighting the spoken word in real-time.
+- **Audio Ducking Envelope**: The pre-computed volume curve dynamically attenuating background music levels during active narration speech and swelling during pauses.
+- **Chromatic Glitch Shader**: An SVG-based RGB channel displacement filter applied across scene cuts for dramatic impact in dark fantasy, true crime, or horror niches.
