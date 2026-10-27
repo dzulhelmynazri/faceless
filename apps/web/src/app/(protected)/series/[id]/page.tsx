@@ -98,15 +98,17 @@ const SeriesDetailPage = ({ params }: PageProps) => {
     trpc.series.generateEpisode.mutationOptions({
       onSuccess: () => {
         toast.success("Episode generated with voiceover audio!");
-        void queryClient.invalidateQueries(
-          trpc.series.byId.queryFilter({ id })
-        );
-        void queryClient.invalidateQueries(trpc.series.list.queryFilter());
       },
       onError: () => {
         toast.error(
           "Failed to generate episode. Check your ElevenLabs configuration."
         );
+      },
+      onSettled: () => {
+        void queryClient.invalidateQueries(
+          trpc.series.byId.queryFilter({ id })
+        );
+        void queryClient.invalidateQueries(trpc.series.list.queryFilter());
       },
     })
   );

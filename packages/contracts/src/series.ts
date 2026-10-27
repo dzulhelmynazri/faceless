@@ -2202,7 +2202,7 @@ export const getSeriesByIdOutputSchema = z.object({
       topic: z.string().nullable(),
       status: z.enum(EPISODE_STATUSES),
       videoUrl: z.string().nullable(),
-      audioUrl: z.string().nullable().optional(),
+      audioUrl: z.string().nullable(),
       thumbnailUrl: z.string().nullable(),
       scheduledFor: z.string().nullable(),
       publishedAt: z.string().nullable(),
@@ -2292,7 +2292,7 @@ export type GenerateEpisodeInput = z.infer<typeof generateEpisodeInputSchema>;
 export const generateEpisodeOutputSchema = z.object({
   episodeId: z.string(),
   script: generatedScriptPayloadSchema,
-  audioUrl: z.string().nullable().optional(),
+  audioUrl: z.string(),
 });
 
 export type GenerateEpisodeOutput = z.infer<typeof generateEpisodeOutputSchema>;

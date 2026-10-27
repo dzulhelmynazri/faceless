@@ -8,14 +8,6 @@ import { ENV } from "../../env";
 import { parseAlignmentToWords } from "./alignment";
 import { sanitizeNarration } from "./sanitizer";
 
-export { parseAlignmentToWords } from "./alignment";
-
-export type { RawElevenLabsAlignment } from "./alignment";
-
-export type { WordTimestamp } from "@faceless/contracts/series";
-
-export { sanitizeNarration } from "./sanitizer";
-
 export interface SynthesizeVoiceoverInput {
   userId: string;
   seriesId: string;
@@ -23,7 +15,6 @@ export interface SynthesizeVoiceoverInput {
   rawNarration: string;
   voiceId: string;
   storage: Files;
-  apiKey?: string;
 }
 
 export interface SynthesizeVoiceoverOutput {

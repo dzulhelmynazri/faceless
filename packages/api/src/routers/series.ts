@@ -8,7 +8,6 @@ import {
   generateEpisodeAudioOutputSchema,
   generateEpisodeInputSchema,
   generateEpisodeOutputSchema,
-  generatedScriptPayloadSchema,
   getSeriesByIdInputSchema,
   getSeriesByIdOutputSchema,
   getSeriesListOutputSchema,
@@ -18,12 +17,12 @@ import {
   updateSeriesStatusInputSchema,
   updateSeriesStatusOutputSchema,
 } from "@faceless/contracts/series";
-import type { GeneratedScriptPayload } from "@faceless/contracts/series";
 import { TRPCError } from "@trpc/server";
 
 import { protectedProcedure } from "../middlewares/auth";
 import { seriesProcedure } from "../middlewares/billing";
 import { synthesizeVoiceover } from "../services/voiceover";
+import type { SynthesizeVoiceoverOutput } from "../services/voiceover";
 import { router } from "../trpc";
 
 export const seriesRouter = router({
@@ -342,7 +341,7 @@ export const seriesRouter = router({
 
       const nextEpisodeNumber = (previousEpisodes[0]?.episodeNumber ?? 0) + 1;
 
-      const script: GeneratedScriptPayload = await runScriptwriterAgent({
+      const script = await runScriptwriterAgent({
         userId: series.userId,
         seriesId: series.id,
         nichePrompt: series.nichePrompt,
@@ -366,8 +365,10 @@ export const seriesRouter = router({
         },
       });
 
+      let voiceover: SynthesizeVoiceoverOutput;
+
       try {
-        const voiceover = await synthesizeVoiceover({
+        voiceover = await synthesizeVoiceover({
           userId: series.userId,
           seriesId: series.id,
           episodeId: episode.id,
@@ -375,24 +376,6 @@ export const seriesRouter = router({
           voiceId: series.voiceId,
           storage: ctx.files,
         });
-
-        await ctx.db.seriesEpisode.update({
-          where: { id: episode.id },
-          data: {
-            audioUrl: voiceover.audioUrl,
-            status: "READY_FOR_REVIEW",
-            metadata: {
-              script,
-              audio: voiceover.metadata,
-            },
-          },
-        });
-
-        return {
-          episodeId: episode.id,
-          script,
-          audioUrl: voiceover.audioUrl,
-        };
       } catch {
         await ctx.db.seriesEpisode.update({
           where: { id: episode.id },
@@ -407,6 +390,25 @@ export const seriesRouter = router({
           message: "Failed to synthesize voiceover audio",
         });
       }
+
+      await ctx.db.seriesEpisode.update({
+        where: { id: episode.id },
+        data: {
+          audioUrl: voiceover.audioUrl,
+          status: "READY_FOR_REVIEW",
+          error: null,
+          metadata: {
+            script,
+            audio: voiceover.metadata,
+          },
+        },
+      });
+
+      return {
+        episodeId: episode.id,
+        script,
+        audioUrl: voiceover.audioUrl,
+      };
     }),
 
   generateEpisodeAudio: protectedProcedure
@@ -432,11 +434,24 @@ export const seriesRouter = router({
         });
       }
 
+      const parsedMetadata = seriesEpisodeMetadataSchema.safeParse(
+        episode.metadata
+      );
+
+      if (!parsedMetadata.success) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Episode script metadata is invalid or missing",
+        });
+      }
+
       const voiceId = input.voiceIdOverride ?? episode.series.voiceId;
       const rawNarration = episode.script;
 
+      let voiceover: SynthesizeVoiceoverOutput;
+
       try {
-        const voiceover = await synthesizeVoiceover({
+        voiceover = await synthesizeVoiceover({
           userId: episode.series.userId,
           seriesId: episode.seriesId,
           episodeId: episode.id,
@@ -444,79 +459,6 @@ export const seriesRouter = router({
           voiceId,
           storage: ctx.files,
         });
-
-        const parsedAsMetadata = seriesEpisodeMetadataSchema.safeParse(
-          episode.metadata
-        );
-
-        const parsedAsScript = generatedScriptPayloadSchema.safeParse(
-          episode.metadata
-        );
-
-        let existingScript: GeneratedScriptPayload | null = null;
-
-        if (parsedAsMetadata.success) {
-          existingScript = parsedAsMetadata.data.script;
-        } else if (parsedAsScript.success) {
-          existingScript = parsedAsScript.data;
-        }
-
-        const updatedMetadata = existingScript
-          ? {
-              script: existingScript,
-              audio: voiceover.metadata,
-            }
-          : {
-              script: {
-                title: episode.title,
-                hook: episode.title,
-                fullNarration: episode.script,
-                scenes: [
-                  {
-                    sceneNumber: 1,
-                    narrationChunk: episode.script,
-                    visualPrompt: `${episode.title} - Opening scene`,
-                    estimatedSeconds: 10,
-                  },
-                  {
-                    sceneNumber: 2,
-                    narrationChunk: episode.script,
-                    visualPrompt: `${episode.title} - Main action`,
-                    estimatedSeconds: 10,
-                  },
-                  {
-                    sceneNumber: 3,
-                    narrationChunk: episode.script,
-                    visualPrompt: `${episode.title} - Climax and conclusion`,
-                    estimatedSeconds: 10,
-                  },
-                ],
-                targetDurationSeconds: Math.max(
-                  1,
-                  Math.round(voiceover.metadata.audioDuration)
-                ),
-                viralityScore: 8,
-                reasoning:
-                  "Synthesized from episode script during audio generation",
-              },
-              audio: voiceover.metadata,
-            };
-
-        await ctx.db.seriesEpisode.update({
-          where: { id: episode.id },
-          data: {
-            audioUrl: voiceover.audioUrl,
-            status: "READY_FOR_REVIEW",
-            error: null,
-            metadata: updatedMetadata,
-          },
-        });
-
-        return {
-          episodeId: episode.id,
-          audioUrl: voiceover.audioUrl,
-          metadata: voiceover.metadata,
-        };
       } catch {
         await ctx.db.seriesEpisode.update({
           where: { id: episode.id },
@@ -531,5 +473,24 @@ export const seriesRouter = router({
           message: "Failed to synthesize voiceover audio",
         });
       }
+
+      await ctx.db.seriesEpisode.update({
+        where: { id: episode.id },
+        data: {
+          audioUrl: voiceover.audioUrl,
+          status: "READY_FOR_REVIEW",
+          error: null,
+          metadata: {
+            script: parsedMetadata.data.script,
+            audio: voiceover.metadata,
+          },
+        },
+      });
+
+      return {
+        episodeId: episode.id,
+        audioUrl: voiceover.audioUrl,
+        metadata: voiceover.metadata,
+      };
     }),
 });

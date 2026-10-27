@@ -72,6 +72,15 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 - Group related code together and separate concerns
 - Avoid import cycles; move shared code into a module both sides import
 
+### Simplicity & Anti-Overengineering
+
+- **No redundant code, types, or re-exports**: Eliminate redundant intermediate variables, duplicate wrapper functions, re-export barrel files, and manual type annotations that TypeScript infers naturally. If a value or environment variable is already validated upfront (e.g. via `env.schema` or Zod input schemas), do not write redundant runtime checks, duplicate fallbacks, or defensive type assertions downstream.
+- **No tangle / single source of truth**: Maintain clean, unidirectional module seams without duplicate files or mirrored utilities across folders (e.g. never keep parallel copies of logic in both `src/` and `lib/`). Eliminate circular dependencies, tangled cross-package imports, and duplicate implementations of the same business logic.
+- **No artificial or degenerate fallbacks**: Never fabricate synthetic fallback data, mock scenes, or dummy records when expected data is missing or corrupted. Validate upfront and fail fast with explicit errors (e.g. `TRPCError` with `BAD_REQUEST`) rather than masking bugs or burning paid external API credits on degraded states.
+- **No speculative or dead optionals**: Avoid premature optionality (`param?: string`, `z.string().nullable().optional()`). Model types constructively: if a field is guaranteed upon successful execution, type it as required (`z.string()`).
+- **Validate at boundaries, trust downstream**: Validate inputs and database metadata schemas once at system boundaries. Do not scatter defensive fallback defaults, type assertions, or redundant nullish checks throughout internal domain services.
+- **YAGNI (You Aren't Gonna Need It)**: Implement the simplest, most direct solution that meets current requirements. Avoid premature abstractions, speculative "future-proofing", and redundant re-export barrel files.
+
 ### Security
 
 - Add `rel="noopener noreferrer"` when using `target="_blank"` on links
