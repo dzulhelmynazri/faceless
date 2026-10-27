@@ -75,7 +75,7 @@ export const EpisodeStudioProvider = ({
               deleted.
             </EmptyDescription>
           </EmptyHeader>
-          <EmptyContent className="flex-row justify-center">
+          <EmptyContent>
             <Button
               nativeButton={false}
               render={<Link href={`/series/${seriesId}`} />}
