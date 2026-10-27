@@ -14,7 +14,7 @@ import {
 } from "@faceless/ui/components/empty";
 import { Tabs, TabsList, TabsTrigger } from "@faceless/ui/components/tabs";
 import { isNonEmptyString } from "@faceless/utils";
-import { ExternalLink, Sparkles, Video } from "lucide-react";
+import { ExternalLink, Sparkles, Video, Volume2 } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
 
@@ -25,6 +25,7 @@ type EpisodeItem = GetSeriesByIdOutput["episodes"][number];
 interface SeriesEpisodesFeedProps {
   seriesId: string;
   episodes: EpisodeItem[];
+  isGenerating?: boolean;
   onGenerateEpisode: () => void;
 }
 
@@ -65,6 +66,7 @@ const getStatusBadgeVariant = (
 export const SeriesEpisodesFeed = ({
   seriesId,
   episodes,
+  isGenerating = false,
   onGenerateEpisode,
 }: SeriesEpisodesFeedProps) => {
   const [activeTab, setActiveTab] = React.useState<EpisodeTab>("ALL");
@@ -126,11 +128,11 @@ export const SeriesEpisodesFeed = ({
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <Button onClick={onGenerateEpisode} size="sm">
-              <span className="flex items-center gap-1.5">
-                <Sparkles className="size-4" />
-                Generate First Episode
-              </span>
+            <Button disabled={isGenerating} onClick={onGenerateEpisode}>
+              <Sparkles data-icon="inline-start" />
+              {isGenerating
+                ? "Generating Episode..."
+                : "Generate First Episode"}
             </Button>
           </EmptyContent>
         </Empty>
@@ -152,6 +154,12 @@ export const SeriesEpisodesFeed = ({
                         <Badge variant={getStatusBadgeVariant(ep.status)}>
                           {ep.status}
                         </Badge>
+                        {isNonEmptyString(ep.audioUrl) && (
+                          <Badge variant="outline">
+                            <Volume2 />
+                            Audio
+                          </Badge>
+                        )}
                       </div>
                       <span className="text-xs text-muted-foreground">
                         {isNonEmptyString(ep.topic)

@@ -37,12 +37,6 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-const handleGenerateEpisode = () => {
-  toast.info(
-    "Episode generation will trigger via Phase 2 scriptwriter engine."
-  );
-};
-
 const SeriesDetailPage = ({ params }: PageProps) => {
   const { id } = React.use(params);
   const router = useRouter();
@@ -99,6 +93,32 @@ const SeriesDetailPage = ({ params }: PageProps) => {
       },
     })
   );
+
+  const generateEpisodeMutation = useMutation(
+    trpc.series.generateEpisode.mutationOptions({
+      onSuccess: () => {
+        toast.success("Episode generated with voiceover audio!");
+        void queryClient.invalidateQueries(
+          trpc.series.byId.queryFilter({ id })
+        );
+        void queryClient.invalidateQueries(trpc.series.list.queryFilter());
+      },
+      onError: () => {
+        toast.error(
+          "Failed to generate episode. Check your ElevenLabs configuration."
+        );
+      },
+    })
+  );
+
+  const handleGenerateEpisode = () => {
+    if (!series || generateEpisodeMutation.isPending) {
+      return;
+    }
+
+    toast.info("Synthesizing script and ElevenLabs voiceover...");
+    generateEpisodeMutation.mutate({ seriesId: series.id });
+  };
 
   const handleToggleStatus = () => {
     if (!series) {
@@ -181,31 +201,30 @@ const SeriesDetailPage = ({ params }: PageProps) => {
 
             variant="outline"
           >
-            <span className="flex items-center gap-1.5">
-              <Settings className="size-3.5" />
-              Settings
-            </span>
+            <Settings data-icon="inline-start" />
+            Settings
           </Button>
           <Button onClick={handleToggleStatus} variant="outline">
-            <span className="flex items-center gap-1.5">
-              {series.status === "ACTIVE" ? (
-                <>
-                  <Pause className="size-3.5" />
-                  Pause Series
-                </>
-              ) : (
-                <>
-                  <Play className="size-3.5" />
-                  Resume Series
-                </>
-              )}
-            </span>
+            {series.status === "ACTIVE" ? (
+              <>
+                <Pause data-icon="inline-start" />
+                Pause Series
+              </>
+            ) : (
+              <>
+                <Play data-icon="inline-start" />
+                Resume Series
+              </>
+            )}
           </Button>
-          <Button onClick={handleGenerateEpisode}>
-            <span className="flex items-center gap-1.5">
-              <Sparkles className="size-3.5" />
-              Generate Episode Now
-            </span>
+          <Button
+            disabled={generateEpisodeMutation.isPending}
+            onClick={handleGenerateEpisode}
+          >
+            <Sparkles data-icon="inline-start" />
+            {generateEpisodeMutation.isPending
+              ? "Generating Voiceover..."
+              : "Generate Episode Now"}
           </Button>
         </div>
       </div>
@@ -216,6 +235,7 @@ const SeriesDetailPage = ({ params }: PageProps) => {
       {/* Episodes Section */}
       <SeriesEpisodesFeed
         episodes={series.episodes}
+        isGenerating={generateEpisodeMutation.isPending}
         onGenerateEpisode={handleGenerateEpisode}
         seriesId={series.id}
       />

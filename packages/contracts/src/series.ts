@@ -2202,6 +2202,7 @@ export const getSeriesByIdOutputSchema = z.object({
       topic: z.string().nullable(),
       status: z.enum(EPISODE_STATUSES),
       videoUrl: z.string().nullable(),
+      audioUrl: z.string().nullable().optional(),
       thumbnailUrl: z.string().nullable(),
       scheduledFor: z.string().nullable(),
       publishedAt: z.string().nullable(),
@@ -2291,6 +2292,56 @@ export type GenerateEpisodeInput = z.infer<typeof generateEpisodeInputSchema>;
 export const generateEpisodeOutputSchema = z.object({
   episodeId: z.string(),
   script: generatedScriptPayloadSchema,
+  audioUrl: z.string().nullable().optional(),
 });
 
 export type GenerateEpisodeOutput = z.infer<typeof generateEpisodeOutputSchema>;
+
+export const wordTimestampSchema = z.object({
+  word: z.string().min(1),
+  cleanWord: z.string().min(1),
+  start: z.number().nonnegative(),
+  end: z.number().nonnegative(),
+});
+
+export type WordTimestamp = z.infer<typeof wordTimestampSchema>;
+
+export const seriesEpisodeAudioMetadataSchema = z.object({
+  audioKey: z.string().min(1),
+  audioDuration: z.number().nonnegative(),
+  wordTimestamps: z.array(wordTimestampSchema),
+  characterCount: z.number().int().nonnegative(),
+  generationCostUsd: z.number().nonnegative(),
+  voiceId: z.string().min(1),
+  modelId: z.string().min(1),
+});
+
+export type SeriesEpisodeAudioMetadata = z.infer<
+  typeof seriesEpisodeAudioMetadataSchema
+>;
+
+export const seriesEpisodeMetadataSchema = z.object({
+  script: generatedScriptPayloadSchema,
+  audio: seriesEpisodeAudioMetadataSchema.optional(),
+});
+
+export type SeriesEpisodeMetadata = z.infer<typeof seriesEpisodeMetadataSchema>;
+
+export const generateEpisodeAudioInputSchema = z.object({
+  episodeId: z.string().min(1),
+  voiceIdOverride: z.string().optional(),
+});
+
+export type GenerateEpisodeAudioInput = z.infer<
+  typeof generateEpisodeAudioInputSchema
+>;
+
+export const generateEpisodeAudioOutputSchema = z.object({
+  episodeId: z.string(),
+  audioUrl: z.string(),
+  metadata: seriesEpisodeAudioMetadataSchema,
+});
+
+export type GenerateEpisodeAudioOutput = z.infer<
+  typeof generateEpisodeAudioOutputSchema
+>;

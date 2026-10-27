@@ -4,11 +4,15 @@ import {
   createSeriesOutputSchema,
   deleteSeriesInputSchema,
   deleteSeriesOutputSchema,
+  generateEpisodeAudioInputSchema,
+  generateEpisodeAudioOutputSchema,
   generateEpisodeInputSchema,
   generateEpisodeOutputSchema,
+  generatedScriptPayloadSchema,
   getSeriesByIdInputSchema,
   getSeriesByIdOutputSchema,
   getSeriesListOutputSchema,
+  seriesEpisodeMetadataSchema,
   updateSeriesInputSchema,
   updateSeriesOutputSchema,
   updateSeriesStatusInputSchema,
@@ -19,6 +23,7 @@ import { TRPCError } from "@trpc/server";
 
 import { protectedProcedure } from "../middlewares/auth";
 import { seriesProcedure } from "../middlewares/billing";
+import { synthesizeVoiceover } from "../services/voiceover";
 import { router } from "../trpc";
 
 export const seriesRouter = router({
@@ -195,6 +200,7 @@ export const seriesRouter = router({
           topic: ep.topic,
           status: ep.status,
           videoUrl: ep.videoUrl,
+          audioUrl: ep.audioUrl,
           thumbnailUrl: ep.thumbnailUrl,
           scheduledFor: ep.scheduledFor ? ep.scheduledFor.toISOString() : null,
           publishedAt: ep.publishedAt ? ep.publishedAt.toISOString() : null,
@@ -355,14 +361,175 @@ export const seriesRouter = router({
           title: script.title,
           topic: input.topicOverride ?? script.title,
           script: script.fullNarration,
-          metadata: script,
+          metadata: { script },
           status: "GENERATING",
         },
       });
 
-      return {
-        episodeId: episode.id,
-        script,
-      };
+      try {
+        const voiceover = await synthesizeVoiceover({
+          userId: series.userId,
+          seriesId: series.id,
+          episodeId: episode.id,
+          rawNarration: script.fullNarration,
+          voiceId: series.voiceId,
+          storage: ctx.files,
+        });
+
+        await ctx.db.seriesEpisode.update({
+          where: { id: episode.id },
+          data: {
+            audioUrl: voiceover.audioUrl,
+            status: "READY_FOR_REVIEW",
+            metadata: {
+              script,
+              audio: voiceover.metadata,
+            },
+          },
+        });
+
+        return {
+          episodeId: episode.id,
+          script,
+          audioUrl: voiceover.audioUrl,
+        };
+      } catch {
+        await ctx.db.seriesEpisode.update({
+          where: { id: episode.id },
+          data: {
+            status: "FAILED",
+            error: "Failed to synthesize voiceover audio",
+          },
+        });
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to synthesize voiceover audio",
+        });
+      }
+    }),
+
+  generateEpisodeAudio: protectedProcedure
+    .input(generateEpisodeAudioInputSchema)
+    .output(generateEpisodeAudioOutputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const episode = await ctx.db.seriesEpisode.findFirst({
+        where: {
+          id: input.episodeId,
+          series: {
+            userId: ctx.session.user.id,
+          },
+        },
+        include: {
+          series: true,
+        },
+      });
+
+      if (!episode) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Episode not found",
+        });
+      }
+
+      const voiceId = input.voiceIdOverride ?? episode.series.voiceId;
+      const rawNarration = episode.script;
+
+      try {
+        const voiceover = await synthesizeVoiceover({
+          userId: episode.series.userId,
+          seriesId: episode.seriesId,
+          episodeId: episode.id,
+          rawNarration,
+          voiceId,
+          storage: ctx.files,
+        });
+
+        const parsedAsMetadata = seriesEpisodeMetadataSchema.safeParse(
+          episode.metadata
+        );
+
+        const parsedAsScript = generatedScriptPayloadSchema.safeParse(
+          episode.metadata
+        );
+
+        let existingScript: GeneratedScriptPayload | null = null;
+
+        if (parsedAsMetadata.success) {
+          existingScript = parsedAsMetadata.data.script;
+        } else if (parsedAsScript.success) {
+          existingScript = parsedAsScript.data;
+        }
+
+        const updatedMetadata = existingScript
+          ? {
+              script: existingScript,
+              audio: voiceover.metadata,
+            }
+          : {
+              script: {
+                title: episode.title,
+                hook: episode.title,
+                fullNarration: episode.script,
+                scenes: [
+                  {
+                    sceneNumber: 1,
+                    narrationChunk: episode.script,
+                    visualPrompt: `${episode.title} - Opening scene`,
+                    estimatedSeconds: 10,
+                  },
+                  {
+                    sceneNumber: 2,
+                    narrationChunk: episode.script,
+                    visualPrompt: `${episode.title} - Main action`,
+                    estimatedSeconds: 10,
+                  },
+                  {
+                    sceneNumber: 3,
+                    narrationChunk: episode.script,
+                    visualPrompt: `${episode.title} - Climax and conclusion`,
+                    estimatedSeconds: 10,
+                  },
+                ],
+                targetDurationSeconds: Math.max(
+                  1,
+                  Math.round(voiceover.metadata.audioDuration)
+                ),
+                viralityScore: 8,
+                reasoning:
+                  "Synthesized from episode script during audio generation",
+              },
+              audio: voiceover.metadata,
+            };
+
+        await ctx.db.seriesEpisode.update({
+          where: { id: episode.id },
+          data: {
+            audioUrl: voiceover.audioUrl,
+            status: "READY_FOR_REVIEW",
+            error: null,
+            metadata: updatedMetadata,
+          },
+        });
+
+        return {
+          episodeId: episode.id,
+          audioUrl: voiceover.audioUrl,
+          metadata: voiceover.metadata,
+        };
+      } catch {
+        await ctx.db.seriesEpisode.update({
+          where: { id: episode.id },
+          data: {
+            status: "FAILED",
+            error: "Failed to synthesize voiceover audio",
+          },
+        });
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to synthesize voiceover audio",
+        });
+      }
     }),
 });
