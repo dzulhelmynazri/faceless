@@ -280,16 +280,23 @@ export const VOICE_CATEGORIES = [
 
 export type VoiceCategory = (typeof VOICE_CATEGORIES)[number];
 
-export const ELEVENLABS_MODELS = ["eleven_v4_turbo"] as const;
+export const ELEVENLABS_MODELS = [
+  "eleven_turbo_v2_5",
+  "eleven_multilingual_v2",
+] as const;
 
 export type ElevenLabsModel = (typeof ELEVENLABS_MODELS)[number];
 
-export const ELEVENLABS_DEFAULT_MODEL: ElevenLabsModel = "eleven_v4_turbo";
+export const ELEVENLABS_DEFAULT_MODEL: ElevenLabsModel = "eleven_turbo_v2_5";
 
 export const ELEVENLABS_PRICING = {
-  eleven_v4_turbo: {
-    pricePer1kChars: 0.04,
-    pricePerChar: 0.00004,
+  eleven_turbo_v2_5: {
+    pricePer1kChars: 0.05,
+    pricePerChar: 0.00005,
+  },
+  eleven_multilingual_v2: {
+    pricePer1kChars: 0.1,
+    pricePerChar: 0.0001,
   },
 } as const;
 
