@@ -1,8 +1,11 @@
+import { runScriptwriterAgent } from "@faceless/agent";
 import {
   createSeriesInputSchema,
   createSeriesOutputSchema,
   deleteSeriesInputSchema,
   deleteSeriesOutputSchema,
+  generateEpisodeInputSchema,
+  generateEpisodeOutputSchema,
   getSeriesByIdInputSchema,
   getSeriesByIdOutputSchema,
   getSeriesListOutputSchema,
@@ -11,6 +14,7 @@ import {
   updateSeriesStatusInputSchema,
   updateSeriesStatusOutputSchema,
 } from "@faceless/contracts/series";
+import type { GeneratedScriptPayload } from "@faceless/contracts/series";
 import { TRPCError } from "@trpc/server";
 
 import { protectedProcedure } from "../middlewares/auth";
@@ -303,5 +307,62 @@ export const seriesRouter = router({
       });
 
       return { success: true };
+    }),
+
+  generateEpisode: protectedProcedure
+    .input(generateEpisodeInputSchema)
+    .output(generateEpisodeOutputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const series = await ctx.db.series.findFirst({
+        where: {
+          id: input.seriesId,
+          userId: ctx.session.user.id,
+        },
+      });
+
+      if (!series) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Series not found",
+        });
+      }
+
+      const previousEpisodes = await ctx.db.seriesEpisode.findMany({
+        where: { seriesId: series.id },
+        select: { title: true, episodeNumber: true },
+        orderBy: { episodeNumber: "desc" },
+        take: 20,
+      });
+
+      const nextEpisodeNumber = (previousEpisodes[0]?.episodeNumber ?? 0) + 1;
+
+      const script: GeneratedScriptPayload = await runScriptwriterAgent({
+        userId: series.userId,
+        seriesId: series.id,
+        nichePrompt: series.nichePrompt,
+        exampleScript: series.exampleScript,
+        language: series.language,
+        duration: series.videoDuration,
+        artStyleId: series.artStyleId,
+        topicOverride: input.topicOverride,
+        previousTitles: previousEpisodes.map((e) => e.title),
+      });
+
+      const episode = await ctx.db.seriesEpisode.create({
+        data: {
+          seriesId: series.id,
+          episodeNumber: nextEpisodeNumber,
+          title: script.title,
+          topic: input.topicOverride ?? script.title,
+          script: script.fullNarration,
+          metadata: script,
+          status: "GENERATING",
+        },
+      });
+
+      return {
+        episodeId: episode.id,
+        script,
+      };
     }),
 });

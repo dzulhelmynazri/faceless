@@ -2250,3 +2250,40 @@ export const deleteSeriesOutputSchema = z.object({
 });
 
 export type DeleteSeriesOutput = z.infer<typeof deleteSeriesOutputSchema>;
+
+export const episodeSceneSchema = z.object({
+  sceneNumber: z.number().int().min(1),
+  narrationChunk: z.string().min(1),
+  visualPrompt: z.string().min(10),
+  estimatedSeconds: z.number().positive(),
+});
+
+export type EpisodeScene = z.infer<typeof episodeSceneSchema>;
+
+export const generatedScriptPayloadSchema = z.object({
+  title: z.string().min(1).max(100),
+  hook: z.string().min(5).max(200),
+  fullNarration: z.string().min(50),
+  scenes: z.array(episodeSceneSchema).min(3),
+  targetDurationSeconds: z.number().int(),
+  viralityScore: z.number().min(1).max(10),
+  reasoning: z.string(),
+});
+
+export type GeneratedScriptPayload = z.infer<
+  typeof generatedScriptPayloadSchema
+>;
+
+export const generateEpisodeInputSchema = z.object({
+  seriesId: z.string().min(1),
+  topicOverride: z.string().max(200).optional(),
+});
+
+export type GenerateEpisodeInput = z.infer<typeof generateEpisodeInputSchema>;
+
+export const generateEpisodeOutputSchema = z.object({
+  episodeId: z.string(),
+  script: generatedScriptPayloadSchema,
+});
+
+export type GenerateEpisodeOutput = z.infer<typeof generateEpisodeOutputSchema>;

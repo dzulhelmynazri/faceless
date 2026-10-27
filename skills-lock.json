@@ -93,6 +93,12 @@
       "skillPath": "skills/files-sdk/SKILL.md",
       "computedHash": "96f88a657b40eb6cc20f85c9cd89a69c50f7b006829c973a3c54f1c8c1bbe6c3"
     },
+    "find-docs": {
+      "source": "upstash/context7",
+      "sourceType": "github",
+      "skillPath": "skills/find-docs/SKILL.md",
+      "computedHash": "e4a9a707d8e5d575d166a175f2fec66e0a13de46597f7dbc910c735ccf01bb93"
+    },
     "find-skills": {
       "source": "vercel-labs/skills",
       "sourceType": "github",

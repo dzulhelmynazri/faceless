@@ -1,4 +1,5 @@
 import { varlockNextConfigPlugin } from "@varlock/nextjs-integration/plugin";
+import { withEve } from "eve/next";
 import type { NextConfig } from "next";
 
 const withVarlock = varlockNextConfigPlugin();
@@ -17,6 +18,7 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
   reactCompiler: true,
   transpilePackages: [
+    "@faceless/agent",
     "@faceless/api",
     "@faceless/auth",
     "@faceless/contracts",
@@ -29,4 +31,8 @@ const nextConfig: NextConfig = {
   devIndicators: false,
 };
 
-export default withVarlock(nextConfig);
+export default withVarlock(
+  withEve(nextConfig, {
+    eveRoot: "../../packages/agent",
+  })
+);

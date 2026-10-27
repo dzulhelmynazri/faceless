@@ -26,7 +26,9 @@
       "@better-auth/expo": "1.7.3",
       "autumn-js": "^1.5.18",
       "files-sdk": "^3.1.1",
-      "@opencoredev/social-sdk": "^0.5.0"
+      "@opencoredev/social-sdk": "^0.5.0",
+      "eve": "^0.83.2",
+      "ai": "^7.0.137"
     }
   },
   "type": "module",
@@ -40,8 +42,8 @@
     "db:studio": "turbo run db:studio -F @faceless/db --",
     "db:generate": "turbo run db:generate -F @faceless/db --",
     "db:migrate": "turbo run db:migrate -F @faceless/db --",
-    "env:generate": "varlock codegen --path ./apps/web/ && varlock codegen --path ./apps/native/ && varlock codegen --path ./packages/db/",
-    "postinstall": "varlock codegen --path ./apps/web/ && varlock codegen --path ./apps/native/ && varlock codegen --path ./packages/db/",
+    "env:generate": "varlock codegen --path ./apps/web/ && varlock codegen --path ./apps/native/ && varlock codegen --path ./packages/db/ && varlock codegen --path ./packages/agent/",
+    "postinstall": "varlock codegen --path ./apps/web/ && varlock codegen --path ./apps/native/ && varlock codegen --path ./packages/db/ && varlock codegen --path ./packages/agent/",
     "check": "ultracite check",
     "fix": "ultracite fix",
     "autumn:setup": "varlock run --path apps/web/ -- bun run ./scripts/setup-autumn.ts",

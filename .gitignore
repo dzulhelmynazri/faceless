@@ -47,6 +47,9 @@ lerna-debug.log*
 .alchemy
 .vercel
 
+# Eve
+.eve
+
 # Testing
 coverage
 .nyc_output

@@ -28,7 +28,12 @@ export default defineConfig({
     tanstackJsPlugins,
     jsPlugins,
   ],
-  ignorePatterns: [...(core.ignorePatterns ?? []), ".agents/**", ".claude/**"],
+  ignorePatterns: [
+    ...(core.ignorePatterns ?? []),
+    ".agents/**",
+    ".claude/**",
+    "**/src/env.ts",
+  ],
   jsPlugins: [...jsPlugins.jsPlugins, ...shadcn.jsPlugins],
   settings: {
     ...jsPluginSettings,

@@ -1,0 +1,12 @@
+# dependencies (bun install)
+node_modules
+
+# output
+dist
+*.tsbuildinfo
+
+# eve dev & compile cache
+.eve
+
+!.env.schema
+/src/env.ts

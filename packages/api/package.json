@@ -13,6 +13,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@faceless/agent": "workspace:*",
     "@faceless/auth": "workspace:*",
     "@faceless/contracts": "workspace:*",
     "@faceless/db": "workspace:*",
