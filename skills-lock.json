@@ -117,6 +117,12 @@
       "skillPath": "skills/heroui-native/SKILL.md",
       "computedHash": "8f8fc3913fd585563795ce27a534428024f794621114f0c83039bc3c983dabdd"
     },
+    "improve-codebase-architecture": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/improve-codebase-architecture/SKILL.md",
+      "computedHash": "ac2c94885f34ff8492dc12aa4543182f661f32ea1722b8d6b6c2c7045af33ae3"
+    },
     "middlewares": {
       "source": "trpc/trpc",
       "sourceType": "github",
