@@ -28,7 +28,7 @@ import Loader from "./loader";
 const signInWithGoogle = async () => {
   await authClient.signIn.social(
     {
-      callbackURL: "/dashboard",
+      callbackURL: "/series",
       provider: "google",
     },
     {

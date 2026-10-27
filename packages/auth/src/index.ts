@@ -19,6 +19,17 @@ export const createAuth = (env: Env, database: Database) =>
     database: prismaAdapter(database, {
       provider: "postgresql",
     }),
+    account: {
+      accountLinking: {
+        enabled: true,
+        trustedProviders: ["google"],
+        requireLocalEmailVerified: false,
+      },
+    },
+    rateLimit: {
+      window: 10,
+      max: 100,
+    },
     emailAndPassword: { enabled: true },
     user: {
       deleteUser: {
