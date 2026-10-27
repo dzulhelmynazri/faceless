@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 
+import { PageHeader } from "@/components/page-header";
 import { auth } from "@/services";
 
 import Test from "./_components/test";
@@ -11,12 +11,15 @@ const DashboardPage = async () => {
   });
 
   if (!session?.user) {
-    redirect("/auth");
+    return null;
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <p className="text-muted-foreground">Welcome {session.user.name}</p>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title={`Welcome, ${session.user.name}`}
+        description="This is the test page."
+      />
       <Test session={session} />
     </div>
   );

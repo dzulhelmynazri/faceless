@@ -63,13 +63,13 @@ export type { CaptionStyleConfig } from "./styles/caption-presets";
 // Schemas & Types
 export {
   captionStyleIdSchema,
-  videoCompositionPropsSchema,
-  videoSceneItemSchema,
-} from "./types";
+  type CaptionStyleId,
+} from "@faceless/contracts/series";
+
+export { videoCompositionPropsSchema, videoSceneItemSchema } from "./types";
 
 export type {
   CaptionPhrase,
-  CaptionStyleId,
   SpeechInterval,
   VideoCompositionProps,
   VideoSceneItem,

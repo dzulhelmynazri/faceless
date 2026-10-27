@@ -11,6 +11,8 @@ import {
 } from "@faceless/ui/components/dialog";
 import { Input } from "@faceless/ui/components/input";
 import { Label } from "@faceless/ui/components/label";
+import { Separator } from "@faceless/ui/components/separator";
+import { Spinner } from "@faceless/ui/components/spinner";
 import { Archive, Trash2 } from "lucide-react";
 import * as React from "react";
 
@@ -72,7 +74,9 @@ const SeriesSettingsForm = ({
           </span>
         </div>
 
-        <div className="flex items-center justify-between border-t border-border/40 pt-3">
+        <Separator />
+
+        <div className="flex items-center justify-between">
           <div className="flex flex-col">
             <span className="text-sm font-medium">Archive Series</span>
             <span className="text-xs text-muted-foreground">
@@ -80,14 +84,14 @@ const SeriesSettingsForm = ({
             </span>
           </div>
           <Button onClick={onToggleArchive} size="sm" variant="outline">
-            <span className="flex items-center gap-1.5">
-              <Archive className="size-3.5" />
-              {status === "ARCHIVED" ? "Unarchive" : "Archive"}
-            </span>
+            <Archive data-icon="inline-start" />
+            {status === "ARCHIVED" ? "Unarchive" : "Archive"}
           </Button>
         </div>
 
-        <div className="flex items-center justify-between border-t border-border/40 pt-3">
+        <Separator />
+
+        <div className="flex items-center justify-between">
           <div className="flex flex-col">
             <span className="text-sm font-medium text-destructive">
               Delete Series
@@ -96,11 +100,9 @@ const SeriesSettingsForm = ({
               Permanently remove this series and all episodes.
             </span>
           </div>
-          <Button onClick={onOpenDeleteDialog} size="sm" variant="destructive">
-            <span className="flex items-center gap-1.5">
-              <Trash2 className="size-3.5" />
-              Delete
-            </span>
+          <Button onClick={onOpenDeleteDialog} variant="destructive">
+            <Trash2 data-icon="inline-start" />
+            Delete
           </Button>
         </div>
       </div>
@@ -110,7 +112,14 @@ const SeriesSettingsForm = ({
           Cancel
         </Button>
         <Button disabled={isSaving} onClick={handleSave}>
-          Save Changes
+          {isSaving ? (
+            <>
+              <Spinner data-icon="inline-start" />
+              Saving...
+            </>
+          ) : (
+            "Save Changes"
+          )}
         </Button>
       </DialogFooter>
     </>

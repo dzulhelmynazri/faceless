@@ -28,7 +28,14 @@ export const SeriesWizardFooter = () => {
 
       {currentStep === 8 ? (
         <Button size="lg" disabled={isCreating} onClick={handleCreateSeries}>
-          {isCreating ? <Spinner /> : "Create Series"}
+          {isCreating ? (
+            <>
+              <Spinner data-icon="inline-start" />
+              Creating Series...
+            </>
+          ) : (
+            "Create Series"
+          )}
         </Button>
       ) : (
         <Button size="lg" onClick={handleContinue}>

@@ -2041,8 +2041,22 @@ export const SERIES_ART_STYLES: readonly SeriesArtStyle[] = [
   },
 ] as const;
 
+export const captionStyleIdSchema = z.enum([
+  "bold-stroke",
+  "red-highlight",
+  "sleek",
+  "karaoke",
+  "majestic",
+  "beast",
+  "elegant",
+  "pixel",
+  "clarity",
+]);
+
+export type CaptionStyleId = z.infer<typeof captionStyleIdSchema>;
+
 export interface SeriesCaptionStyle {
-  id: string;
+  id: CaptionStyleId;
   name: string;
 }
 
@@ -2319,15 +2333,20 @@ export type RegenerateEpisodeSceneInput = z.infer<
   typeof regenerateEpisodeSceneInputSchema
 >;
 
+export const studioSceneItemSchema = z.object({
+  id: z.string(),
+  sceneNumber: z.number().int(),
+  narrationText: z.string(),
+  visualPrompt: z.string(),
+  imageUrl: z.string(),
+  duration: z.number(),
+});
+
+export type StudioSceneItem = z.infer<typeof studioSceneItemSchema>;
+
 export const regenerateEpisodeSceneOutputSchema = z.object({
   success: z.boolean(),
-  scene: z.object({
-    id: z.string(),
-    sceneNumber: z.number().int(),
-    visualPrompt: z.string(),
-    imageUrl: z.string(),
-    duration: z.number(),
-  }),
+  scene: studioSceneItemSchema,
   thumbnailUrl: z.string().nullable(),
 });
 
@@ -2358,9 +2377,18 @@ export type SeriesEpisodeAudioMetadata = z.infer<
   typeof seriesEpisodeAudioMetadataSchema
 >;
 
+export const episodeCustomizationSchema = z.object({
+  captionStyleId: captionStyleIdSchema,
+  bgmUrl: z.string().nullable(),
+  glitchEffect: z.boolean(),
+});
+
+export type EpisodeCustomization = z.infer<typeof episodeCustomizationSchema>;
+
 export const seriesEpisodeMetadataSchema = z.object({
   script: generatedScriptPayloadSchema,
   audio: seriesEpisodeAudioMetadataSchema.optional(),
+  customization: episodeCustomizationSchema.optional(),
 });
 
 export type SeriesEpisodeMetadata = z.infer<typeof seriesEpisodeMetadataSchema>;
@@ -2382,4 +2410,119 @@ export const generateEpisodeAudioOutputSchema = z.object({
 
 export type GenerateEpisodeAudioOutput = z.infer<
   typeof generateEpisodeAudioOutputSchema
+>;
+
+export const getEpisodeByIdInputSchema = z.object({
+  episodeId: z.string().min(1),
+});
+
+export type GetEpisodeByIdInput = z.infer<typeof getEpisodeByIdInputSchema>;
+
+export const getEpisodeByIdOutputSchema = z.object({
+  episode: z.object({
+    id: z.string(),
+    seriesId: z.string(),
+    episodeNumber: z.number().int(),
+    title: z.string(),
+    topic: z.string().nullable(),
+    script: z.string(),
+    status: z.enum([
+      "PENDING",
+      "GENERATING",
+      "READY_FOR_REVIEW",
+      "APPROVED",
+      "PUBLISHED",
+      "FAILED",
+    ]),
+    audioUrl: z.string().nullable(),
+    thumbnailUrl: z.string().nullable(),
+    videoUrl: z.string().nullable(),
+    error: z.string().nullable(),
+    metadata: seriesEpisodeMetadataSchema.nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+  }),
+  series: z.object({
+    id: z.string(),
+    name: z.string(),
+    voiceId: z.string(),
+    captionStyleId: captionStyleIdSchema,
+    musicTrackId: z.string().nullable(),
+    customMusicUrl: z.string().nullable(),
+    glitchEffect: z.boolean(),
+  }),
+  scenes: z.array(studioSceneItemSchema),
+});
+
+export type GetEpisodeByIdOutput = z.infer<typeof getEpisodeByIdOutputSchema>;
+
+export const updateEpisodeCustomizationInputSchema = z.object({
+  episodeId: z.string().min(1),
+  customization: episodeCustomizationSchema,
+});
+
+export type UpdateEpisodeCustomizationInput = z.infer<
+  typeof updateEpisodeCustomizationInputSchema
+>;
+
+export const updateEpisodeCustomizationOutputSchema = z.object({
+  success: z.boolean(),
+  customization: episodeCustomizationSchema,
+});
+
+export type UpdateEpisodeCustomizationOutput = z.infer<
+  typeof updateEpisodeCustomizationOutputSchema
+>;
+
+export const updateEpisodeStatusInputSchema = z.object({
+  episodeId: z.string().min(1),
+  status: z.enum([
+    "PENDING",
+    "GENERATING",
+    "READY_FOR_REVIEW",
+    "APPROVED",
+    "PUBLISHED",
+    "FAILED",
+  ]),
+});
+
+export type UpdateEpisodeStatusInput = z.infer<
+  typeof updateEpisodeStatusInputSchema
+>;
+
+export const updateEpisodeStatusOutputSchema = z.object({
+  success: z.boolean(),
+  status: z.enum([
+    "PENDING",
+    "GENERATING",
+    "READY_FOR_REVIEW",
+    "APPROVED",
+    "PUBLISHED",
+    "FAILED",
+  ]),
+});
+
+export type UpdateEpisodeStatusOutput = z.infer<
+  typeof updateEpisodeStatusOutputSchema
+>;
+
+export const updateEpisodeSceneInputSchema = z.object({
+  episodeId: z.string().min(1),
+  sceneNumber: z.number().int().min(1),
+  narrationText: z.string().min(1).optional(),
+  visualPrompt: z.string().min(1).optional(),
+});
+
+export type UpdateEpisodeSceneInput = z.infer<
+  typeof updateEpisodeSceneInputSchema
+>;
+
+export const updateEpisodeSceneOutputSchema = z.object({
+  success: z.boolean(),
+  scene: studioSceneItemSchema,
+  updatedScript: z.string().optional(),
+});
+
+export type UpdateEpisodeSceneOutput = z.infer<
+  typeof updateEpisodeSceneOutputSchema
 >;

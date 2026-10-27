@@ -1,4 +1,4 @@
-import type { WordTimestamp } from "@faceless/contracts/series";
+import type { CaptionStyleId, WordTimestamp } from "@faceless/contracts/series";
 import * as React from "react";
 import { useCurrentFrame, useVideoConfig } from "remotion";
 
@@ -7,7 +7,6 @@ import {
   getCaptionPhraseAtTime,
 } from "../core/caption-window";
 import { getCaptionStyleConfig } from "../styles/caption-presets";
-import type { CaptionStyleId } from "../types";
 
 export interface CaptionLayerProps {
   wordTimestamps: readonly WordTimestamp[];

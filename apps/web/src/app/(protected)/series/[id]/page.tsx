@@ -10,18 +10,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@faceless/ui/components/alert-dialog";
-import { Button, buttonVariants } from "@faceless/ui/components/button";
+import { Button } from "@faceless/ui/components/button";
 import { Card, CardHeader } from "@faceless/ui/components/card";
 import {
   Empty,
   EmptyContent,
   EmptyDescription,
   EmptyHeader,
+  EmptyMedia,
   EmptyTitle,
 } from "@faceless/ui/components/empty";
 import { Skeleton } from "@faceless/ui/components/skeleton";
+import { Spinner } from "@faceless/ui/components/spinner";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Pause, Play, Settings, Sparkles } from "lucide-react";
+import { ArrowLeft, Film, Pause, Play, Settings } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
@@ -166,15 +168,22 @@ const SeriesDetailPage = ({ params }: PageProps<"/series/[id]">) => {
     return (
       <Empty>
         <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Film />
+          </EmptyMedia>
           <EmptyTitle>Series Not Found</EmptyTitle>
           <EmptyDescription>
             The series you are looking for does not exist or has been deleted.
           </EmptyDescription>
         </EmptyHeader>
-        <EmptyContent>
-          <Link className={buttonVariants()} href="/videos">
-            Return to Dashboard
-          </Link>
+        <EmptyContent className="flex-row justify-center">
+          <Button
+            nativeButton={false}
+            render={<Link href="/series" />}
+            variant="outline"
+          >
+            Return to Series
+          </Button>
         </EmptyContent>
       </Empty>
     );
@@ -184,10 +193,14 @@ const SeriesDetailPage = ({ params }: PageProps<"/series/[id]">) => {
     <div className="flex flex-col gap-6">
       {/* Back button & Action Toolbar */}
       <div className="flex items-center justify-between">
-        <Link className={buttonVariants({ variant: "ghost" })} href="/videos">
-          <ArrowLeft />
+        <Button
+          nativeButton={false}
+          render={<Link href="/videos" />}
+          variant="ghost"
+        >
+          <ArrowLeft data-icon="inline-start" />
           Back to Videos
-        </Link>
+        </Button>
 
         <div className="flex items-center gap-2">
           <Button
@@ -216,10 +229,14 @@ const SeriesDetailPage = ({ params }: PageProps<"/series/[id]">) => {
             disabled={generateEpisodeMutation.isPending}
             onClick={handleGenerateEpisode}
           >
-            <Sparkles data-icon="inline-start" />
-            {generateEpisodeMutation.isPending
-              ? "Generating Voiceover..."
-              : "Generate Episode Now"}
+            {generateEpisodeMutation.isPending ? (
+              <>
+                <Spinner data-icon="inline-start" />
+                Generating Voiceover...
+              </>
+            ) : (
+              "Generate Episode Now"
+            )}
           </Button>
         </div>
       </div>

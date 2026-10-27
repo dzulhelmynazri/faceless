@@ -1,5 +1,6 @@
 "use client";
 
+import { Separator } from "@faceless/ui/components/separator";
 import Link from "next/link";
 
 import { ModeToggle } from "./mode-toggle";
@@ -22,7 +23,7 @@ const Header = () => (
         <UserMenu />
       </div>
     </div>
-    <hr />
+    <Separator />
   </div>
 );
 

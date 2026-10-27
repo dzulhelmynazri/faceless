@@ -1,6 +1,6 @@
+import type { CaptionStyleId } from "@faceless/contracts/series";
 import type { CSSProperties } from "react";
 
-import type { CaptionStyleId } from "../types";
 import { FONT_FAMILIES } from "./fonts";
 
 export interface CaptionStyleConfig {

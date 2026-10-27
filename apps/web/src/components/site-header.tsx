@@ -3,6 +3,7 @@
 import { Separator } from "@faceless/ui/components/separator";
 import { SidebarTrigger } from "@faceless/ui/components/sidebar";
 import { usePathname } from "next/navigation";
+import * as React from "react";
 
 const titles = new Map<string, string>([
   ["/series", "Series"],
@@ -13,20 +14,25 @@ const titles = new Map<string, string>([
   ["/billings", "Billings"],
 ]);
 
-export const SiteHeader = () => {
+const SiteHeaderTitle = () => {
   const pathname = usePathname();
-  const title = titles.get(pathname);
 
-  return (
-    <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
-      <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
-        <SidebarTrigger className="-ml-1" />
-        <Separator
-          orientation="vertical"
-          className="mx-2 h-4 data-vertical:self-auto"
-        />
-        <h1 className="text-base font-medium">{title}</h1>
-      </div>
-    </header>
-  );
+  return titles.get(pathname);
 };
+
+export const SiteHeader = () => (
+  <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
+    <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
+      <SidebarTrigger className="-ml-1" />
+      <Separator
+        orientation="vertical"
+        className="mx-2 h-4 data-vertical:self-auto"
+      />
+      <h1 className="text-base font-medium">
+        <React.Suspense fallback={null}>
+          <SiteHeaderTitle />
+        </React.Suspense>
+      </h1>
+    </div>
+  </header>
+);

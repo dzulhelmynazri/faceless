@@ -20,6 +20,7 @@ import {
   ItemDescription,
   ItemTitle,
 } from "@faceless/ui/components/item";
+import { Spinner } from "@faceless/ui/components/spinner";
 import {
   Tabs,
   TabsContent,
@@ -28,11 +29,12 @@ import {
 } from "@faceless/ui/components/tabs";
 import { Textarea } from "@faceless/ui/components/textarea";
 import { isNonEmptyString } from "@faceless/utils";
-import { Layers, Loader2, Paintbrush, Pause, Play, Upload } from "lucide-react";
+import { Layers, Paintbrush, Pause, Play, Upload } from "lucide-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import * as React from "react";
 import { toast } from "sonner";
 
+import { PageHeader } from "@/components/page-header";
 import { useAppFiles } from "@/lib/files-client";
 
 import { useSeriesWizard } from "../_context/series-wizard-context";
@@ -91,9 +93,7 @@ const CustomMusicUploadCard = ({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {isUploading && (
-            <Loader2 className="size-4 animate-spin text-muted-foreground" />
-          )}
+          {isUploading && <Spinner />}
           <Button variant="ghost" disabled={isUploading} onClick={onRemove}>
             Remove
           </Button>
@@ -102,7 +102,7 @@ const CustomMusicUploadCard = ({
     ) : (
       <Empty>
         <EmptyMedia variant="icon">
-          {isUploading ? <Loader2 className="animate-spin" /> : <Upload />}
+          {isUploading ? <Spinner /> : <Upload />}
         </EmptyMedia>
         <EmptyHeader>
           <EmptyDescription>
@@ -112,7 +112,14 @@ const CustomMusicUploadCard = ({
         </EmptyHeader>
         <EmptyContent>
           <Button variant="outline" disabled={isUploading} onClick={onBrowse}>
-            {isUploading ? "Uploading..." : "Browse files"}
+            {isUploading ? (
+              <>
+                <Spinner data-icon="inline-start" />
+                Uploading...
+              </>
+            ) : (
+              "Browse files"
+            )}
           </Button>
         </EmptyContent>
       </Empty>
@@ -485,20 +492,16 @@ export const StepThreeMusic = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center gap-2.5">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Background Music
-          </h1>
-          <Badge variant="outline">Step 3 of 8</Badge>
-          <span className="text-xs text-muted-foreground">Optional</span>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Choose as many songs as you want, we&apos;ll pick a random one for
-          each video
-        </p>
-      </div>
+      <PageHeader
+        title="Background Music"
+        description="Choose as many songs as you want, we'll pick a random one for each video"
+        badge={
+          <>
+            <Badge variant="outline">Step 3 of 8</Badge>
+            <span className="text-xs text-muted-foreground">Optional</span>
+          </>
+        }
+      />
 
       {/* Tabs */}
       <Tabs value={tab} onValueChange={handleTabChange}>

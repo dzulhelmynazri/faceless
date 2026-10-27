@@ -22,6 +22,8 @@ import { Check, Layers, Paintbrush } from "lucide-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import * as React from "react";
 
+import { PageHeader } from "@/components/page-header";
+
 import { useSeriesWizard } from "../_context/series-wizard-context";
 
 const NICHE_MAX_LENGTH = 5000;
@@ -54,18 +56,11 @@ export const StepOneNiche = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center gap-2.5">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Choose your niche
-          </h1>
-          <Badge variant="outline">Step 1 of 8</Badge>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Select a preset or describe your own niche
-        </p>
-      </div>
+      <PageHeader
+        title="Choose your niche"
+        description="Select a preset or describe your own niche"
+        badge={<Badge variant="outline">Step 1 of 8</Badge>}
+      />
 
       {/* Tabs */}
       <Tabs value={tab} onValueChange={handleTabChange}>

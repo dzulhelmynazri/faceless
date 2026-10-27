@@ -7,6 +7,8 @@ import { Card, CardContent } from "@faceless/ui/components/card";
 import { Check } from "lucide-react";
 import * as React from "react";
 
+import { PageHeader } from "@/components/page-header";
+
 import { useSeriesWizard } from "../_context/series-wizard-context";
 
 interface CaptionPhrase {
@@ -614,18 +616,11 @@ export const StepFiveCaptionStyle = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center gap-2.5">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Caption Style
-          </h1>
-          <Badge variant="outline">Step 5 of 8</Badge>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Choose how captions will appear in your video
-        </p>
-      </div>
+      <PageHeader
+        title="Caption Style"
+        description="Choose how captions will appear in your video"
+        badge={<Badge variant="outline">Step 5 of 8</Badge>}
+      />
 
       {/* Grid of Caption Styles */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">

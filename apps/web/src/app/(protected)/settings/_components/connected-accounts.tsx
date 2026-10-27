@@ -5,13 +5,7 @@ import type {
   SocialPlatform,
 } from "@faceless/contracts/social";
 import { Button } from "@faceless/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@faceless/ui/components/card";
+import { Card, CardContent } from "@faceless/ui/components/card";
 import { Separator } from "@faceless/ui/components/separator";
 import { Skeleton } from "@faceless/ui/components/skeleton";
 import { Spinner } from "@faceless/ui/components/spinner";
@@ -27,7 +21,7 @@ interface AccountConfig {
   id: string;
   name: string;
   platform: SocialPlatform;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className: string }>;
 }
 
 const ACCOUNTS: readonly AccountConfig[] = [
@@ -114,13 +108,6 @@ export const ConnectedAccounts = () => {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Connected accounts</CardTitle>
-        <CardDescription>
-          Connect your social media accounts for automatic content distribution.
-        </CardDescription>
-      </CardHeader>
-      <Separator />
       <CardContent className="flex flex-col">
         {ACCOUNTS.map((account, index) => {
           const Icon = account.icon;

@@ -6,6 +6,8 @@ import { Badge } from "@faceless/ui/components/badge";
 import { Card, CardContent } from "@faceless/ui/components/card";
 import { Switch } from "@faceless/ui/components/switch";
 
+import { PageHeader } from "@/components/page-header";
+
 import { useSeriesWizard } from "../_context/series-wizard-context";
 
 export const StepSixEffects = () => {
@@ -13,19 +15,16 @@ export const StepSixEffects = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center gap-2.5">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Effects
-          </h1>
-          <Badge variant="outline">Step 6 of 8</Badge>
-          <span className="text-xs text-muted-foreground">Optional</span>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Add visual effects to make your videos more engaging and eye-catching.
-        </p>
-      </div>
+      <PageHeader
+        title="Effects"
+        description="Add visual effects to make your videos more engaging and eye-catching."
+        badge={
+          <>
+            <Badge variant="outline">Step 6 of 8</Badge>
+            <span className="text-xs text-muted-foreground">Optional</span>
+          </>
+        }
+      />
 
       {/* Effects list */}
       <div className="flex flex-col gap-3">

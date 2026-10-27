@@ -1,6 +1,7 @@
 "use client";
 
 import type { GetSeriesByIdOutput } from "@faceless/contracts/series";
+import { AspectRatio } from "@faceless/ui/components/aspect-ratio";
 import { Badge } from "@faceless/ui/components/badge";
 import { Button } from "@faceless/ui/components/button";
 import {
@@ -100,7 +101,7 @@ export const SceneGalleryDialog = ({
                 className="flex flex-col gap-2 rounded-xl border border-border bg-card p-3 shadow-xs"
                 key={scene.id}
               >
-                <div className="relative aspect-[9/16] w-full overflow-hidden rounded-lg bg-muted">
+                <AspectRatio className="w-full overflow-hidden" ratio={9 / 16}>
                   <Image
                     alt={`Scene ${scene.sceneNumber} Keyframe`}
                     className="object-cover"
@@ -114,7 +115,7 @@ export const SceneGalleryDialog = ({
                     </Badge>
                     <Badge variant="outline">{scene.duration}s</Badge>
                   </div>
-                </div>
+                </AspectRatio>
 
                 <div className="flex flex-col gap-1 text-xs">
                   <p className="line-clamp-2 font-medium text-foreground">

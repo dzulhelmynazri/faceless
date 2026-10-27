@@ -24,9 +24,13 @@ const UserMenu = () => {
 
   if (!session) {
     return (
-      <Link href="/auth">
-        <Button variant="outline">Sign In</Button>
-      </Link>
+      <Button
+        nativeButton={false}
+        render={<Link href="/auth" />}
+        variant="outline"
+      >
+        Sign In
+      </Button>
     );
   }
 

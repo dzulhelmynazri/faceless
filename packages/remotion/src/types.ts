@@ -1,20 +1,9 @@
 import type { WordTimestamp } from "@faceless/contracts/series";
-import { wordTimestampSchema } from "@faceless/contracts/series";
+import {
+  captionStyleIdSchema,
+  wordTimestampSchema,
+} from "@faceless/contracts/series";
 import { z } from "zod";
-
-export const captionStyleIdSchema = z.enum([
-  "bold-stroke",
-  "red-highlight",
-  "sleek",
-  "karaoke",
-  "majestic",
-  "beast",
-  "elegant",
-  "pixel",
-  "clarity",
-]);
-
-export type CaptionStyleId = z.infer<typeof captionStyleIdSchema>;
 
 export const videoSceneItemSchema = z.object({
   id: z.string().optional(),

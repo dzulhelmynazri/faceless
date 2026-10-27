@@ -47,3 +47,13 @@ This document defines the core domain terms and concepts across the Faceless pla
 - **Caption Phrase Window**: A 2–4 word sliding text segment derived from syllable timestamps and bounded by sentence punctuation, highlighting the spoken word in real-time.
 - **Audio Ducking Envelope**: The pre-computed volume curve dynamically attenuating background music levels during active narration speech and swelling during pauses.
 - **Chromatic Glitch Shader**: An SVG-based RGB channel displacement filter applied across scene cuts for dramatic impact in dark fantasy, true crime, or horror niches.
+
+---
+
+## 6. Episode Studio Domain
+
+- **Episode Studio**: The interactive web workspace at `/series/[id]/episodes/[episodeId]` enabling creators to preview, scrub, edit, regenerate, and approve an episode before server rendering and social publishing.
+- **Interactive Web Player (`@remotion/player`)**: In-browser zero-render-latency video playback engine that renders the root Remotion composition directly in the React DOM.
+- **Episode Customization Overrides**: Episode-specific adjustments (caption style preset, background music track, glitch toggle) stored within `SeriesEpisode.metadata.customization`, preserving snapshot fidelity without altering parent series defaults.
+- **Granular Scene Regeneration**: Targeted re-synthesis of an individual scene keyframe image via FLUX without re-running the entire episode pipeline or burning redundant generation credits.
+- **Approval Gate**: State transition (`READY_FOR_REVIEW` $\rightarrow$ `APPROVED`) that locks episode assets and queues Phase 7 background server rendering and social platform distribution.

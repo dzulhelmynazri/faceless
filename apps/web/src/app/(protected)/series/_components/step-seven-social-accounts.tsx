@@ -6,7 +6,7 @@ import type {
 } from "@faceless/contracts/social";
 import { Badge } from "@faceless/ui/components/badge";
 import { Button } from "@faceless/ui/components/button";
-import { Card } from "@faceless/ui/components/card";
+import { Card, CardContent } from "@faceless/ui/components/card";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,7 @@ import {
   Empty,
   EmptyDescription,
   EmptyHeader,
+  EmptyMedia,
   EmptyTitle,
 } from "@faceless/ui/components/empty";
 import {
@@ -30,13 +31,13 @@ import {
 import { Skeleton } from "@faceless/ui/components/skeleton";
 import { Spinner } from "@faceless/ui/components/spinner";
 import { Switch } from "@faceless/ui/components/switch";
-import { cn } from "@faceless/ui/lib/utils";
 import { Instagram, Tiktok, Youtube } from "@faceless/ui/socials";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { Plus, Share2 } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 
+import { PageHeader } from "@/components/page-header";
 import { trpc } from "@/utils/trpc";
 
 import { useSeriesWizard } from "../_context/series-wizard-context";
@@ -45,7 +46,7 @@ interface SupportedPlatformOption {
   id: SocialPlatform;
   name: string;
   notice: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className: string }>;
 }
 
 const SUPPORTED_PLATFORMS: readonly SupportedPlatformOption[] = [
@@ -73,7 +74,7 @@ const SUPPORTED_PLATFORMS: readonly SupportedPlatformOption[] = [
 
 const PLATFORM_ICONS: Record<
   SocialPlatform,
-  React.ComponentType<{ className?: string }>
+  React.ComponentType<{ className: string }>
 > = {
   INSTAGRAM: Instagram,
   TIKTOK: Tiktok,
@@ -149,19 +150,11 @@ export const StepSevenSocialAccounts = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center gap-2.5">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Connect Social Accounts
-          </h1>
-          <Badge variant="outline">Step 7 of 8</Badge>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Connect and select the social media accounts where you want to publish
-          your content
-        </p>
-      </div>
+      <PageHeader
+        title="Connect Social Accounts"
+        description="Connect and select the social media accounts where you want to publish your content"
+        badge={<Badge variant="outline">Step 7 of 8</Badge>}
+      />
 
       {/* Connected Accounts List */}
       <div className="flex flex-col gap-3">
@@ -200,6 +193,9 @@ export const StepSevenSocialAccounts = () => {
               <Card>
                 <Empty>
                   <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <Share2 />
+                    </EmptyMedia>
                     <EmptyTitle>No accounts connected yet</EmptyTitle>
                     <EmptyDescription>
                       Connect an account to automatically publish videos to your
@@ -279,24 +275,24 @@ export const StepSevenSocialAccounts = () => {
                 const isSelected = selectedPlatform === platform.id;
 
                 return (
-                  <button
+                  <Card
+                    className="cursor-pointer select-none"
                     key={platform.id}
-                    type="button"
                     onClick={() => {
                       setSelectedPlatform(platform.id);
                     }}
-                    className={cn(
-                      "flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border px-3 py-5 transition-all outline-none select-none",
-                      isSelected
-                        ? "border-primary bg-card ring-1 ring-primary"
-                        : "border-border/80 bg-card hover:bg-muted/40"
-                    )}
+                    size="sm"
+                    variant={isSelected ? "selected" : "interactive"}
                   >
-                    <Icon className="size-8 shrink-0 text-foreground" />
-                    <span className="text-sm font-semibold text-foreground">
-                      {platform.name}
-                    </span>
-                  </button>
+                    <CardContent>
+                      <div className="flex flex-col items-center justify-center gap-2.5 text-center">
+                        <Icon className="size-8 shrink-0" />
+                        <span className="text-sm font-semibold">
+                          {platform.name}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
                 );
               })}
             </div>

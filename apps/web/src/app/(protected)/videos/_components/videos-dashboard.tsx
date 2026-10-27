@@ -12,7 +12,7 @@ import {
   AlertDialogTitle,
 } from "@faceless/ui/components/alert-dialog";
 import { Badge } from "@faceless/ui/components/badge";
-import { Button, buttonVariants } from "@faceless/ui/components/button";
+import { Button } from "@faceless/ui/components/button";
 import {
   Card,
   CardAction,
@@ -31,6 +31,7 @@ import {
 } from "@faceless/ui/components/dropdown-menu";
 import {
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
@@ -57,6 +58,7 @@ import Link from "next/link";
 import * as React from "react";
 import { toast } from "sonner";
 
+import { PageHeader } from "@/components/page-header";
 import { trpc } from "@/utils/trpc";
 
 type SeriesItem = GetSeriesListOutput[number];
@@ -256,13 +258,15 @@ const SeriesCard = ({ series }: { series: SeriesItem }) => {
           <span className="text-xs text-muted-foreground">
             {series.episodeCount} episodes
           </span>
-          <Link
-            className={buttonVariants({ variant: "ghost", size: "sm" })}
-            href={`/series/${series.id}`}
+          <Button
+            nativeButton={false}
+            render={<Link href={`/series/${series.id}`} />}
+            size="sm"
+            variant="ghost"
           >
             Manage
-            <ArrowRight />
-          </Link>
+            <ArrowRight data-icon="inline-end" />
+          </Button>
         </CardFooter>
       </Card>
 
@@ -292,8 +296,8 @@ const SeriesEmptyState = ({ filter }: { filter: FilterTab }) => {
     return (
       <Empty>
         <EmptyHeader>
-          <EmptyMedia>
-            <Pause className="size-6" />
+          <EmptyMedia variant="icon">
+            <Pause />
           </EmptyMedia>
           <EmptyTitle>No Paused Series</EmptyTitle>
           <EmptyDescription>
@@ -309,8 +313,8 @@ const SeriesEmptyState = ({ filter }: { filter: FilterTab }) => {
     return (
       <Empty>
         <EmptyHeader>
-          <EmptyMedia>
-            <Archive className="size-6" />
+          <EmptyMedia variant="icon">
+            <Archive />
           </EmptyMedia>
           <EmptyTitle>No Archived Series</EmptyTitle>
           <EmptyDescription>
@@ -325,8 +329,8 @@ const SeriesEmptyState = ({ filter }: { filter: FilterTab }) => {
   return (
     <Empty>
       <EmptyHeader>
-        <EmptyMedia>
-          <Video className="size-6" />
+        <EmptyMedia variant="icon">
+          <Video />
         </EmptyMedia>
         <EmptyTitle>
           {filter === "ACTIVE" ? "No Active Series" : "No Series Created Yet"}
@@ -336,6 +340,11 @@ const SeriesEmptyState = ({ filter }: { filter: FilterTab }) => {
           voiceover, dynamic visual scenes, and multi-platform publishing.
         </EmptyDescription>
       </EmptyHeader>
+      <EmptyContent>
+        <Button nativeButton={false} render={<Link href="/series" />}>
+          Create Series
+        </Button>
+      </EmptyContent>
     </Empty>
   );
 };
@@ -357,13 +366,10 @@ export const VideosDashboard = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Top Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Videos</h1>
-        <p className="text-sm text-muted-foreground">
-          View and manage your automated video series and content pipelines.
-        </p>
-      </div>
+      <PageHeader
+        title="Videos"
+        description="View and manage your automated video series and content pipelines."
+      />
 
       {/* Tabs */}
       <div className="flex items-center justify-between">
@@ -386,7 +392,7 @@ export const VideosDashboard = () => {
 
       {/* Content Grid */}
       {isLoading && (
-        <div className="grid grid-cols-1 grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {[1, 2, 3, 4].map((n) => (
             <Card key={n}>
               <CardHeader>
@@ -409,7 +415,7 @@ export const VideosDashboard = () => {
       )}
 
       {!isLoading && filteredSeries.length > 0 && (
-        <div className="grid grid-cols-1 grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {filteredSeries.map((series) => (
             <SeriesCard key={series.id} series={series} />
           ))}

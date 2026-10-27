@@ -25,10 +25,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@faceless/ui/components/tooltip";
-import { cn } from "@faceless/ui/lib/utils";
 import { Tiktok } from "@faceless/ui/socials";
 import { Clock, Info } from "lucide-react";
 import * as React from "react";
+
+import { PageHeader } from "@/components/page-header";
 
 import { useSeriesWizard } from "../_context/series-wizard-context";
 
@@ -102,34 +103,24 @@ const TimePickerPopover = ({
               Select Publish Time
             </span>
             <div className="flex items-center rounded-lg border border-border/80 p-0.5">
-              <button
-                type="button"
+              <Button
                 onClick={() => {
                   handleSetPeriod("AM");
                 }}
-                className={cn(
-                  "cursor-pointer rounded-md px-2 py-0.5 text-xs font-medium transition-colors",
-                  periodPart === "AM"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
+                size="xs"
+                variant={periodPart === "AM" ? "default" : "ghost"}
               >
                 AM
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
                 onClick={() => {
                   handleSetPeriod("PM");
                 }}
-                className={cn(
-                  "cursor-pointer rounded-md px-2 py-0.5 text-xs font-medium transition-colors",
-                  periodPart === "PM"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
+                size="xs"
+                variant={periodPart === "PM" ? "default" : "ghost"}
               >
                 PM
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -141,21 +132,16 @@ const TimePickerPopover = ({
               </span>
               <div className="grid grid-cols-4 gap-1">
                 {HOURS.map((hour) => (
-                  <button
+                  <Button
                     key={hour}
-                    type="button"
                     onClick={() => {
                       handleSetHour(hour);
                     }}
-                    className={cn(
-                      "cursor-pointer rounded-md py-1 text-center text-xs transition-colors",
-                      hourPart === hour
-                        ? "bg-primary font-semibold text-primary-foreground"
-                        : "bg-muted/30 text-foreground hover:bg-muted"
-                    )}
+                    size="xs"
+                    variant={hourPart === hour ? "default" : "ghost"}
                   >
                     {hour}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -166,21 +152,16 @@ const TimePickerPopover = ({
               </span>
               <div className="grid grid-cols-2 gap-1">
                 {MINUTES.map((min) => (
-                  <button
+                  <Button
                     key={min}
-                    type="button"
                     onClick={() => {
                       handleSetMinute(min);
                     }}
-                    className={cn(
-                      "cursor-pointer rounded-md py-1 text-center text-xs transition-colors",
-                      minutePart === min
-                        ? "bg-primary font-semibold text-primary-foreground"
-                        : "bg-muted/30 text-foreground hover:bg-muted"
-                    )}
+                    size="xs"
+                    variant={minutePart === min ? "default" : "ghost"}
                   >
                     {min}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -193,22 +174,17 @@ const TimePickerPopover = ({
             </span>
             <div className="flex flex-wrap gap-1.5">
               {POPULAR_TIMES.map((popular) => (
-                <button
+                <Button
                   key={popular}
-                  type="button"
                   onClick={() => {
                     onSelectTime(popular);
                     setOpen(false);
                   }}
-                  className={cn(
-                    "cursor-pointer rounded-md px-2 py-1 text-xs transition-colors",
-                    currentTime === popular
-                      ? "bg-primary font-medium text-primary-foreground"
-                      : "bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground"
-                  )}
+                  size="xs"
+                  variant={currentTime === popular ? "default" : "secondary"}
                 >
                   {popular}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -236,18 +212,11 @@ export const StepEightDetails = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center gap-2.5">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Series Details
-          </h1>
-          <Badge variant="outline">Step 8 of 8</Badge>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Finalize your series details and posting schedule
-        </p>
-      </div>
+      <PageHeader
+        title="Series Details"
+        description="Finalize your series details and posting schedule"
+        badge={<Badge variant="outline">Step 8 of 8</Badge>}
+      />
 
       {/* Series Name Field */}
       <Field>

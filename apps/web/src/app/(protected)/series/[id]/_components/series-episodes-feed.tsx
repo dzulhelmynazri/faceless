@@ -2,7 +2,7 @@
 
 import type { GetSeriesByIdOutput } from "@faceless/contracts/series";
 import { Badge } from "@faceless/ui/components/badge";
-import { Button, buttonVariants } from "@faceless/ui/components/button";
+import { Button } from "@faceless/ui/components/button";
 import { Card, CardContent } from "@faceless/ui/components/card";
 import {
   Empty,
@@ -14,7 +14,7 @@ import {
 } from "@faceless/ui/components/empty";
 import { Tabs, TabsList, TabsTrigger } from "@faceless/ui/components/tabs";
 import { isNonEmptyString } from "@faceless/utils";
-import { ExternalLink, Images, Sparkles, Video, Volume2 } from "lucide-react";
+import { ArrowUpRight, Images, Sparkles, Video, Volume2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import * as React from "react";
@@ -175,13 +175,13 @@ export const SeriesEpisodesFeed = ({
                         </Badge>
                         {isNonEmptyString(ep.audioUrl) && (
                           <Badge variant="outline">
-                            <Volume2 />
+                            <Volume2 data-icon="inline-start" />
                             Audio
                           </Badge>
                         )}
                         {ep.scenes.length > 0 && (
                           <Badge variant="outline">
-                            <Images />
+                            <Images data-icon="inline-start" />
                             {ep.scenes.length} Scenes
                           </Badge>
                         )}
@@ -206,16 +206,16 @@ export const SeriesEpisodesFeed = ({
                         Preview Scenes
                       </Button>
                     )}
-                    <Link
-                      className={buttonVariants({
-                        variant: "outline",
-                        size: "sm",
-                      })}
-                      href={`/series/${seriesId}/episodes/${ep.id}`}
+                    <Button
+                      nativeButton={false}
+                      render={
+                        <Link href={`/series/${seriesId}/episodes/${ep.id}`} />
+                      }
+                      variant="outline"
                     >
                       Open in Studio
-                      <ExternalLink />
-                    </Link>
+                      <ArrowUpRight data-icon="inline-end" />
+                    </Button>
                   </div>
                 </div>
               </CardContent>

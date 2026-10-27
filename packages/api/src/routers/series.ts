@@ -1,5 +1,6 @@
 import { runScriptwriterAgent } from "@faceless/agent";
 import {
+  captionStyleIdSchema,
   createSeriesInputSchema,
   createSeriesOutputSchema,
   deleteSeriesInputSchema,
@@ -8,12 +9,20 @@ import {
   generateEpisodeAudioOutputSchema,
   generateEpisodeInputSchema,
   generateEpisodeOutputSchema,
+  getEpisodeByIdInputSchema,
+  getEpisodeByIdOutputSchema,
   getSeriesByIdInputSchema,
   getSeriesByIdOutputSchema,
   getSeriesListOutputSchema,
   regenerateEpisodeSceneInputSchema,
   regenerateEpisodeSceneOutputSchema,
   seriesEpisodeMetadataSchema,
+  updateEpisodeCustomizationInputSchema,
+  updateEpisodeCustomizationOutputSchema,
+  updateEpisodeSceneInputSchema,
+  updateEpisodeSceneOutputSchema,
+  updateEpisodeStatusInputSchema,
+  updateEpisodeStatusOutputSchema,
   updateSeriesInputSchema,
   updateSeriesOutputSchema,
   updateSeriesStatusInputSchema,
@@ -658,11 +667,265 @@ export const seriesRouter = router({
         scene: {
           id: updatedScene.id,
           sceneNumber: updatedScene.sceneNumber,
+          narrationText: updatedScene.narrationText,
           visualPrompt: updatedScene.visualPrompt,
           imageUrl: updatedScene.imageUrl,
           duration: updatedScene.duration,
         },
         thumbnailUrl: nextThumbnailUrl,
+      };
+    }),
+
+  getEpisodeById: protectedProcedure
+    .input(getEpisodeByIdInputSchema)
+    .output(getEpisodeByIdOutputSchema)
+    .query(async ({ ctx, input }) => {
+      const episode = await ctx.db.seriesEpisode.findFirst({
+        where: {
+          id: input.episodeId,
+          series: {
+            userId: ctx.session.user.id,
+          },
+        },
+        include: {
+          series: {
+            select: {
+              id: true,
+              name: true,
+              voiceId: true,
+              captionStyleId: true,
+              musicTrackId: true,
+              customMusicUrl: true,
+              glitchEffect: true,
+            },
+          },
+          scenes: {
+            orderBy: {
+              sceneNumber: "asc",
+            },
+          },
+        },
+      });
+
+      if (!episode) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Episode not found",
+        });
+      }
+
+      const parsedMetadata =
+        episode.metadata !== null && episode.metadata !== undefined
+          ? seriesEpisodeMetadataSchema.safeParse(episode.metadata)
+          : null;
+
+      const safeMetadata =
+        parsedMetadata?.success === true ? parsedMetadata.data : null;
+
+      return {
+        episode: {
+          id: episode.id,
+          seriesId: episode.seriesId,
+          episodeNumber: episode.episodeNumber,
+          title: episode.title,
+          topic: episode.topic,
+          script: episode.script,
+          status: episode.status,
+          audioUrl: episode.audioUrl,
+          thumbnailUrl: episode.thumbnailUrl,
+          videoUrl: episode.videoUrl,
+          error: episode.error,
+          metadata: safeMetadata,
+          createdAt: episode.createdAt.toISOString(),
+          updatedAt: episode.updatedAt.toISOString(),
+        },
+        series: {
+          ...episode.series,
+          captionStyleId: captionStyleIdSchema.parse(
+            episode.series.captionStyleId
+          ),
+        },
+        scenes: episode.scenes.map((s) => ({
+          id: s.id,
+          sceneNumber: s.sceneNumber,
+          narrationText: s.narrationText,
+          visualPrompt: s.visualPrompt,
+          imageUrl: s.imageUrl,
+          duration: s.duration,
+        })),
+      };
+    }),
+
+  updateEpisodeCustomization: protectedProcedure
+    .input(updateEpisodeCustomizationInputSchema)
+    .output(updateEpisodeCustomizationOutputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const episode = await ctx.db.seriesEpisode.findFirst({
+        where: {
+          id: input.episodeId,
+          series: {
+            userId: ctx.session.user.id,
+          },
+        },
+      });
+
+      if (!episode) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Episode not found",
+        });
+      }
+
+      const parsedMetadata =
+        episode.metadata !== null && episode.metadata !== undefined
+          ? seriesEpisodeMetadataSchema.safeParse(episode.metadata)
+          : null;
+
+      const currentMetadata =
+        parsedMetadata?.success === true ? parsedMetadata.data : undefined;
+
+      const updatedMetadata = currentMetadata
+        ? {
+            ...currentMetadata,
+            customization: {
+              ...currentMetadata.customization,
+              ...input.customization,
+            },
+          }
+        : {
+            customization: input.customization,
+          };
+
+      await ctx.db.seriesEpisode.update({
+        where: { id: episode.id },
+        data: {
+          metadata: updatedMetadata,
+        },
+      });
+
+      return {
+        success: true,
+        customization: input.customization,
+      };
+    }),
+
+  updateEpisodeStatus: protectedProcedure
+    .input(updateEpisodeStatusInputSchema)
+    .output(updateEpisodeStatusOutputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const episode = await ctx.db.seriesEpisode.findFirst({
+        where: {
+          id: input.episodeId,
+          series: {
+            userId: ctx.session.user.id,
+          },
+        },
+      });
+
+      if (!episode) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Episode not found",
+        });
+      }
+
+      const updated = await ctx.db.seriesEpisode.update({
+        where: { id: episode.id },
+        data: {
+          status: input.status,
+        },
+      });
+
+      return {
+        success: true,
+        status: updated.status,
+      };
+    }),
+
+  updateEpisodeScene: protectedProcedure
+    .input(updateEpisodeSceneInputSchema)
+    .output(updateEpisodeSceneOutputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const episode = await ctx.db.seriesEpisode.findFirst({
+        where: {
+          id: input.episodeId,
+          series: {
+            userId: ctx.session.user.id,
+          },
+        },
+      });
+
+      if (!episode) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Episode not found",
+        });
+      }
+
+      const existingScene = await ctx.db.seriesEpisodeScene.findUnique({
+        where: {
+          episodeId_sceneNumber: {
+            episodeId: episode.id,
+            sceneNumber: input.sceneNumber,
+          },
+        },
+      });
+
+      if (!existingScene) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `Scene #${input.sceneNumber} not found`,
+        });
+      }
+
+      const updateData = {
+        ...(input.narrationText !== undefined && {
+          narrationText: input.narrationText,
+        }),
+        ...(input.visualPrompt !== undefined && {
+          visualPrompt: input.visualPrompt,
+        }),
+      };
+
+      const updatedScene = await ctx.db.seriesEpisodeScene.update({
+        where: {
+          episodeId_sceneNumber: {
+            episodeId: episode.id,
+            sceneNumber: input.sceneNumber,
+          },
+        },
+        data: updateData,
+      });
+
+      let updatedScript: string | undefined;
+
+      if (input.narrationText !== undefined) {
+        const allScenes = await ctx.db.seriesEpisodeScene.findMany({
+          where: { episodeId: episode.id },
+          orderBy: { sceneNumber: "asc" },
+        });
+
+        updatedScript = allScenes.map((s) => s.narrationText).join("\n\n");
+
+        await ctx.db.seriesEpisode.update({
+          where: { id: episode.id },
+          data: {
+            script: updatedScript,
+          },
+        });
+      }
+
+      return {
+        success: true,
+        scene: {
+          id: updatedScene.id,
+          sceneNumber: updatedScene.sceneNumber,
+          narrationText: updatedScene.narrationText,
+          visualPrompt: updatedScene.visualPrompt,
+          imageUrl: updatedScene.imageUrl,
+          duration: updatedScene.duration,
+        },
+        updatedScript,
       };
     }),
 });

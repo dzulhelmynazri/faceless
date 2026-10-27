@@ -24,6 +24,8 @@ import { Pause, Play } from "lucide-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import * as React from "react";
 
+import { PageHeader } from "@/components/page-header";
+
 import { useSeriesWizard } from "../_context/series-wizard-context";
 
 const GENDER_TABS = ["all", "male", "female"] as const;
@@ -175,18 +177,11 @@ export const StepTwoVoice = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center gap-2.5">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Language & Voice
-          </h1>
-          <Badge variant="outline">Step 2 of 8</Badge>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Choose the language and voice style for your video
-        </p>
-      </div>
+      <PageHeader
+        title="Language & Voice"
+        description="Choose the language and voice style for your video"
+        badge={<Badge variant="outline">Step 2 of 8</Badge>}
+      />
 
       {/* Language Field */}
       <Field>
