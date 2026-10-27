@@ -4,6 +4,7 @@ import type { Files } from "@faceless/storage";
 import { isNonEmptyString } from "@faceless/utils";
 import { z } from "zod";
 
+import { ENV } from "../../env";
 import { parseAlignmentToWords } from "./alignment";
 import { sanitizeNarration } from "./sanitizer";
 
@@ -43,13 +44,7 @@ const elevenLabsApiResponseSchema = z.object({
 export const synthesizeVoiceover = async (
   input: SynthesizeVoiceoverInput
 ): Promise<SynthesizeVoiceoverOutput> => {
-  const apiKey = input.apiKey ?? process.env.ELEVENLABS_API_KEY;
-
-  if (!isNonEmptyString(apiKey)) {
-    throw new Error(
-      "ELEVENLABS_API_KEY is missing. Configure it in your environment."
-    );
-  }
+  const apiKey = ENV.ELEVENLABS_API_KEY;
 
   const cleanNarration = sanitizeNarration(input.rawNarration);
 

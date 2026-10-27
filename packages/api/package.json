@@ -10,7 +10,8 @@
     }
   },
   "scripts": {
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "env:generate": "varlock codegen"
   },
   "dependencies": {
     "@faceless/agent": "workspace:*",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "@faceless/config": "workspace:*",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "varlock": "catalog:"
   }
 }
