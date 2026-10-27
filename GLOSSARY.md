@@ -27,3 +27,13 @@ This document defines the core domain terms and concepts across the Faceless pla
 
 - **Episode Metadata**: The structured, non-destructive JSON payload stored on `SeriesEpisode.metadata`. Organizes phase artifacts into typed namespaces (`script`, `audio`, and upcoming `visuals` and `render`).
 - **Audio Asset**: The master narration MP3 uploaded to Cloudflare R2 under tenant-isolated pathing (`users/${userId}/series/${seriesId}/episodes/${episodeId}/audio.mp3`) and streamed via a public CDN base URL.
+
+---
+
+## 4. Visual Generation Domain
+
+- **Visual Module**: The deep module responsible for turning scene descriptions into high-resolution, style-consistent vertical keyframe images. Encapsulates prompt enrichment, FLUX.1 [schnell] gateway generation, Cloudflare R2 object storage, retry resilience, and scene duration calibration behind a single interface.
+- **Scene Keyframe**: The visual image asset generated for a specific narrative beat in an episode, formatted in 9:16 aspect ratio.
+- **Style Enricher**: Pure transformation layer that injects art-style-specific visual tokens, vertical framing parameters, and anti-text/watermark suppression directives into raw scene visual prompts.
+- **Scene Duration Calibration**: Synchronization step mapping each scene's spoken `narrationChunk` to ElevenLabs word timestamps to derive the exact start and end time boundaries for Remotion video composition.
+- **Episode Scene Record**: The relational database entity (`SeriesEpisodeScene`) linking an episode, scene number, narration text, prompt, image asset URL, and calibrated duration.

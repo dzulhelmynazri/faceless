@@ -162,6 +162,7 @@
     "packages/api": {
       "name": "@faceless/api",
       "dependencies": {
+        "@ai-sdk/gateway": "^4.0.126",
         "@faceless/agent": "workspace:*",
         "@faceless/auth": "workspace:*",
         "@faceless/contracts": "workspace:*",
@@ -171,12 +172,14 @@
         "@faceless/utils": "workspace:*",
         "@trpc/client": "catalog:",
         "@trpc/server": "catalog:",
+        "ai": "catalog:",
         "autumn-js": "catalog:",
         "zod": "catalog:",
       },
       "devDependencies": {
         "@faceless/config": "workspace:*",
         "typescript": "^6.0.3",
+        "varlock": "catalog:",
       },
     },
     "packages/auth": {

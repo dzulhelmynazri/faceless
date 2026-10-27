@@ -2207,6 +2207,16 @@ export const getSeriesByIdOutputSchema = z.object({
       scheduledFor: z.string().nullable(),
       publishedAt: z.string().nullable(),
       createdAt: z.string(),
+      scenes: z.array(
+        z.object({
+          id: z.string(),
+          sceneNumber: z.number().int(),
+          narrationText: z.string(),
+          visualPrompt: z.string(),
+          imageUrl: z.string(),
+          duration: z.number(),
+        })
+      ),
     })
   ),
 });
@@ -2293,9 +2303,37 @@ export const generateEpisodeOutputSchema = z.object({
   episodeId: z.string(),
   script: generatedScriptPayloadSchema,
   audioUrl: z.string(),
+  thumbnailUrl: z.string().nullable(),
+  sceneCount: z.number().int(),
 });
 
 export type GenerateEpisodeOutput = z.infer<typeof generateEpisodeOutputSchema>;
+
+export const regenerateEpisodeSceneInputSchema = z.object({
+  episodeId: z.string().min(1),
+  sceneNumber: z.number().int().min(1),
+  promptOverride: z.string().min(1).optional(),
+});
+
+export type RegenerateEpisodeSceneInput = z.infer<
+  typeof regenerateEpisodeSceneInputSchema
+>;
+
+export const regenerateEpisodeSceneOutputSchema = z.object({
+  success: z.boolean(),
+  scene: z.object({
+    id: z.string(),
+    sceneNumber: z.number().int(),
+    visualPrompt: z.string(),
+    imageUrl: z.string(),
+    duration: z.number(),
+  }),
+  thumbnailUrl: z.string().nullable(),
+});
+
+export type RegenerateEpisodeSceneOutput = z.infer<
+  typeof regenerateEpisodeSceneOutputSchema
+>;
 
 export const wordTimestampSchema = z.object({
   word: z.string().min(1),

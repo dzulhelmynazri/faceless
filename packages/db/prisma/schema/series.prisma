@@ -78,8 +78,27 @@ model SeriesEpisode {
 
   series        Series              @relation(fields: [seriesId], references: [id], onDelete: Cascade)
   publications  SocialPublication[]
+  scenes        SeriesEpisodeScene[]
 
   @@index([seriesId])
   @@index([status])
   @@map("series_episode")
+}
+
+model SeriesEpisodeScene {
+  id            String        @id @default(cuid())
+  episodeId     String
+  episode       SeriesEpisode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  sceneNumber   Int
+  narrationText String        @db.Text
+  visualPrompt  String        @db.Text
+  imageUrl      String
+  imageKey      String
+  duration      Float
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@unique([episodeId, sceneNumber])
+  @@index([episodeId])
+  @@map("series_episode_scene")
 }

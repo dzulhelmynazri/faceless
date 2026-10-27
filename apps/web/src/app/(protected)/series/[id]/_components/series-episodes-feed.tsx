@@ -14,9 +14,12 @@ import {
 } from "@faceless/ui/components/empty";
 import { Tabs, TabsList, TabsTrigger } from "@faceless/ui/components/tabs";
 import { isNonEmptyString } from "@faceless/utils";
-import { ExternalLink, Sparkles, Video, Volume2 } from "lucide-react";
+import { ExternalLink, Images, Sparkles, Video, Volume2 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import * as React from "react";
+
+import { SceneGalleryDialog } from "./scene-gallery-dialog";
 
 type EpisodeTab = "ALL" | "READY" | "SCHEDULED" | "PUBLISHED";
 
@@ -70,6 +73,9 @@ export const SeriesEpisodesFeed = ({
   onGenerateEpisode,
 }: SeriesEpisodesFeedProps) => {
   const [activeTab, setActiveTab] = React.useState<EpisodeTab>("ALL");
+
+  const [galleryEpisode, setGalleryEpisode] =
+    React.useState<EpisodeItem | null>(null);
 
   const filteredEpisodes = React.useMemo(() => {
     if (activeTab === "READY") {
@@ -143,9 +149,22 @@ export const SeriesEpisodesFeed = ({
               <CardContent>
                 <div className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-3">
-                    <div className="flex size-10 items-center justify-center rounded-lg bg-muted text-sm font-semibold">
-                      #{ep.episodeNumber}
-                    </div>
+                    {isNonEmptyString(ep.thumbnailUrl) ? (
+                      <div className="relative size-12 shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
+                        <Image
+                          alt={ep.title}
+                          className="object-cover"
+                          fill
+                          sizes="48px"
+                          src={ep.thumbnailUrl}
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-muted text-sm font-semibold">
+                        #{ep.episodeNumber}
+                      </div>
+                    )}
+
                     <div className="flex flex-col gap-0.5">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-semibold">
@@ -160,6 +179,12 @@ export const SeriesEpisodesFeed = ({
                             Audio
                           </Badge>
                         )}
+                        {ep.scenes.length > 0 && (
+                          <Badge variant="outline">
+                            <Images />
+                            {ep.scenes.length} Scenes
+                          </Badge>
+                        )}
                       </div>
                       <span className="text-xs text-muted-foreground">
                         {isNonEmptyString(ep.topic)
@@ -170,6 +195,17 @@ export const SeriesEpisodesFeed = ({
                   </div>
 
                   <div className="flex items-center gap-2">
+                    {ep.scenes.length > 0 && (
+                      <Button
+                        onClick={() => {
+                          setGalleryEpisode(ep);
+                        }}
+                        variant="outline"
+                      >
+                        <Images data-icon="inline-start" />
+                        Preview Scenes
+                      </Button>
+                    )}
                     <Link
                       className={buttonVariants({
                         variant: "outline",
@@ -187,6 +223,17 @@ export const SeriesEpisodesFeed = ({
           ))}
         </div>
       )}
+
+      <SceneGalleryDialog
+        episode={galleryEpisode}
+        isOpen={galleryEpisode !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setGalleryEpisode(null);
+          }
+        }}
+        seriesId={seriesId}
+      />
     </div>
   );
 };

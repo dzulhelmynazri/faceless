@@ -33,11 +33,7 @@ import { SeriesDetailHeader } from "./_components/series-detail-header";
 import { SeriesEpisodesFeed } from "./_components/series-episodes-feed";
 import { SeriesSettingsDialog } from "./_components/series-settings-dialog";
 
-interface PageProps {
-  params: Promise<{ id: string }>;
-}
-
-const SeriesDetailPage = ({ params }: PageProps) => {
+const SeriesDetailPage = ({ params }: PageProps<"/series/[id]">) => {
   const { id } = React.use(params);
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -97,12 +93,10 @@ const SeriesDetailPage = ({ params }: PageProps) => {
   const generateEpisodeMutation = useMutation(
     trpc.series.generateEpisode.mutationOptions({
       onSuccess: () => {
-        toast.success("Episode generated with voiceover audio!");
+        toast.success("Episode generated with voiceover and visual keyframes!");
       },
       onError: () => {
-        toast.error(
-          "Failed to generate episode. Check your ElevenLabs configuration."
-        );
+        toast.error("Failed to generate episode. Please try again.");
       },
       onSettled: () => {
         void queryClient.invalidateQueries(
@@ -118,7 +112,7 @@ const SeriesDetailPage = ({ params }: PageProps) => {
       return;
     }
 
-    toast.info("Synthesizing script and ElevenLabs voiceover...");
+    toast.info("Generating script, voiceover audio, and visual scenes...");
     generateEpisodeMutation.mutate({ seriesId: series.id });
   };
 
@@ -200,7 +194,6 @@ const SeriesDetailPage = ({ params }: PageProps) => {
             onClick={() => {
               setIsSettingsOpen(true);
             }}
-
             variant="outline"
           >
             <Settings data-icon="inline-start" />

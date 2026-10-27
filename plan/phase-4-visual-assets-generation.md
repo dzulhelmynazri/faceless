@@ -2,7 +2,7 @@
 
 ## 1. Goal & Objectives
 
-Generate 9:16 vertical keyframe images for each scene in the generated script using **FLUX.1 [schnell]** via Vercel AI Gateway (~$0.003 / image, ~1.5s latency). Apply aesthetic prompt modifiers corresponding to the 14 curated styles defined in `SERIES_ART_STYLES`, execute batch image generation concurrently, automatically assign Scene 1 as the episode thumbnail, and persist scene assets directly to Cloudflare R2 via `@faceless/storage`.
+Generate 9:16 vertical keyframe images for each scene in the generated script using **FLUX.1 [schnell]** via Vercel AI Gateway (~$0.003 / image, ~1.5s latency). Apply aesthetic prompt modifiers corresponding to the 14 curated styles defined in `SERIES_ART_STYLES`, execute batch image generation concurrently with single-scene auto-retry, calibrate scene durations against ElevenLabs word timestamps, automatically assign Scene 1 as the episode thumbnail, persist scene assets directly to Cloudflare R2 via `@faceless/storage`, store first-class `SeriesEpisodeScene` Prisma records, and expose both end-to-end generation and single-scene regeneration.
 
 ---
 
@@ -10,24 +10,22 @@ Generate 9:16 vertical keyframe images for each scene in the generated script us
 
 ```mermaid
 flowchart TD
-    Scenes["Scene Payloads from Phase 2<br/>(sceneNumber, visualPrompt, estimatedSeconds)"] --> StyleEnricher["Style Prompt Enricher<br/>Injects artStyleId aesthetic modifiers & 9:16 aspect ratio"]
+    Script["Phase 2 Script<br/>(scenes with visualPrompt & narrationChunk)"] --> Audio["Phase 3 Voiceover<br/>(audioUrl & wordTimestamps)"]
 
-    StyleEnricher --> ParallelGen["Parallel Generation Batch (Promise.allSettled)<br/>FLUX.1 [schnell] via Vercel AI Gateway (~$0.003 / img)"]
+    Script & Audio --> VisualService["packages/api/src/services/visual<br/>generateEpisodeScenes()"]
 
-    subgraph "Image Generation & R2 Upload"
-        ParallelGen --> Img1["Scene 1 Keyframe (WebP)"]
-        ParallelGen --> Img2["Scene 2 Keyframe (WebP)"]
-        ParallelGen --> ImgN["Scene N Keyframe (WebP)"]
+    subgraph "Visual Service Pipeline"
+        VisualService --> Enricher["Art Style Enricher<br/>Prompt + Art Style Tokens + 9:16 Vertical + Anti-Text Suppression"]
+        VisualService --> Calibrator["Duration Calibrator<br/>Maps scene narrationChunk to ElevenLabs word timestamps"]
 
-        Img1 --> R2Upload["Upload to Cloudflare R2 via Files SDK<br/>users/{userId}/series/{seriesId}/episodes/{episodeId}/scenes/"]
-        Img2 --> R2Upload
-        ImgN --> R2Upload
+        Enricher --> ParallelGen["Concurrent Generation (FLUX.1 [schnell] via AI Gateway)<br/>Auto-retry failed scene once"]
+        ParallelGen --> R2Upload["Upload to Cloudflare R2 via @faceless/storage<br/>users/{userId}/series/{seriesId}/episodes/{episodeId}/scenes/scene_{n}.webp"]
     end
 
-    subgraph "Thumbnail & Database Persistence"
-        Img1 -.->|"Auto-derive"| Thumbnail["Episode Thumbnail<br/>(thumbnailUrl = Scene 1)"]
-        R2Upload --> DBScenes["Prisma SeriesEpisodeScene Records<br/>(sceneNumber, narrationText, visualPrompt, imageUrl, duration)"]
-        Thumbnail --> DBEpisode["Update SeriesEpisode.thumbnailUrl"]
+    subgraph "Database Persistence & UI"
+        R2Upload & Calibrator --> DBScenes["Prisma SeriesEpisodeScene Records<br/>(sceneNumber, narrationText, visualPrompt, imageUrl, imageKey, duration)"]
+        R2Upload -.->|"Scene 1"| Thumbnail["SeriesEpisode.thumbnailUrl = Scene 1"]
+        DBScenes --> UI["Series Detail & Episode Feed UI<br/>Thumbnail preview, scene count badge, gallery preview dialog & single-scene regeneration"]
     end
 ```
 
@@ -35,88 +33,61 @@ flowchart TD
 
 ## 3. Art Style Prompt Enricher (14 Curated Styles)
 
-The enricher maps the `series.artStyleId` from `@faceless/contracts/series` to high-fidelity visual tokens for FLUX:
+The enricher maps `series.artStyleId` from `@faceless/contracts/series` to high-fidelity visual tokens for FLUX, combined with vertical framing and text suppression directives:
+
+- **Vertical Composition Directive**: `vertical 9:16 portrait aspect ratio, full vertical composition, high production value, cinematic lighting`
+- **Text & Clutter Suppression Directive**: `clean visual, no text, no captions, no subtitles, no watermarks, no split screens, no borders`
 
 | Contract ID | Style Name | Injected Prompt Modifiers (FLUX.1 [schnell]) |
 | :-- | :-- | :-- |
-| **`comic`** | Comic | `vintage American comic book style, bold ink line art, halftone dot shading, dynamic action angle, 9:16 vertical poster, vibrant graphic novel aesthetic` |
-| **`creepy-comic`** | Creepy Comic | `eerie graphic novel horror aesthetic, deep stark shadows, grotesque ink hatching, desaturated palette with blood red accents, gritty 9:16 vertical` |
-| **`modern-cartoon`** | Modern Cartoon | `modern vibrant 2D cartoon style, clean vector outlines, playful bright lighting, contemporary animation studio aesthetic, 9:16` |
-| **`disney`** | Disney | `whimsical 3D animation style, expressive character faces, magical glowing ambient lighting, Pixar Disney render, Unreal Engine 5, 9:16` |
-| **`anime`** | Anime | `high-end Japanese anime aesthetic, Makoto Shinkai sky and volumetric lighting, crisp cel-shaded lines, cinematic composition, 9:16` |
-| **`dark-fantasy`** | Dark Fantasy | `dark gothic fantasy oil painting, Elden Ring and Dark Souls atmosphere, chiaroscuro lighting, eerie fog, gritty textures, 9:16` |
-| **`fantastic`** | Fantastic | `surreal fantasy world, vibrant bioluminescent flora, ethereal magical atmosphere, dreamlike epic landscape, 9:16 vertical` |
-| **`ghibli`** | Ghibli | `hand-painted Studio Ghibli gouache background, soft nostalgic watercolor textures, lush greenery, pastoral peaceful mood, 9:16` |
-| **`lego`** | Lego | `miniature Lego brick diorama, glossy plastic brick textures, macro tilt-shift photography, playful construction, 9:16` |
-| **`mythology`** | Mythology | `ancient classical mythological fresco, marble statues, golden hour divine sunlight, epic Hellenic/Norse lore illustration, 9:16` |
-| **`painting`** | Painting | `textured classical canvas oil painting, visible expressive impasto brushstrokes, rich warm palette, museum masterpiece, 9:16` |
-| **`pixel-art`** | Pixel Art | `retro 16-bit pixel art, detailed pixel shading, nostalgic arcade RPG aesthetic, vibrant color palette, crisp pixel grid, 9:16` |
-| **`polaroid`** | Polaroid | `vintage 90s instant Polaroid photograph, film grain, soft lens flare, bleached highlights, nostalgic candid snapshot, 9:16` |
-| **`realism`** | Realism | `35mm cinematic photograph, realistic skin textures, natural directional lighting, shallow depth of field, 8k photorealistic, 9:16` |
+| **`comic`** | Comic | `vintage American comic book style, bold ink line art, halftone dot shading, dynamic action angle, vibrant graphic novel aesthetic` |
+| **`creepy-comic`** | Creepy Comic | `eerie graphic novel horror aesthetic, deep stark shadows, grotesque ink hatching, desaturated palette with blood red accents, gritty atmosphere` |
+| **`modern-cartoon`** | Modern Cartoon | `modern vibrant 2D cartoon style, clean vector outlines, playful bright lighting, contemporary animation studio aesthetic` |
+| **`disney`** | Disney | `whimsical 3D animation style, expressive character faces, magical glowing ambient lighting, Pixar Disney render, Unreal Engine 5` |
+| **`anime`** | Anime | `high-end Japanese anime aesthetic, Makoto Shinkai sky and volumetric lighting, crisp cel-shaded lines, cinematic composition` |
+| **`dark-fantasy`** | Dark Fantasy | `dark gothic fantasy oil painting, Elden Ring and Dark Souls atmosphere, chiaroscuro lighting, eerie fog, gritty textures` |
+| **`fantastic`** | Fantastic | `surreal fantasy world, vibrant bioluminescent flora, ethereal magical atmosphere, dreamlike epic landscape` |
+| **`ghibli`** | Ghibli | `hand-painted Studio Ghibli gouache background, soft nostalgic watercolor textures, lush greenery, pastoral peaceful mood` |
+| **`lego`** | Lego | `miniature Lego brick diorama, glossy plastic brick textures, macro tilt-shift photography, playful construction` |
+| **`mythology`** | Mythology | `ancient classical mythological fresco, marble statues, golden hour divine sunlight, epic Hellenic/Norse lore illustration` |
+| **`painting`** | Painting | `textured classical canvas oil painting, visible expressive impasto brushstrokes, rich warm palette, museum masterpiece` |
+| **`pixel-art`** | Pixel Art | `retro 16-bit pixel art, detailed pixel shading, nostalgic arcade RPG aesthetic, vibrant color palette, crisp pixel grid` |
+| **`polaroid`** | Polaroid | `vintage 90s instant Polaroid photograph, film grain, soft lens flare, bleached highlights, nostalgic candid snapshot` |
+| **`realism`** | Realism | `35mm cinematic photograph, realistic skin textures, natural directional lighting, shallow depth of field, 8k photorealistic` |
 
 ---
 
-## 4. Detailed Component Plan
+## 4. Architectural Seam & Implementation Details
 
-### A. Image Generation Service (`packages/api/src/services/ai/image-generator.ts`)
+### A. Environment Binding
 
-- **Model**: `fal/flux-schnell` or `together/black-forest-labs/FLUX.1-schnell` routed via `AI_GATEWAY_API_KEY`.
-- **Dimensions**: $768 \times 1344$ or $864 \times 1536$ (native 9:16 vertical).
-- **Format**: Converted to `.webp` before upload for optimal loading speed and minimal R2 bandwidth.
+- Add `AI_GATEWAY_API_KEY` to `packages/api/.env.schema`:
+  ```ini
+  # @import(../../apps/web/, pick=[NODE_ENV, ELEVENLABS_API_KEY, AI_GATEWAY_API_KEY])
+  # @generateTsTypes(path=./src/env.ts, exposeEnv=local)
+  ```
+- Run `bun run env:generate` to keep typed `ENV.AI_GATEWAY_API_KEY` available in `@faceless/api`.
 
-### B. Parallel Batch Execution & Automatic Thumbnail
+### B. Visual Domain Service (`packages/api/src/services/visual/`)
 
-```ts
-export async function generateEpisodeScenes({
-  userId,
-  seriesId,
-  episodeId,
-  artStyleId,
-  scenes,
-}: GenerateScenesParams) {
-  const scenePromises = scenes.map(async (scene) => {
-    const prompt = enrichPromptWithStyle({
-      prompt: scene.visualPrompt,
-      artStyleId,
-    });
+- **`index.ts`**: Entry point exposing `generateEpisodeScenes` and `regenerateSingleScene`.
+- **`enricher.ts`**: Pure function mapping `artStyleId` + scene prompt into enriched FLUX prompts.
+- **`calibrator.ts`**: Aligns each scene's `narrationChunk` with ElevenLabs `wordTimestamps` to compute exact start/end `duration` (in seconds).
+- **Model**: `createGatewayProvider({ apiKey: ENV.AI_GATEWAY_API_KEY }).imageModel("black-forest-labs/flux-schnell")` combined with `generateImage` from `ai`.
+- **Upload**: Directly upload image buffer to Cloudflare R2 via `@faceless/storage` under: `users/${userId}/series/${seriesId}/episodes/${episodeId}/scenes/scene_${sceneNumber}.webp`
 
-    const imageBuffer = await generateFluxImage({
-      prompt,
-      aspectRatio: "9:16",
-    });
+### C. Concurrency & Retry Strategy
 
-    const storageKey = `users/${userId}/series/${seriesId}/episodes/${episodeId}/scenes/scene_${scene.sceneNumber}.webp`;
-
-    await files.upload(storageKey, imageBuffer, {
-      contentType: "image/webp",
-    });
-
-    const imageUrl = await files.url(storageKey);
-
-    return {
-      sceneNumber: scene.sceneNumber,
-      narrationText: scene.narrationChunk,
-      visualPrompt: scene.visualPrompt,
-      imageUrl,
-      imageKey: storageKey,
-      duration: scene.estimatedSeconds,
-    };
-  });
-
-  const generatedScenes = await Promise.all(scenePromises);
-
-  // Auto-derive thumbnail from Scene 1
-  const thumbnailUrl = generatedScenes[0]?.imageUrl ?? null;
-
-  return { generatedScenes, thumbnailUrl };
-}
-```
+1. Scenes are generated concurrently with `Promise.allSettled`.
+2. Any scene that fails (network timeout/rate limit) is automatically retried once.
+3. If all scenes succeed, they are persisted to `SeriesEpisodeScene`, Scene 1 is assigned to `SeriesEpisode.thumbnailUrl`, and episode status moves to `READY_FOR_REVIEW`.
+4. If a scene still fails after retry, successful scenes are persisted, the episode is set to `status: "FAILED"` with an actionable error message, and single-scene regeneration remains available.
 
 ---
 
 ## 5. Database Schema: First-Class `SeriesEpisodeScene`
 
-Creating `SeriesEpisodeScene` in `packages/db/prisma/schema/series.prisma` allows creators in Phase 6 (Episode Studio) to re-generate an individual scene without re-generating the entire video:
+Add `SeriesEpisodeScene` model to `packages/db/prisma/schema/series.prisma`:
 
 ```prisma
 model SeriesEpisodeScene {
@@ -130,6 +101,7 @@ model SeriesEpisodeScene {
   imageKey      String
   duration      Float
   createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@unique([episodeId, sceneNumber])
   @@index([episodeId])
@@ -137,7 +109,7 @@ model SeriesEpisodeScene {
 }
 ```
 
-And in `SeriesEpisode`:
+Update `SeriesEpisode` in `packages/db/prisma/schema/series.prisma`:
 
 ```prisma
 model SeriesEpisode {
@@ -148,12 +120,55 @@ model SeriesEpisode {
 
 ---
 
-## 6. Implementation Checklist
+## 6. API Procedures & Contracts (`packages/contracts` and `packages/api`)
 
-- [ ] Add `SeriesEpisodeScene` model and relation to `packages/db/prisma/schema/series.prisma`.
-- [ ] Build `art-style-enricher.ts` with all 14 curated styles from `SERIES_ART_STYLES`.
-- [ ] Implement `packages/api/src/services/ai/image-generator.ts` with FLUX.1 [schnell] 9:16 generation.
-- [ ] Implement parallel generation and Cloudflare R2 uploads via `@faceless/storage`.
-- [ ] Wire automatic thumbnail assignment (Scene 1 $\rightarrow$ `SeriesEpisode.thumbnailUrl`).
-- [ ] Expose single-scene regeneration endpoint: `series.regenerateSceneImage`.
-- [ ] Run `bunx ultracite check` and `bun run check-types` to ensure zero errors.
+1. **`generateEpisode` (Extended Pipeline)**:
+   - Scriptwriter $\rightarrow$ ElevenLabs Audio $\rightarrow$ Scene Visual Generation & R2 Upload $\rightarrow$ Set `thumbnailUrl` = Scene 1.
+2. **`regenerateEpisodeScene` (New Procedure)**:
+   - Input: `{ episodeId: string, sceneNumber: number, promptOverride?: string }`
+   - Re-generates single scene keyframe, uploads to R2, updates `SeriesEpisodeScene` record (and updates `thumbnailUrl` if `sceneNumber === 1`).
+3. **`getSeriesById` (Contract Update)**:
+   - Include `scenes` array in episode data:
+     ```ts
+     scenes: z.array(
+       z.object({
+         id: z.string(),
+         sceneNumber: z.number(),
+         narrationText: z.string(),
+         visualPrompt: z.string(),
+         imageUrl: z.string(),
+         duration: z.number(),
+       })
+     );
+     ```
+
+---
+
+## 7. Web UI Experience (`apps/web`)
+
+1. **Episode Card**:
+   - Render `thumbnailUrl` as the episode card preview image with fallback icon.
+   - Add Scene badge: `🖼️ {ep.scenes.length} Scenes`.
+2. **Scene Gallery Dialog**:
+   - Add a "Preview Scenes" action opening a modal drawer.
+   - Shows all generated scene keyframes in 9:16 vertical cards with their narration chunks and durations.
+   - Includes a "Regenerate" button per scene triggering `trpc.series.regenerateEpisodeScene` with live mutation state and automatic `onSettled` query invalidation.
+
+---
+
+## 8. Implementation Checklist
+
+- [x] Update `packages/api/.env.schema` to import `AI_GATEWAY_API_KEY` and run `bun run env:generate`.
+- [x] Add `SeriesEpisodeScene` to `packages/db/prisma/schema/series.prisma` and run `bun run db:push`.
+- [x] Create `packages/api/src/services/visual/`:
+  - `enricher.ts` (14 art styles + vertical composition + anti-text tokens)
+  - `calibrator.ts` (align scene narration with word timestamps)
+  - `index.ts` (FLUX image generation via AI Gateway + R2 upload + retry logic)
+- [x] Add contract schemas in `packages/contracts/src/series.ts` (`regenerateEpisodeSceneInputSchema`, output schema, and updated `getSeriesByIdOutputSchema`).
+- [x] Update `packages/api/src/routers/series.ts`:
+  - Chain visual generation into `generateEpisode`.
+  - Implement `regenerateEpisodeScene` procedure.
+  - Return `scenes` relation in `byId`.
+- [x] Update `apps/web/src/app/(protected)/series/[id]/_components/series-episodes-feed.tsx` with thumbnail preview and scene gallery dialog.
+- [x] Add unit tests for `enricher.ts` and `calibrator.ts`.
+- [x] Verify `bunx vitest run`, `bun run check-types`, and `bunx ultracite check`.
