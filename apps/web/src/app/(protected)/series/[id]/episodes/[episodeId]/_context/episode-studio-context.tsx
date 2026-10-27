@@ -83,13 +83,6 @@ export const EpisodeStudioProvider = ({
             >
               Return to Series
             </Button>
-            <Button
-              nativeButton={false}
-              render={<Link href="/series" />}
-              variant="ghost"
-            >
-              All Series
-            </Button>
           </EmptyContent>
         </Empty>
       </div>

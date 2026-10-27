@@ -341,7 +341,11 @@ const SeriesEmptyState = ({ filter }: { filter: FilterTab }) => {
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <Button nativeButton={false} render={<Link href="/series" />}>
+        <Button
+          nativeButton={false}
+          variant="outline"
+          render={<Link href="/series" />}
+        >
           Create Series
         </Button>
       </EmptyContent>

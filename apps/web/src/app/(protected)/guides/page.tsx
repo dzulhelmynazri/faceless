@@ -24,7 +24,11 @@ const GuidesPage = () => (
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <Button nativeButton={false} render={<Link href="/videos" />}>
+        <Button
+          nativeButton={false}
+          variant="outline"
+          render={<Link href="/videos" />}
+        >
           View Videos
         </Button>
       </EmptyContent>
