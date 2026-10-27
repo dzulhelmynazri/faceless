@@ -50,6 +50,7 @@ Give the caption area a width and position it over the video. In this 1920px-wid
 import { Video } from "@remotion/media";
 import { TransitionSeries } from "@remotion/transitions";
 import { staticFile, useVideoConfig } from "remotion";
+
 import { BasicCaptions } from "./basic-captions";
 
 export const MyComposition: React.FC = () => {
@@ -138,6 +139,7 @@ export const MyComposition: React.FC = () => {
 
 ```tsx title="src/Root.tsx"
 import { Composition } from "remotion";
+
 import { MyComposition } from "./MyComposition";
 
 export const RemotionRoot = () => {

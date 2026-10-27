@@ -83,6 +83,7 @@ export const paginationParams = z.object({
 ```typescript
 // schemas/user.ts
 import { z } from "zod";
+
 import { baseEntity, uuid } from "./common";
 
 export const userSchema = baseEntity.extend({
@@ -96,6 +97,7 @@ export type User = z.infer<typeof userSchema>;
 ```typescript
 // schemas/order.ts
 import { z } from "zod";
+
 import { baseEntity, uuid } from "./common";
 
 const orderItemSchema = z.object({

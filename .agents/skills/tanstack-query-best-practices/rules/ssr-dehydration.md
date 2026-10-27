@@ -38,6 +38,7 @@ import {
   HydrationBoundary,
   QueryClient,
 } from "@tanstack/react-query";
+
 import { postQueries } from "@/lib/queries";
 
 export default async function PostsPage() {
@@ -56,6 +57,7 @@ export default async function PostsPage() {
 ("use client");
 
 import { useSuspenseQuery } from "@tanstack/react-query";
+
 import { postQueries } from "@/lib/queries";
 
 export function PostList() {
@@ -76,6 +78,7 @@ export function PostList() {
 ```tsx
 // routes/posts.tsx
 import { createFileRoute } from "@tanstack/react-router";
+
 import { postQueries } from "@/lib/queries";
 
 export const Route = createFileRoute("/posts")({

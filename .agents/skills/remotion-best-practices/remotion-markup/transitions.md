@@ -29,6 +29,7 @@ Use the connected `Chapter` scene from the [composition example](../remotion-int
 ```tsx title="TransitionVideo.tsx"
 import { TransitionSeries, linearTiming } from "@remotion/transitions";
 import { fade } from "@remotion/transitions/fade";
+
 import { Chapter } from "./Chapter";
 
 export const TransitionVideo = () => (
@@ -81,6 +82,7 @@ Use it in place of `fade()` in `TransitionVideo.tsx`:
 
 ```tsx
 import { TransitionSeries, linearTiming } from "@remotion/transitions";
+
 import { SlideInPresentation } from "./SlideInPresentation";
 
 <TransitionSeries.Transition
@@ -135,6 +137,7 @@ export const LightLeakOverlay = Interactive.create({
 
 ```tsx title="OverlayVideo.tsx"
 import { TransitionSeries } from "@remotion/transitions";
+
 import { Chapter } from "./Chapter";
 import { LightLeakOverlay } from "./LightLeakOverlay";
 
@@ -160,6 +163,7 @@ Separate overlays and transitions with a scene.
 ```tsx title="MixedVideo.tsx"
 import { TransitionSeries, linearTiming } from "@remotion/transitions";
 import { fade } from "@remotion/transitions/fade";
+
 import { Chapter } from "./Chapter";
 import { LightLeakOverlay } from "./LightLeakOverlay";
 
@@ -204,11 +208,11 @@ export const MixedVideo = () => (
 Import transitions from their respective modules:
 
 ```tsx
+import { clockWipe } from "@remotion/transitions/clock-wipe";
 import { fade } from "@remotion/transitions/fade";
+import { flip } from "@remotion/transitions/flip";
 import { slide } from "@remotion/transitions/slide";
 import { wipe } from "@remotion/transitions/wipe";
-import { flip } from "@remotion/transitions/flip";
-import { clockWipe } from "@remotion/transitions/clock-wipe";
 ```
 
 ## Slide transition with direction

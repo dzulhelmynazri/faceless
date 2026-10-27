@@ -18,11 +18,10 @@ For frontend applications where bundle size is critical, use `@zod/mini` instead
 // - Simple validation needs (no complex transforms)
 // - Tree-shaking is important
 
-// Zod: ~17kb gzipped
-import { z } from "zod";
-
 // Zod Mini: ~1.9kb gzipped (when tree-shaken)
 import * as z from "@zod/mini";
+// Zod: ~17kb gzipped
+import { z } from "zod";
 ```
 
 **Standard Zod (method chaining):**

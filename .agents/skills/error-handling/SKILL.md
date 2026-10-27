@@ -49,6 +49,7 @@ export const publicProcedure = t.procedure;
 ```ts
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+
 import { publicProcedure, router } from "./trpc";
 
 export const appRouter = router({
@@ -76,6 +77,7 @@ function getUserFromDb(id: string) {
 
 ```ts
 import { TRPCError } from "@trpc/server";
+
 import { publicProcedure, router } from "./trpc";
 
 export const appRouter = router({
@@ -103,6 +105,7 @@ Pass the original error as `cause` to retain the stack trace for debugging.
 
 ```ts
 import { createHTTPServer } from "@trpc/server/adapters/standalone";
+
 import { appRouter } from "./appRouter";
 
 const server = createHTTPServer({
@@ -152,6 +155,7 @@ Correct:
 
 ```ts
 import { TRPCError } from "@trpc/server";
+
 import { publicProcedure } from "./trpc";
 
 const proc = publicProcedure.query(() => {

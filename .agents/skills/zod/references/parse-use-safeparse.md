@@ -12,8 +12,8 @@ tags: parse, safeParse, error-handling, validation
 **Incorrect (parse without error handling):**
 
 ```typescript
-import { z } from "zod";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 const createUserSchema = z.object({
   email: z.string().email(),
@@ -36,8 +36,8 @@ export async function POST(req: NextRequest) {
 **Correct (using safeParse):**
 
 ```typescript
-import { z } from "zod";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 const createUserSchema = z.object({
   email: z.string().email(),

@@ -48,6 +48,7 @@ export const MyComp = () => {
 `onPaint` runs whenever the content updates. Call `ctx.drawElementImage(elementImage, 0, 0)` to draw the captured DOM.
 
 ```tsx
+import { useCallback } from "react";
 import {
   AbsoluteFill,
   HtmlInCanvas,
@@ -55,7 +56,6 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { useCallback } from "react";
 
 export const Blur = () => {
   const frame = useCurrentFrame();

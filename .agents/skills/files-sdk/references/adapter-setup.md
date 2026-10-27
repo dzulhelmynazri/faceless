@@ -129,8 +129,8 @@ Notes:
 ## Azure Blob Storage — `files-sdk/azure`
 
 ```ts
-import { azure } from "files-sdk/azure";
 import { DefaultAzureCredential } from "@azure/identity";
+import { azure } from "files-sdk/azure";
 
 const adapter = azure({
   container: "uploads", // (Azure calls it "container", surfaced as bucket)

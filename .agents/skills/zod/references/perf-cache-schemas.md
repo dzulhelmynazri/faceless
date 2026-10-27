@@ -58,8 +58,8 @@ function UserForm() {
 **For dynamic schemas, use useMemo:**
 
 ```typescript
-import { z } from "zod";
 import { useMemo } from "react";
+import { z } from "zod";
 
 function DynamicForm({ minAge }: { minAge: number }) {
   // Schema only recreated when minAge changes

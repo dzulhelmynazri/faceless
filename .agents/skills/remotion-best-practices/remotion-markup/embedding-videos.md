@@ -57,8 +57,8 @@ return (
 Set `from` directly on `<Video>` to delay when it appears:
 
 ```tsx
-import { staticFile, useVideoConfig } from "remotion";
 import { Video } from "@remotion/media";
+import { staticFile, useVideoConfig } from "remotion";
 
 const { fps } = useVideoConfig();
 

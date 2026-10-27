@@ -86,6 +86,7 @@ export const publicProcedure = t.procedure;
 ```ts
 // server/appRouter.ts
 import { z } from "zod";
+
 import { publicProcedure, router } from "./trpc";
 
 export const appRouter = router({
@@ -100,6 +101,7 @@ export type AppRouter = typeof appRouter;
 ```ts
 // server/index.ts
 import { createHTTPServer } from "@trpc/server/adapters/standalone";
+
 import { appRouter } from "./appRouter";
 
 const server = createHTTPServer({ router: appRouter });
@@ -109,6 +111,7 @@ server.listen(3000);
 ```ts
 // client/index.ts
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
+
 import type { AppRouter } from "../server/appRouter";
 
 const trpc = createTRPCClient<AppRouter>({

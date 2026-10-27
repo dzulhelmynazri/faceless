@@ -50,9 +50,9 @@ export interface VideoRendererService {
   - Offloads rendering to AWS Lambda via `@remotion/lambda` for sub-15s distributed rendering without container memory/timeout constraints.
 
 ```ts
+import { files } from "@faceless/storage";
 import { bundle } from "@remotion/bundler";
 import { renderMedia, selectComposition } from "@remotion/renderer";
-import { files } from "@faceless/storage";
 
 export async function renderAndUploadEpisodeVideo({
   userId,

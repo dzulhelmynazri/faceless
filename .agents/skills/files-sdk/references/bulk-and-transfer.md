@@ -88,8 +88,8 @@ const { items, prefixes } = await files.list({
 
 ```ts
 import { Files, transfer } from "files-sdk";
-import { s3 } from "files-sdk/s3";
 import { r2 } from "files-sdk/r2";
+import { s3 } from "files-sdk/s3";
 
 const from = new Files({ adapter: s3({ bucket: "old" }) });
 const to = new Files({

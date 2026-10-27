@@ -104,7 +104,7 @@ The colored message surface is `Bubble` + `BubbleContent`, never a styled `div` 
 **Incorrect:**
 
 ```tsx
-<div className="bg-primary text-primary-foreground w-fit rounded-2xl px-3 py-2">
+<div className="w-fit rounded-2xl bg-primary px-3 py-2 text-primary-foreground">
   {text}
 </div>
 ```
@@ -163,7 +163,7 @@ Status lines ("Sarah joined the conversation"), date dividers ("Today"), and lab
 ```tsx
 <div className="flex items-center gap-3 py-2">
   <Separator className="flex-1" />
-  <span className="text-muted-foreground text-xs">Today</span>
+  <span className="text-xs text-muted-foreground">Today</span>
   <Separator className="flex-1" />
 </div>
 ```
@@ -351,7 +351,7 @@ Code, terminal output, tool input and output, logs, stack traces and diffs are a
 **Incorrect:**
 
 ```tsx
-<pre className="bg-muted rounded-md p-3 font-mono text-xs whitespace-pre-wrap">
+<pre className="rounded-md bg-muted p-3 font-mono text-xs whitespace-pre-wrap">
   {output}
 </pre>
 ```

@@ -28,6 +28,7 @@ Use the [`getVideoDuration`](../remotion-multimedia/get-video-duration.md) and [
 
 ```tsx
 import { CalculateMetadataFunction } from "remotion";
+
 import { getVideoDuration } from "./get-video-duration";
 
 const calculateMetadata: CalculateMetadataFunction<Props> = async ({
@@ -47,8 +48,9 @@ Use the [`getVideoDimensions`](../remotion-multimedia/get-video-dimensions.md) s
 
 ```tsx
 import { CalculateMetadataFunction } from "remotion";
-import { getVideoDuration } from "./get-video-duration";
+
 import { getVideoDimensions } from "./get-video-dimensions";
+import { getVideoDuration } from "./get-video-duration";
 
 const calculateMetadata: CalculateMetadataFunction<Props> = async ({
   props,

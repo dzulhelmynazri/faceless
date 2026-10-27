@@ -66,7 +66,7 @@ If you need a success/positive color that doesn't exist as a semantic token, use
 **Incorrect:**
 
 ```tsx
-<Button className="border-input hover:bg-accent border bg-transparent">
+<Button className="border border-input bg-transparent hover:bg-accent">
   Click me
 </Button>
 ```
@@ -174,7 +174,7 @@ For scroll-aware edge fading on a scroll container, use `scroll-fade` (and the a
 **Incorrect:**
 
 ```tsx
-<span className="from-muted-foreground/40 via-foreground/70 to-muted-foreground/40 [animation:shimmer_1.6s_infinite] animate-pulse bg-gradient-to-r bg-clip-text text-transparent">
+<span className="[animation:shimmer_1.6s_infinite] animate-pulse bg-gradient-to-r from-muted-foreground/40 via-foreground/70 to-muted-foreground/40 bg-clip-text text-transparent">
   Thinking…
 </span>
 ```

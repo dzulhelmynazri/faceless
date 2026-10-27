@@ -11,10 +11,10 @@ The four writes (`uploadFile`, `deleteFile`, `copyFile`, `signUploadUrl`) are ap
 Tools are a record shaped for `tools: { ... }` on `generateText`/`streamText`/`ToolLoopAgent`.
 
 ```ts
+import { generateText, isStepCount } from "ai";
 import { Files } from "files-sdk";
 import { createFileTools } from "files-sdk/ai-sdk";
 import { s3 } from "files-sdk/s3";
-import { generateText, isStepCount } from "ai";
 
 const files = new Files({ adapter: s3({ bucket: "uploads" }) });
 
@@ -112,10 +112,10 @@ Notes:
 ### Agents SDK
 
 ```ts
+import { Agent, run } from "@openai/agents";
 import { Files } from "files-sdk";
 import { createAgentsFileTools } from "files-sdk/openai";
 import { s3 } from "files-sdk/s3";
-import { Agent, run } from "@openai/agents";
 
 const files = new Files({ adapter: s3({ bucket: "uploads" }) });
 const tools = createAgentsFileTools({ files });
@@ -137,8 +137,8 @@ Bridges to the Claude Agent SDK's in-process MCP server + `allowedTools` + `canU
 ```ts
 import { query } from "@anthropic-ai/claude-agent-sdk";
 import { Files } from "files-sdk";
-import { s3 } from "files-sdk/s3";
 import { createClaudeFileTools } from "files-sdk/claude";
+import { s3 } from "files-sdk/s3";
 
 const files = new Files({ adapter: s3({ bucket: "uploads" }) });
 const tools = createClaudeFileTools({ files });

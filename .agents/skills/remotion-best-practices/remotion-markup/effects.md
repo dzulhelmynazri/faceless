@@ -36,8 +36,8 @@ Ordinary HTML elements, `<Interactive.*>` DOM wrappers, `<AbsoluteFill>`, and `<
 For example, apply an effect directly to a video:
 
 ```tsx
-import { Video } from "@remotion/media";
 import { blur } from "@remotion/effects/blur";
+import { Video } from "@remotion/media";
 
 <Video
   src="https://remotion.media/video.mp4"
@@ -70,8 +70,8 @@ Built-in effects from `@remotion/effects`:
 Example:
 
 ```tsx
-import { Video } from "@remotion/media";
 import { brightness } from "@remotion/effects/brightness";
+import { Video } from "@remotion/media";
 
 <Video src="https://remotion.media/video.mp4" effects={[brightness({})]} />;
 ```
@@ -261,6 +261,7 @@ Use the returned factory in an `effects` array:
 
 ```tsx
 import { CanvasImage, staticFile } from "remotion";
+
 import { myEffect } from "./effects/my-effect";
 
 export const MyComp: React.FC = () => {

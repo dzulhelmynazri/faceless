@@ -124,6 +124,7 @@ export function createMyPlugin() {
 ```ts
 // server/trpc.ts
 import { initTRPC } from "@trpc/server";
+
 import { createMyPlugin } from "./myPlugin";
 
 const t = initTRPC.context<{}>().create();

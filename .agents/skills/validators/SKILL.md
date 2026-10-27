@@ -29,6 +29,7 @@ export const publicProcedure = t.procedure;
 ```ts
 // server/appRouter.ts
 import { z } from "zod";
+
 import { publicProcedure, router } from "./trpc";
 
 export const appRouter = router({
@@ -49,6 +50,7 @@ export type AppRouter = typeof appRouter;
 
 ```ts
 import { z } from "zod";
+
 import { publicProcedure, router } from "./trpc";
 
 export const appRouter = router({
@@ -93,6 +95,7 @@ Multiple `.input()` calls merge object properties; the final input type is `{ to
 
 ```ts
 import { z } from "zod";
+
 import { publicProcedure, router } from "./trpc";
 
 export const appRouter = router({
@@ -137,6 +140,7 @@ Wrong:
 
 ```ts
 import { z } from "zod";
+
 import { publicProcedure } from "./trpc";
 
 const proc = publicProcedure.input(z.string()).input(z.number());
@@ -146,6 +150,7 @@ Correct:
 
 ```ts
 import { z } from "zod";
+
 import { publicProcedure } from "./trpc";
 
 const proc = publicProcedure
@@ -163,6 +168,7 @@ Wrong:
 
 ```ts
 import { z } from "zod";
+
 import { publicProcedure } from "./trpc";
 
 const proc = publicProcedure
@@ -174,6 +180,7 @@ Correct:
 
 ```ts
 import { z } from "zod";
+
 import { publicProcedure } from "./trpc";
 
 const proc = publicProcedure
@@ -191,6 +198,7 @@ Wrong:
 
 ```ts
 import { z } from "zod";
+
 import { publicProcedure } from "./trpc";
 
 const proc = publicProcedure
@@ -204,6 +212,7 @@ Correct:
 
 ```ts
 import { z } from "zod";
+
 import { publicProcedure } from "./trpc";
 
 const proc = publicProcedure

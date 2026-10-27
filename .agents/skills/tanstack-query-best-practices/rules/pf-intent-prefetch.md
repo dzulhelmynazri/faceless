@@ -28,6 +28,7 @@ function PostList({ posts }: { posts: Post[] }) {
 
 ```tsx
 import { useQueryClient } from "@tanstack/react-query";
+
 import { postQueries } from "@/lib/queries";
 
 function PostList({ posts }: { posts: Post[] }) {

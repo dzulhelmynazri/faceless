@@ -30,8 +30,8 @@ function App() {
 ## Good Example: Basic Persistence with localStorage
 
 ```tsx
-import { QueryClient } from "@tanstack/react-query";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
+import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 
 const queryClient = new QueryClient({

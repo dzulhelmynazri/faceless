@@ -37,8 +37,8 @@ flowchart TD
 Callers in the transport router interact with a single, high-leverage interface:
 
 ```ts
-import type { Files } from "files-sdk";
 import type { SeriesEpisodeAudioMetadata } from "@faceless/contracts/series";
+import type { Files } from "files-sdk";
 
 export interface SynthesizeVoiceoverInput {
   userId: string;

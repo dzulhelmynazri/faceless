@@ -22,16 +22,18 @@ export const userSchema = z.object({
   role: z.enum(["admin", "user"]),
 });
 
+import type { z } from "zod";
+
 // Every consumer must derive the type
 // api/users.ts
 import { userSchema } from "@/schemas/user";
-import type { z } from "zod";
 
 type User = z.infer<typeof userSchema>; // Repeated everywhere
 
+import type { z } from "zod";
+
 // components/UserCard.tsx
 import { userSchema } from "@/schemas/user";
-import type { z } from "zod";
 
 type User = z.infer<typeof userSchema>; // Same boilerplate again
 ```

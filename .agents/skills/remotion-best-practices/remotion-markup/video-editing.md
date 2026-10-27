@@ -20,6 +20,7 @@ A `Sequence` is useful here because moving, trimming, retiming, or deleting the 
 import { Video } from "@remotion/media";
 import { TransitionSeries } from "@remotion/transitions";
 import { staticFile, useVideoConfig } from "remotion";
+
 import { BasicCaptions } from "./basic-captions";
 
 export const Interview = () => {

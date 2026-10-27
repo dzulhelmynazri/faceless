@@ -20,6 +20,8 @@ A compatible GPU is required. ONNX Runtime does not work on Linux arm64.
 Make a Node.js script that decodes the audio to a 16kHz mono waveform, downloads a model, and transcribes it.
 
 ```ts
+import { writeFile } from "node:fs/promises";
+
 import { registerMediabunnyServer } from "@mediabunny/server";
 import {
   WHISPER_WEBGPU_SAMPLE_RATE,
@@ -38,7 +40,6 @@ import {
   Output,
   WavOutputFormat,
 } from "mediabunny";
-import { writeFile } from "node:fs/promises";
 
 registerMediabunnyServer();
 

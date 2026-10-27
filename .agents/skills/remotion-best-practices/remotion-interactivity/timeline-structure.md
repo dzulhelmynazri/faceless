@@ -55,6 +55,7 @@ export const Title = Interactive.create({
 
 ```tsx title="Chapter.tsx"
 import { Interactive } from "remotion";
+
 import { Title } from "./Title";
 
 const ChapterInner = ({ title }: { readonly title: string }) => (
@@ -81,6 +82,7 @@ export const Chapter = Interactive.create({
 ```tsx title="MyVideo.tsx"
 import { Audio } from "@remotion/media";
 import { staticFile, Track, useVideoConfig } from "remotion";
+
 import { Chapter } from "./Chapter";
 
 export const MyVideo = () => {
@@ -131,6 +133,7 @@ export const MyVideo = () => {
 
 ```tsx title="Root.tsx"
 import { Composition, Folder } from "remotion";
+
 import { Chapter } from "./Chapter";
 import { MyVideo } from "./MyVideo";
 import { Title } from "./Title";

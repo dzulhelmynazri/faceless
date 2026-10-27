@@ -154,8 +154,8 @@ Three per-call `upload`/`download` options for big objects — all detailed in [
 
 ```ts
 import { Files, transfer } from "files-sdk";
-import { s3 } from "files-sdk/s3";
 import { r2 } from "files-sdk/r2";
+import { s3 } from "files-sdk/s3";
 
 const from = new Files({ adapter: s3({ bucket: "old" }) });
 const to = new Files({
@@ -321,10 +321,10 @@ Three subpaths expose a configured `Files` instance as in-process tools for AI a
 | `files-sdk/claude` | Anthropic Claude Agent SDK | `createClaudeFileTools` |
 
 ```ts
+import { generateText } from "ai";
 import { Files } from "files-sdk";
 import { createFileTools } from "files-sdk/ai-sdk";
 import { s3 } from "files-sdk/s3";
-import { generateText } from "ai";
 
 const files = new Files({ adapter: s3({ bucket: "uploads" }) });
 

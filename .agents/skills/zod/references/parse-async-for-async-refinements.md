@@ -86,8 +86,8 @@ const enrichedUser = await enrichedUserSchema.parseAsync({ userId: "123" });
 **Pattern for API routes:**
 
 ```typescript
-import { z } from "zod";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 const registerSchema = z
   .object({

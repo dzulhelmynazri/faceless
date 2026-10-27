@@ -73,9 +73,10 @@ if (!mapboxAccessToken) {
 ## Basic map example
 
 ```tsx
+import mapboxgl from "mapbox-gl";
 import { useEffect, useRef, useState } from "react";
 import { useDelayRender, useVideoConfig } from "remotion";
-import mapboxgl from "mapbox-gl";
+
 import "mapbox-gl/dist/mapbox-gl.css";
 
 const zurich: [number, number] = [8.5417, 47.3769];
@@ -141,6 +142,7 @@ This example shows the recommended pattern for route animations:
 
 ```tsx
 import * as turf from "@turf/turf";
+import mapboxgl, { type GeoJSONSource, type Map } from "mapbox-gl";
 import { useEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -150,7 +152,7 @@ import {
   useDelayRender,
   useVideoConfig,
 } from "remotion";
-import mapboxgl, { type GeoJSONSource, type Map } from "mapbox-gl";
+
 import "mapbox-gl/dist/mapbox-gl.css";
 
 const zurich: [number, number] = [8.5417, 47.3769];

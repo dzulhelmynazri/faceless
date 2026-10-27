@@ -23,6 +23,7 @@ export const MyComposition = ({ title }: Props) => <h1>{title}</h1>;
 
 ```tsx title="src/Root.tsx"
 import { Composition } from "remotion";
+
 import { MyComposition } from "./MyComposition";
 
 export const RemotionRoot = () => {
@@ -64,6 +65,7 @@ For Studio editing, keep `defaultProps` as an inline object literal on `<Composi
 
 ```tsx title="src/Root.tsx"
 import { Composition } from "remotion";
+
 import { MyComposition } from "./MyComposition";
 
 const defaultProps = { title: "Hello World" };
@@ -129,6 +131,7 @@ Use `<Still>` for single-frame images. It does not require `durationInFrames` or
 
 ```tsx title="src/Root.tsx"
 import { Still } from "remotion";
+
 import { Thumbnail } from "./Thumbnail";
 
 export const RemotionRoot = () => {
