@@ -26,7 +26,6 @@ export interface ScriptwriterInput {
   artStyleId: string;
   topicOverride?: string;
   previousTitles: string[];
-  modelId: string;
 }
 
 export const runScriptwriterAgent = async (

@@ -99,7 +99,7 @@ export const generateEpisodeScenes = async (
     });
 
     await input.storage.upload(storageKey, image.uint8Array, {
-      contentType: image.mediaType ?? "image/webp",
+      contentType: image.mediaType,
     });
 
     const imageUrl = await input.storage.url(storageKey);
@@ -205,7 +205,7 @@ export const regenerateSingleScene = async (
   });
 
   await input.storage.upload(storageKey, image.uint8Array, {
-    contentType: image.mediaType ?? "image/webp",
+    contentType: image.mediaType,
   });
 
   const imageUrl = await input.storage.url(storageKey);
