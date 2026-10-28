@@ -38,15 +38,7 @@ const isEpisodeTab = (val: string): val is EpisodeTab =>
   val === "SCHEDULED" ||
   val === "PUBLISHED";
 
-const getStatusBadgeVariant = (
-  status:
-    | "READY_FOR_REVIEW"
-    | "APPROVED"
-    | "PUBLISHED"
-    | "PENDING"
-    | "GENERATING"
-    | "FAILED"
-) => {
+const getStatusBadgeVariant = (status: EpisodeItem["status"]) => {
   if (status === "PUBLISHED") {
     return "default";
   }

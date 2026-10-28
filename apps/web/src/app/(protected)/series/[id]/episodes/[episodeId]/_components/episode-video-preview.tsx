@@ -127,7 +127,7 @@ export const EpisodeVideoPreview = () => {
         {/* Top Floating Scene Badge */}
         <div className="pointer-events-none absolute top-3 left-3 z-10 flex items-center gap-2">
           <Badge variant="outline">9:16 Vertical HD</Badge>
-          {compositionProps.glitchEffect === true && (
+          {compositionProps.glitchEffect && (
             <Badge variant="outline">Glitch FX</Badge>
           )}
         </div>

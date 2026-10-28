@@ -13,3 +13,11 @@ export {
   router,
   t,
 } from "./trpc";
+
+export { publishEpisodeToSocials } from "./services/publisher";
+
+export {
+  calculateNextScheduledFor,
+  renderEpisodeVideo,
+  resolveScheduledFor,
+} from "./services/renderer";

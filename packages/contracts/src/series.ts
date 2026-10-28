@@ -2144,7 +2144,9 @@ export const EPISODE_STATUSES = [
   "PENDING",
   "GENERATING",
   "READY_FOR_REVIEW",
+  "RENDERING",
   "APPROVED",
+  "PUBLISHING",
   "PUBLISHED",
   "FAILED",
 ] as const;
@@ -2155,7 +2157,7 @@ export const getSeriesListOutputSchema = z.array(
   z.object({
     id: z.string(),
     name: z.string(),
-    nichePresetId: z.string().nullable().optional(),
+    nichePresetId: z.string().nullable(),
     language: z.string(),
     voiceId: z.string(),
     artStyleId: z.string(),
@@ -2167,7 +2169,7 @@ export const getSeriesListOutputSchema = z.array(
     updatedAt: z.string(),
     episodeCount: z.number().int(),
     socialAccountCount: z.number().int(),
-    platforms: z.array(z.enum(["TIKTOK", "YOUTUBE", "INSTAGRAM"])).optional(),
+    platforms: z.array(z.enum(["TIKTOK", "YOUTUBE", "INSTAGRAM"])),
   })
 );
 
@@ -2188,8 +2190,8 @@ export const getSeriesByIdOutputSchema = z.object({
   language: z.string(),
   voiceId: z.string(),
   musicTrackId: z.string().nullable(),
-  customMusicKey: z.string().nullable().optional(),
-  customMusicUrl: z.string().nullable().optional(),
+  customMusicKey: z.string().nullable(),
+  customMusicUrl: z.string().nullable(),
   tiktokSounds: z.string().nullable(),
   artStyleId: z.string(),
   captionStyleId: z.string(),
@@ -2426,14 +2428,7 @@ export const getEpisodeByIdOutputSchema = z.object({
     title: z.string(),
     topic: z.string().nullable(),
     script: z.string(),
-    status: z.enum([
-      "PENDING",
-      "GENERATING",
-      "READY_FOR_REVIEW",
-      "APPROVED",
-      "PUBLISHED",
-      "FAILED",
-    ]),
+    status: z.enum(EPISODE_STATUSES),
     audioUrl: z.string().nullable(),
     thumbnailUrl: z.string().nullable(),
     videoUrl: z.string().nullable(),
@@ -2476,14 +2471,7 @@ export type UpdateEpisodeCustomizationOutput = z.infer<
 
 export const updateEpisodeStatusInputSchema = z.object({
   episodeId: z.string().min(1),
-  status: z.enum([
-    "PENDING",
-    "GENERATING",
-    "READY_FOR_REVIEW",
-    "APPROVED",
-    "PUBLISHED",
-    "FAILED",
-  ]),
+  status: z.enum(EPISODE_STATUSES),
 });
 
 export type UpdateEpisodeStatusInput = z.infer<
@@ -2492,14 +2480,7 @@ export type UpdateEpisodeStatusInput = z.infer<
 
 export const updateEpisodeStatusOutputSchema = z.object({
   success: z.boolean(),
-  status: z.enum([
-    "PENDING",
-    "GENERATING",
-    "READY_FOR_REVIEW",
-    "APPROVED",
-    "PUBLISHED",
-    "FAILED",
-  ]),
+  status: z.enum(EPISODE_STATUSES),
 });
 
 export type UpdateEpisodeStatusOutput = z.infer<
@@ -2526,3 +2507,66 @@ export const updateEpisodeSceneOutputSchema = z.object({
 export type UpdateEpisodeSceneOutput = z.infer<
   typeof updateEpisodeSceneOutputSchema
 >;
+
+export const renderEpisodeInputSchema = z.object({
+  episodeId: z.string().min(1),
+});
+
+export type RenderEpisodeInput = z.infer<typeof renderEpisodeInputSchema>;
+
+export const renderEpisodeOutputSchema = z.object({
+  status: z.enum(EPISODE_STATUSES),
+  success: z.boolean(),
+  videoUrl: z.string().nullable(),
+});
+
+export type RenderEpisodeOutput = z.infer<typeof renderEpisodeOutputSchema>;
+
+export const publishEpisodeNowInputSchema = z.object({
+  episodeId: z.string().min(1),
+});
+
+export type PublishEpisodeNowInput = z.infer<
+  typeof publishEpisodeNowInputSchema
+>;
+
+export const publicationOutcomeItemSchema = z.object({
+  accountId: z.string(),
+  error: z.string().optional(),
+  platform: z.string(),
+  postId: z.string().optional(),
+  postUrl: z.string().optional(),
+  state: z.string(),
+});
+
+export type PublicationOutcomeItem = z.infer<
+  typeof publicationOutcomeItemSchema
+>;
+
+export const publishEpisodeNowOutputSchema = z.object({
+  outcomes: z.array(publicationOutcomeItemSchema),
+  publishedAt: z.string().nullable(),
+  status: z.enum(EPISODE_STATUSES),
+  success: z.boolean(),
+});
+
+export type PublishEpisodeNowOutput = z.infer<
+  typeof publishEpisodeNowOutputSchema
+>;
+
+export const renderWebhookPayloadSchema = z.discriminatedUnion("status", [
+  z.object({
+    episodeId: z.string().min(1),
+    outputSizeBytes: z.number(),
+    renderDurationMs: z.number(),
+    status: z.literal("completed"),
+    videoUrl: z.url(),
+  }),
+  z.object({
+    episodeId: z.string().min(1),
+    error: z.string().min(1),
+    status: z.literal("failed"),
+  }),
+]);
+
+export type RenderWebhookPayload = z.infer<typeof renderWebhookPayloadSchema>;

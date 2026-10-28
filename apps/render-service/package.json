@@ -1,0 +1,30 @@
+{
+  "name": "render-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "start": "bun run src/index.ts",
+    "deploy": "wrangler deploy",
+    "check-types": "tsc --noEmit",
+    "env:generate": "varlock codegen"
+  },
+  "dependencies": {
+    "@cloudflare/containers": "^0.3.7",
+    "@faceless/contracts": "workspace:*",
+    "@faceless/remotion": "workspace:*",
+    "@faceless/storage": "workspace:*",
+    "@faceless/utils": "workspace:*",
+    "@hono/node-server": "^1.13.8",
+    "hono": "^4.7.1",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261028.1",
+    "@faceless/config": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "^6.0.3",
+    "varlock": "catalog:"
+  }
+}

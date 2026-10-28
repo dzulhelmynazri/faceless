@@ -5,6 +5,7 @@ export default defineAgent({
   description:
     "Autonomous high-retention short-form video scriptwriter with Jev virality decision gates and vertical visual scene generation",
   model: auto({
+    model: "typesafe-ai/jev",
     options: {
       "openai/gpt-4o":
         "Deep narrative pacing, psychological tension, historical detail, and layered suspense",

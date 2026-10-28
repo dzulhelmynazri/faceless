@@ -2,23 +2,14 @@ import type { WordTimestamp } from "@faceless/contracts/series";
 
 import type { SpeechInterval } from "../types";
 
-export interface ResolveDuckingVolumeInput {
-  currentTime: number;
-  intervals: readonly SpeechInterval[];
-  activeSpeechVolume?: number;
-  pauseVolume?: number;
-  fadeDuration?: number;
-}
+const ACTIVE_SPEECH_VOLUME = 0.12;
+const PAUSE_VOLUME = 0.32;
+const FADE_DURATION = 0.15;
+const PAUSE_THRESHOLD = 0.35;
 
-export interface ComputeSpeechIntervalsInput {
-  wordTimestamps: readonly WordTimestamp[];
-  pauseThreshold?: number;
-}
-
-export const computeSpeechIntervals = ({
-  wordTimestamps,
-  pauseThreshold = 0.35,
-}: ComputeSpeechIntervalsInput): SpeechInterval[] => {
+export const computeSpeechIntervals = (
+  wordTimestamps: readonly WordTimestamp[]
+): SpeechInterval[] => {
   if (wordTimestamps.length === 0) {
     return [];
   }
@@ -34,7 +25,7 @@ export const computeSpeechIntervals = ({
   let currentEnd = firstWord.end;
 
   for (const word of restWords) {
-    if (word.start - currentEnd < pauseThreshold) {
+    if (word.start - currentEnd < PAUSE_THRESHOLD) {
       currentEnd = Math.max(currentEnd, word.end);
     } else {
       intervals.push({ start: currentStart, end: currentEnd });
@@ -48,44 +39,36 @@ export const computeSpeechIntervals = ({
   return intervals;
 };
 
-export const resolveDuckingVolume = ({
-  currentTime,
-  intervals,
-  activeSpeechVolume = 0.12,
-  pauseVolume = 0.32,
-  fadeDuration = 0.15,
-}: ResolveDuckingVolumeInput): number => {
+export const getDuckingVolume = (
+  currentTime: number,
+  intervals: readonly SpeechInterval[]
+): number => {
   if (intervals.length === 0) {
-    return pauseVolume;
+    return PAUSE_VOLUME;
   }
 
   for (const interval of intervals) {
-    const paddedStart = interval.start - fadeDuration;
-    const paddedEnd = interval.end + fadeDuration;
+    const paddedStart = interval.start - FADE_DURATION;
+    const paddedEnd = interval.end + FADE_DURATION;
 
     if (currentTime >= paddedStart && currentTime <= paddedEnd) {
       if (currentTime < interval.start) {
-        const factor = (currentTime - paddedStart) / fadeDuration;
+        const factor = (currentTime - paddedStart) / FADE_DURATION;
 
-        return Number(
-          (pauseVolume - factor * (pauseVolume - activeSpeechVolume)).toFixed(3)
-        );
+        return PAUSE_VOLUME - factor * (PAUSE_VOLUME - ACTIVE_SPEECH_VOLUME);
       }
 
       if (currentTime > interval.end) {
-        const factor = (currentTime - interval.end) / fadeDuration;
+        const factor = (currentTime - interval.end) / FADE_DURATION;
 
-        return Number(
-          (
-            activeSpeechVolume +
-            factor * (pauseVolume - activeSpeechVolume)
-          ).toFixed(3)
+        return (
+          ACTIVE_SPEECH_VOLUME + factor * (PAUSE_VOLUME - ACTIVE_SPEECH_VOLUME)
         );
       }
 
-      return activeSpeechVolume;
+      return ACTIVE_SPEECH_VOLUME;
     }
   }
 
-  return pauseVolume;
+  return PAUSE_VOLUME;
 };

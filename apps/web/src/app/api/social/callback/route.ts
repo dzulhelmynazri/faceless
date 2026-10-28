@@ -55,7 +55,6 @@ export const GET = async (req: NextRequest) => {
 
   await db.socialConnection.upsert({
     create: {
-      accessToken: "managed_by_zernio",
       platform,
       platformUserId,
       platformUserName,
@@ -63,7 +62,6 @@ export const GET = async (req: NextRequest) => {
       userId: session.user.id,
     },
     update: {
-      accessToken: "managed_by_zernio",
       platformUserName,
       status: "CONNECTED",
     },

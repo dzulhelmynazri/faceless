@@ -30,12 +30,7 @@ export type { GlitchShaderProps } from "./compositions/glitch-shader";
 // Core Timing & Window Algorithms
 export {
   computeSpeechIntervals,
-  resolveDuckingVolume,
-} from "./core/speech-envelope";
-
-export type {
-  ComputeSpeechIntervalsInput,
-  ResolveDuckingVolumeInput,
+  getDuckingVolume,
 } from "./core/speech-envelope";
 
 export {

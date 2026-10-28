@@ -5,13 +5,13 @@ import { Html5Audio, useCurrentFrame, useVideoConfig } from "remotion";
 
 import {
   computeSpeechIntervals,
-  resolveDuckingVolume,
+  getDuckingVolume,
 } from "../core/speech-envelope";
 
 export interface AudioMixerProps {
   voiceUrl: string;
   wordTimestamps: readonly WordTimestamp[];
-  bgmUrl?: string | null;
+  bgmUrl: string | null;
 }
 
 export const AudioMixer: React.FC<AudioMixerProps> = ({
@@ -24,28 +24,24 @@ export const AudioMixer: React.FC<AudioMixerProps> = ({
   const currentTime = frame / fps;
 
   const intervals = React.useMemo(
-    () => computeSpeechIntervals({ wordTimestamps, pauseThreshold: 0.35 }),
+    () => computeSpeechIntervals(wordTimestamps),
     [wordTimestamps]
   );
 
-  const bgmVolume = React.useMemo(
-    () =>
-      resolveDuckingVolume({
-        currentTime,
-        intervals,
-        activeSpeechVolume: 0.12,
-        pauseVolume: 0.32,
-        fadeDuration: 0.15,
-      }),
-    [currentTime, intervals]
-  );
+  const bgmVolume = React.useMemo(() => {
+    if (!isNonEmptyString(bgmUrl)) {
+      return 0;
+    }
+
+    return getDuckingVolume(currentTime, intervals);
+  }, [bgmUrl, currentTime, intervals]);
 
   return (
     <>
       <Html5Audio src={voiceUrl} volume={1} />
-      {isNonEmptyString(bgmUrl) ? (
+      {isNonEmptyString(bgmUrl) && (
         <Html5Audio loop src={bgmUrl} volume={bgmVolume} />
-      ) : null}
+      )}
     </>
   );
 };

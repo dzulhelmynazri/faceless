@@ -14,7 +14,7 @@ export const MainVideo: React.FC<VideoCompositionProps> = ({
   scenes,
   captionStyleId,
   bgmUrl,
-  glitchEffect = false,
+  glitchEffect,
 }) => {
   React.useEffect(() => {
     ensureCaptionFontsLoaded();

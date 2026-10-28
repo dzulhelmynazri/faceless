@@ -5,6 +5,12 @@
     ".": {
       "default": "./src/index.ts"
     },
+    "./services/publisher": {
+      "default": "./src/services/publisher/index.ts"
+    },
+    "./services/renderer": {
+      "default": "./src/services/renderer/index.ts"
+    },
     "./*": {
       "default": "./src/*.ts"
     }
@@ -19,6 +25,7 @@
     "@faceless/auth": "workspace:*",
     "@faceless/contracts": "workspace:*",
     "@faceless/db": "workspace:*",
+    "@faceless/remotion": "workspace:*",
     "@faceless/socials": "workspace:*",
     "@faceless/storage": "workspace:*",
     "@faceless/utils": "workspace:*",

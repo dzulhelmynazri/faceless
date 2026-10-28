@@ -2,7 +2,7 @@ import type { Context as ApiContext } from "@faceless/api";
 import type { NextRequest } from "next/server";
 
 import { env } from "./env.server";
-import { auth, autumn, files, getDb, socials } from "./services";
+import { auth, autumn, files, getDb, socials, videoRenderer } from "./services";
 
 export const createContext = async (req: NextRequest): Promise<ApiContext> => {
   const db = getDb();
@@ -19,6 +19,7 @@ export const createContext = async (req: NextRequest): Promise<ApiContext> => {
     files,
     session,
     socials,
+    videoRenderer,
   };
 };
 

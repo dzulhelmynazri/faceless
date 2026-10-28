@@ -2,6 +2,7 @@ import { createAuth } from "@faceless/auth";
 import { createPrismaClient } from "@faceless/db";
 import type { Database } from "@faceless/db";
 import { createEmail } from "@faceless/email";
+import { createVideoRenderer } from "@faceless/remotion/server";
 import { createSocialClient } from "@faceless/socials";
 import { createFiles } from "@faceless/storage";
 import { Autumn } from "autumn-js";
@@ -21,4 +22,9 @@ export const socials = createSocialClient({
   apiKey: env.ZERNIO_API_KEY,
   provider: "zernio",
   webhookSecret: env.ZERNIO_WEBHOOK_SECRET,
+});
+
+export const videoRenderer = createVideoRenderer({
+  serviceToken: env.RENDER_SERVICE_TOKEN,
+  serviceUrl: env.RENDER_SERVICE_URL,
 });

@@ -12,3 +12,5 @@ export const createPrismaClient = (env: DatabaseConfig) => {
 };
 
 export type Database = ReturnType<typeof createPrismaClient>;
+
+export type { SocialConnection } from "../prisma/generated/client";

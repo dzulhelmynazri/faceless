@@ -31,28 +31,31 @@ export const defaultVideoProps = {
   ],
   scenes: [
     {
-      sceneNumber: 1,
-      narrationText: "Did you know that nine hikers vanished,",
-      visualPrompt: "A snowy mountain peak at dusk, ominous blizzard",
+      duration: 3,
+      id: "mock-scene-1",
       imageUrl:
         "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1080&h=1920&q=80",
-      duration: 3,
+      narrationText: "Did you know that nine hikers vanished,",
+      sceneNumber: 1,
+      visualPrompt: "A snowy mountain peak at dusk, ominous blizzard",
     },
     {
-      sceneNumber: 2,
-      narrationText: "and their tents were cut from the inside?",
-      visualPrompt: "An abandoned torn tent flapping violently in the snow",
+      duration: 3.5,
+      id: "mock-scene-2",
       imageUrl:
         "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1080&h=1920&q=80",
-      duration: 3.5,
+      narrationText: "and their tents were cut from the inside?",
+      sceneNumber: 2,
+      visualPrompt: "An abandoned torn tent flapping violently in the snow",
     },
     {
-      sceneNumber: 3,
-      narrationText: "No one knows what they were running from.",
-      visualPrompt: "Shadowy figures fleeing into a dark pine forest",
+      duration: 5.5,
+      id: "mock-scene-3",
       imageUrl:
         "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1080&h=1920&q=80",
-      duration: 5.5,
+      narrationText: "No one knows what they were running from.",
+      sceneNumber: 3,
+      visualPrompt: "Shadowy figures fleeing into a dark pine forest",
     },
   ],
   captionStyleId: "red-highlight",

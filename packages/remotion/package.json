@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./server": "./src/server/index.ts",
     "./compositions/*": "./src/compositions/*.tsx",
     "./core/*": "./src/core/*.ts",
     "./styles/*": "./src/styles/*.ts",
@@ -17,9 +18,12 @@
   },
   "dependencies": {
     "@faceless/contracts": "workspace:*",
+    "@faceless/storage": "workspace:*",
     "@faceless/utils": "workspace:*",
+    "@remotion/bundler": "^4.0.539",
     "@remotion/google-fonts": "^4.0.539",
     "@remotion/media-utils": "^4.0.539",
+    "@remotion/renderer": "^4.0.539",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "remotion": "^4.0.539"
@@ -27,6 +31,7 @@
   "devDependencies": {
     "@faceless/config": "workspace:*",
     "@remotion/cli": "^4.0.539",
+    "@types/node": "catalog:",
     "@types/react": "^19.2.18",
     "@types/react-dom": "catalog:",
     "typescript": "^6.0.3"

@@ -107,7 +107,7 @@ export const SceneSequence: React.FC<SceneSequenceProps> = ({ scenes }) => {
         <Sequence
           durationInFrames={durationInFrames}
           from={from}
-          key={`${scene.sceneNumber}-${scene.imageUrl}`}
+          key={scene.id}
           name={`Scene #${scene.sceneNumber}`}
         >
           <SingleSceneCard

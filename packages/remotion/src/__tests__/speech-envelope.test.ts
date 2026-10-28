@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   computeSpeechIntervals,
-  resolveDuckingVolume,
+  getDuckingVolume,
 } from "../core/speech-envelope";
 
 describe("Speech Envelope & Audio Ducking", () => {
@@ -20,10 +20,7 @@ describe("Speech Envelope & Audio Ducking", () => {
   ];
 
   it("merges adjacent word timestamps within pause threshold into discrete speech intervals", () => {
-    const intervals = computeSpeechIntervals({
-      wordTimestamps: sampleWords,
-      pauseThreshold: 0.35,
-    });
+    const intervals = computeSpeechIntervals(sampleWords);
 
     expect(intervals).toHaveLength(2);
     expect(intervals[0]).toStrictEqual({ start: 1, end: 2.5 });
@@ -31,44 +28,29 @@ describe("Speech Envelope & Audio Ducking", () => {
   });
 
   it("returns empty intervals when word timestamps are empty", () => {
-    expect(computeSpeechIntervals({ wordTimestamps: [] })).toStrictEqual([]);
+    expect(computeSpeechIntervals([])).toStrictEqual([]);
   });
 
   it("ducks volume smoothly during active speech intervals", () => {
-    const intervals = computeSpeechIntervals({
-      wordTimestamps: sampleWords,
-      pauseThreshold: 0.35,
-    });
+    const intervals = computeSpeechIntervals(sampleWords);
 
     // During pause before speech (t = 0.5s): full pause volume (0.32)
-    const volumeAtStart = resolveDuckingVolume({
-      currentTime: 0.5,
-      intervals,
-    });
+    const volumeAtStart = getDuckingVolume(0.5, intervals);
 
     expect(volumeAtStart).toBe(0.32);
 
     // Right in the middle of first speech block (t = 1.8s): ducked volume (0.12)
-    const volumeDuringSpeech = resolveDuckingVolume({
-      currentTime: 1.8,
-      intervals,
-    });
+    const volumeDuringSpeech = getDuckingVolume(1.8, intervals);
 
     expect(volumeDuringSpeech).toBe(0.12);
 
     // In between speech blocks (t = 3.2s): full pause volume (0.32)
-    const volumeInPause = resolveDuckingVolume({
-      currentTime: 3.2,
-      intervals,
-    });
+    const volumeInPause = getDuckingVolume(3.2, intervals);
 
     expect(volumeInPause).toBe(0.32);
 
     // In between speech blocks during second sentence (t = 4.6s): ducked volume (0.12)
-    const volumeDuringSecondSpeech = resolveDuckingVolume({
-      currentTime: 4.6,
-      intervals,
-    });
+    const volumeDuringSecondSpeech = getDuckingVolume(4.6, intervals);
 
     expect(volumeDuringSecondSpeech).toBe(0.12);
   });

@@ -17,10 +17,6 @@ model SocialConnection {
   platformUserId   String
   platformUserName String
   avatarUrl        String?
-  accessToken      String
-  refreshToken     String?
-  expiresAt        DateTime?
-  scopes           String[]         @default([])
   status           ConnectionStatus @default(CONNECTED)
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt

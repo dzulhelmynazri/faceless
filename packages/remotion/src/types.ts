@@ -6,12 +6,12 @@ import {
 import { z } from "zod";
 
 export const videoSceneItemSchema = z.object({
-  id: z.string().optional(),
-  sceneNumber: z.number().int(),
-  narrationText: z.string(),
-  visualPrompt: z.string(),
-  imageUrl: z.string(),
   duration: z.number(),
+  id: z.string(),
+  imageUrl: z.string(),
+  narrationText: z.string(),
+  sceneNumber: z.number().int(),
+  visualPrompt: z.string(),
 });
 
 export type VideoSceneItem = z.infer<typeof videoSceneItemSchema>;
@@ -34,8 +34,8 @@ export const videoCompositionPropsSchema = z.object({
   wordTimestamps: z.array(wordTimestampSchema),
   scenes: z.array(videoSceneItemSchema),
   captionStyleId: captionStyleIdSchema,
-  bgmUrl: z.string().nullable().optional(),
-  glitchEffect: z.boolean().optional(),
+  bgmUrl: z.string().nullable(),
+  glitchEffect: z.boolean(),
 });
 
 export type VideoCompositionProps = z.infer<typeof videoCompositionPropsSchema>;

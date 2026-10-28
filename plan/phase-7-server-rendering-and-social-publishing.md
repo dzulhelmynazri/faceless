@@ -1,183 +1,282 @@
-# Phase 7: Server Rendering & Social Publishing Pipeline
+# Phase 7: Server Rendering & Social Publishing Pipeline (Cloudflare Containers Edition)
 
-## 1. Goal & Objectives
+## 1. Goal & Architectural Overview
 
-Execute server-side video rendering using **`@remotion/renderer`** to export production-ready `.mp4` video files ($1080 \times 1920$ H.264 / AAC) and persist them to Cloudflare R2 via `@faceless/storage`. Automate scheduled publishing based on the series `publishTime` using a secure Vercel Cron endpoint (`/api/cron/publish`) and dispatching videos to connected TikTok, YouTube Shorts, and Instagram accounts via the existing **`@faceless/socials`** publisher.
+Execute server-side video rendering using **`@remotion/renderer`** to export production-ready vertical videos ($1080 \times 1920$ H.264 / AAC @ 30 FPS, CRF 20) and persist them to Cloudflare R2 via `@faceless/storage`. Rendering is orchestrated by **`apps/render-service`** running on **Cloudflare Containers** (with an in-process local fallback for local development).
+
+Automate scheduled publishing based on series `publishTime` (resolved to UTC `scheduledFor` timestamps) using a secure cron endpoint (`/api/cron/publish`), dispatching videos to connected TikTok, YouTube Shorts, and Instagram accounts via **`@faceless/socials`**.
 
 ---
 
-## 2. Server Rendering & Distribution Flow
+## 2. End-to-End System Architecture
 
 ```mermaid
 flowchart TD
-    Approval["Episode Marked APPROVED<br/>(Manual in Studio or via Auto-Pilot)"] --> PreRender["Pre-Render Video Engine<br/>@remotion/renderer compiles MP4 immediately"]
-    PreRender --> R2Upload["Upload MP4 to Cloudflare R2 via Files SDK<br/>users/{userId}/series/{seriesId}/episodes/{episodeId}/video.mp4"]
-    R2Upload --> SaveVideo["Update SeriesEpisode.videoUrl (Ready on CDN)"]
-
-    CronTrigger["Vercel Cron (/api/cron/publish)<br/>Matches publishTime & checks APPROVED episodes"] --> Dispatch["Dispatch Pre-Rendered Video to Socials"]
-
-    subgraph "Multi-Platform Social Distribution (@faceless/socials)"
-        Dispatch --> SocialSDK["@faceless/socials (publisher.ts)<br/>@opencoredev/social-sdk"]
-        SocialSDK --> DispatchTikTok["TikTok Content Posting API"]
-        SocialSDK --> DispatchYouTube["YouTube Data API v3 (#shorts)"]
-        SocialSDK --> DispatchInstagram["Instagram Graph API (Reels)"]
+    subgraph "1. Studio Lifecycle & Trigger"
+        Review["Episode in Studio<br/>(status: READY_FOR_REVIEW)"]
+        ApproveAction["Creator clicks 'Approve & Render'<br/>or autopilot triggers"]
+        Review --> ApproveAction
+        ApproveAction --> SetRendering["Atomically transition<br/>status: RENDERING"]
     end
 
-    DispatchTikTok --> RecordOutcomes["Create/Update SocialPublication Records<br/>- Independent Status per platform<br/>- Auto-retry up to 3x on failure<br/>- In-UI 'Retry' button"]
-    DispatchYouTube --> RecordOutcomes
-    DispatchInstagram --> RecordOutcomes
-    RecordOutcomes --> UpdateEpisode["Update SeriesEpisode<br/>status: 'PUBLISHED', publishedAt: now()"]
+    subgraph "2. Video Rendering Service (apps/render-service & @faceless/remotion)"
+        SetRendering --> DispatchRenderer{"RENDER_SERVICE_URL configured?"}
+
+        DispatchRenderer -->|Local Dev / Fallback| LocalRenderer["LocalRemotionRenderer (@faceless/remotion/server)<br/>- In-process @remotion/renderer<br/>- Zero Docker needed for dev<br/>- Direct upload to R2"]
+
+        DispatchRenderer -->|Production Cloudflare| ContainerTrigger["POST /jobs to apps/render-service<br/>Auth: RENDER_SERVICE_TOKEN<br/>Returns 202 Accepted (<200ms)"]
+
+        ContainerTrigger --> CFContainer["Cloudflare Container (Docker)<br/>- Node.js + Chromium + FFmpeg<br/>- @remotion/renderer compilation"]
+
+        CFContainer --> R2Upload["Upload MP4 to Cloudflare R2 via @faceless/storage<br/>users/{userId}/series/{seriesId}/episodes/{episodeId}/video.mp4<br/>(Zero Egress within Cloudflare)"]
+        LocalRenderer --> R2Upload
+
+        R2Upload --> WebhookCallback["POST /api/render/webhook (Next.js)<br/>Auth: RENDER_WEBHOOK_SECRET"]
+        WebhookCallback --> SetApproved["Save SeriesEpisode.videoUrl<br/>Calculate UTC scheduledFor<br/>status: APPROVED"]
+    end
+
+    subgraph "3. Publishing Engine (Automated Cron & On-Demand)"
+        CronTrigger["Cron Endpoint (/api/cron/publish)<br/>Triggered on schedule with CRON_SECRET"]
+        StudioPublishNow["Studio Action: 'Publish Now'<br/>(Immediate bypass)"]
+
+        CronTrigger --> QueryDue["Query due episodes:<br/>status == APPROVED<br/>scheduledFor <= now()<br/>videoUrl != null"]
+        QueryDue --> AtomicLock["Atomic DB Lock (updateMany)<br/>status: APPROVED -> PUBLISHING"]
+        StudioPublishNow --> AtomicLock
+    end
+
+    subgraph "4. Multi-Platform Social Dispatch (@faceless/socials)"
+        AtomicLock --> Dispatcher["publishVideoToSocials<br/>Deterministic Idempotency Key: episode_{id}"]
+        Dispatcher --> TikTok["TikTok Content Posting API"]
+        Dispatcher --> YouTube["YouTube Shorts (Data API v3)"]
+        Dispatcher --> Instagram["Instagram Graph API (Reels)"]
+
+        TikTok --> RecordOutcomes["Create / Update SocialPublication Records<br/>- Per-platform status (published / failed)<br/>- externalPostId / postUrl<br/>- Error diagnostics"]
+        YouTube --> RecordOutcomes
+        Instagram --> RecordOutcomes
+    end
+
+    subgraph "5. Final State & Error Handling"
+        RecordOutcomes --> CheckOutcomes{"Any Platform Succeeded?"}
+        CheckOutcomes -->|Yes| SetPublished["SeriesEpisode.status = PUBLISHED<br/>publishedAt = now()"]
+        CheckOutcomes -->|No (All Failed)| SetFailed["SeriesEpisode.status = FAILED<br/>error = 'Failed to publish'"]
+    end
 ```
 
 ---
 
-## 3. Detailed Component Plan
+## 3. Explicit State Machine (`EpisodeStatus`)
 
-### A. Video Renderer Architecture (`VideoRendererService` Adapter Pattern)
+To eliminate concurrency bugs, protect cron from publishing unfinished videos, and provide transparent creator UI feedback, `EpisodeStatus` is expanded in `packages/db/prisma/schema/series.prisma`:
 
-To ensure zero vendor lock-in and seamless transition between local development and high-throughput serverless rendering, we employ an adapter pattern:
-
-```ts
-export interface VideoRendererService {
-  renderVideo(params: RenderParams): Promise<{ videoUrl: string }>;
-}
-```
-
-- **`LocalRemotionRenderer`** (Default for local development & staging):
-  - Uses `@remotion/bundler` and `@remotion/renderer` in-process.
-  - Generates `.mp4` into `/tmp`, streams upload to Cloudflare R2 via Files SDK, and unlinks temporary files.
-- **`RemotionLambdaRenderer`** (Production ready):
-  - Offloads rendering to AWS Lambda via `@remotion/lambda` for sub-15s distributed rendering without container memory/timeout constraints.
-
-```ts
-import { files } from "@faceless/storage";
-import { bundle } from "@remotion/bundler";
-import { renderMedia, selectComposition } from "@remotion/renderer";
-
-export async function renderAndUploadEpisodeVideo({
-  userId,
-  seriesId,
-  episodeId,
-  compositionProps,
-}: RenderParams): Promise<string> {
-  const bundleLocation = await bundle({
-    entryPoint: "apps/web/src/remotion/index.ts",
-  });
-
-  const composition = await selectComposition({
-    serveUrl: bundleLocation,
-    id: "MainVideo",
-    inputProps: compositionProps,
-  });
-
-  const tempOutputPath = `/tmp/episode_${episodeId}.mp4`;
-
-  await renderMedia({
-    composition,
-    serveUrl: bundleLocation,
-    codec: "h264",
-    outputLocation: tempOutputPath,
-    inputProps: compositionProps,
-    concurrency: 4,
-  });
-
-  // Upload to Cloudflare R2 via Files SDK
-  const videoKey = `users/${userId}/series/${seriesId}/episodes/${episodeId}/video.mp4`;
-  const videoBuffer = await fs.promises.readFile(tempOutputPath);
-
-  await files.upload(videoKey, videoBuffer, {
-    contentType: "video/mp4",
-  });
-
-  // Cleanup temp file
-  await fs.promises.unlink(tempOutputPath);
-
-  return await files.url(videoKey);
+```prisma
+enum EpisodeStatus {
+  PENDING           // Script generation queued
+  GENERATING        // AI Scriptwriter, ElevenLabs TTS, or Flux visual assets in flight
+  READY_FOR_REVIEW  // Voiceover + scenes ready in web player for creator preview
+  RENDERING         // Cloudflare Container or local renderer actively compiling MP4
+  APPROVED          // MP4 baked on R2 CDN, scheduledFor set, ready for publish
+  PUBLISHING        // Claimed by cron / immediate publisher (atomic execution lock)
+  PUBLISHED         // Successfully broadcast to connected social accounts
+  FAILED            // Fatal failure in generation, rendering, or publishing
 }
 ```
 
 ---
 
-### B. Credit & Quota Consumption Policy
+## 4. Rendering Infrastructure & Service Layout
 
-- **Reserve at Trigger**: When an episode generation is initiated (either via automated cron or manual "Generate Episode Now"), 1 episode quota is reserved from the user's active billing period.
-- **Automatic Refund on Fatal Failure**: If the generation pipeline fails after all retries (e.g. downstream ElevenLabs/FLUX outage), the reserved credit is immediately refunded to the user's quota, and the episode is marked `FAILED` with actionable error details.
+### A. Dedicated Rendering App: `apps/render-service`
+
+A dedicated Node.js / Hono microservice optimized for running headless Chromium + FFmpeg inside Cloudflare Containers:
+
+```
+apps/render-service/
+├── Dockerfile              # Debian slim + Node.js 22 + Chromium + FFmpeg + fonts
+├── wrangler.jsonc          # Cloudflare Container + Worker configuration
+├── package.json            # @remotion/renderer, @remotion/bundler, hono, @faceless/storage
+├── tsconfig.json
+└── src/
+    ├── index.ts            # Hono server (POST /jobs, GET /health)
+    ├── renderer.ts         # Remotion bundle + renderMedia execution
+    └── webhook.ts          # Dispatches signed completion webhook back to Next.js
+```
+
+#### Endpoints in `apps/render-service`:
+
+1. `POST /jobs`:
+   - Validates `Authorization: Bearer ${RENDER_SERVICE_TOKEN}`.
+   - Body: `{ episodeId, userId, seriesId, compositionProps, callbackUrl }`.
+   - Returns `202 Accepted` with `{ jobId, status: "processing" }` immediately (<200ms).
+   - Starts async rendering task in the background.
+2. Background Job Execution:
+   - Renders video with `@remotion/renderer` into `/tmp/episode_${id}.mp4` (CRF 20, H.264, AAC @ 30 FPS).
+   - Streams upload to Cloudflare R2 using `@faceless/storage` under key: `users/${userId}/series/${seriesId}/episodes/${episodeId}/video.mp4`.
+   - Calls `callbackUrl` (`POST /api/render/webhook`) with `Authorization: Bearer ${RENDER_WEBHOOK_SECRET}` and payload `{ episodeId, videoUrl, status: "completed" }`.
+   - Cleans up `/tmp` artifacts in a `finally` block.
 
 ---
 
-### B. Multi-Platform Auto-Posting via Existing `@faceless/socials`
+### B. Monorepo Seams: `@faceless/remotion/server`
 
-[`packages/socials/src/publisher.ts`](file:///Users/dzulhelmy/Desktop/faceless/packages/socials/src/publisher.ts) already handles platform conversions and payload construction using `@opencoredev/social-sdk`:
+Isolates Node.js rendering utilities from React compositions to avoid client bundling issues:
+
+```
+packages/remotion/
+├── package.json
+│   ├── "."        -> ./src/index.ts (React compositions & player types)
+│   └── "./server" -> ./src/server/index.ts (Renderer contracts & local renderer)
+└── src/
+    └── server/
+        ├── types.ts              # VideoRendererService, RenderVideoParams, RenderVideoResult
+        ├── local-renderer.ts     # LocalRemotionRenderer (in-process for local dev/staging)
+        ├── remote-renderer.ts    # CloudflareContainerRenderer (dispatches to apps/render-service)
+        ├── factory.ts            # createVideoRenderer() choosing local vs container
+        └── index.ts              # Server barrel export
+```
+
+#### Dual Mode in `createVideoRenderer()`:
+
+- **Local Dev / Fallback**: If `RENDER_SERVICE_URL` is not set, `LocalRemotionRenderer` executes directly in-process on the local developer machine. Zero Docker required to run `bun dev`!
+- **Production Cloudflare**: If `RENDER_SERVICE_URL` is set, `CloudflareContainerRenderer` triggers the Cloudflare Container asynchronously.
+
+---
+
+## 5. Next.js Webhook Handler (`/api/render/webhook`)
+
+Located at `apps/web/src/app/api/render/webhook/route.ts`:
+
+1. Validates `Authorization: Bearer ${RENDER_WEBHOOK_SECRET}`.
+2. Reads `{ episodeId, videoUrl, status, error }`.
+3. If `status === "completed"`:
+   - Updates `SeriesEpisode`:
+     - `videoUrl`: `payload.videoUrl`
+     - `status`: `"APPROVED"`
+     - `scheduledFor`: calculated next UTC occurrence based on `series.publishTime`
+4. If `status === "failed"`:
+   - Updates `SeriesEpisode`:
+     - `status`: `"FAILED"`
+     - `error`: `payload.error`
+
+---
+
+## 6. Scheduling Resolution & Atomic Locking
+
+### A. UTC Timestamp Resolution
+
+When an episode transitions to `APPROVED`:
+
+1. `series.publishTime` (e.g. `"12:00 PM"`) is resolved against the series timezone (or UTC default) into an exact UTC `scheduledFor: DateTime`.
+2. The cron job query is timezone-agnostic and immune to missed runs:
+   ```ts
+   const dueEpisodes = await db.seriesEpisode.findMany({
+     where: {
+       status: "APPROVED",
+       videoUrl: { not: null },
+       scheduledFor: { lte: new Date() },
+       series: { status: "ACTIVE" },
+     },
+     take: 10,
+   });
+   ```
+
+### B. Atomic Race-Condition Lock
+
+To prevent parallel cron instances or duplicate triggers from dispatching the same video multiple times:
 
 ```ts
-import { publishVideoToTargets } from "@faceless/socials";
-
-const result = await publishVideoToTargets({
-  client: socialClient,
-  input: {
-    videoUrl: episode.videoUrl,
-    title: episode.title,
-    description: `${episode.title} #shorts #viral`,
+const claim = await db.seriesEpisode.updateMany({
+  where: {
+    id: episode.id,
+    status: "APPROVED",
   },
-  targets: connectedAccounts.map((account) => ({
-    platform: account.platform.toLowerCase(),
-    accountId: account.platformUserId,
-    // platform-specific options (e.g. visibility, shareToFeed)
-  })),
+  data: {
+    status: "PUBLISHING",
+  },
+});
+
+if (claim.count === 0) {
+  // Another worker or manual publisher already claimed this episode
+  continue;
+}
+```
+
+---
+
+## 7. Social Distribution & Error Recovery (`@faceless/socials`)
+
+### A. Idempotent Target Dispatch
+
+Using `@faceless/socials` (`publishVideoToSocials`), each publish call transmits `idempotencyKey: episode_${episode.id}`:
+
+```ts
+const result = await publishVideoToSocials(socialClient, {
+  videoUrl: episode.videoUrl,
+  title: episode.title,
+  description: `${episode.title} #shorts #viral`,
+  idempotencyKey: `episode_${episode.id}`,
+  targets: connectedAccounts,
 });
 ```
 
----
+### B. Per-Platform Publication Logging
 
-### C. Existing Database Model: `SocialPublication`
-
-Rather than adding a duplicate model, we leverage the existing [`SocialPublication`](file:///Users/dzulhelmy/Desktop/faceless/packages/db/prisma/schema/social.prisma) model:
-
-```prisma
-model SocialPublication {
-  id                 String           @id @default(cuid())
-  socialConnectionId String
-  episodeId          String?
-  platform           SocialPlatform   // TIKTOK | YOUTUBE | INSTAGRAM
-  externalPostId     String?
-  status             String           // SUCCESS | FAILED
-  error              String?
-  metadata           Json?
-  publishedAt        DateTime?
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
-
-  connection         SocialConnection @relation(fields: [socialConnectionId], references: [id], onDelete: Cascade)
-  episode            SeriesEpisode?   @relation(fields: [episodeId], references: [id], onDelete: SetNull)
-
-  @@index([socialConnectionId])
-  @@index([episodeId])
-  @@map("social_publication")
-}
-```
+- Each delivery outcome is recorded in `SocialPublication` with `status: "published" | "failed" | "processing"`.
+- Delivery, rate limits, and network retries are delegated to Zernio via `@faceless/socials`.
+- If any target platform accepts or publishes the video, the episode transitions to `PUBLISHED`. If all platforms fail, the episode transitions to `FAILED`.
 
 ---
 
-### D. Automated Vercel Cron Worker (`apps/web/src/app/api/cron/publish/route.ts`)
+## 8. Studio UI Integration (`StudioActionBar`)
 
-- Protected with standard `Authorization: Bearer ${process.env.CRON_SECRET}`.
-- Triggered on an automated schedule (e.g. `*/15 * * * *` in `vercel.json`):
-  1. Finds all `Series` where `status = "ACTIVE"`.
-  2. Matches current hour against series `publishTime` (e.g. `12:00 PM`).
-  3. Finds the next `SeriesEpisode` where `status = "APPROVED"`.
-  4. Renders video if `videoUrl` is null.
-  5. Dispatches video to connected social accounts.
-  6. Creates `SocialPublication` records.
-  7. Updates `SeriesEpisode.status = "PUBLISHED"` and `publishedAt = new Date()`.
+The action bar in `apps/web/src/app/(protected)/series/[id]/episodes/[episodeId]/_components/studio-action-bar.tsx` provides complete lifecycle control:
+
+1. **`READY_FOR_REVIEW`**:
+   - `[ Approve & Render ]`: Triggers `trpc.series.renderEpisode`, flips status to `RENDERING`.
+2. **`RENDERING`**:
+   - Animated spinner: `"Rendering Video (1080x1920)..."` with disabled actions.
+3. **`APPROVED`**:
+   - Badge: `"Approved & Scheduled for [Date/Time]"`.
+   - `[ Download MP4 ]`: Direct link to CDN video URL on Cloudflare R2.
+   - `[ Publish Now ]`: Direct bypass dispatching immediately to socials.
+4. **`PUBLISHING`**:
+   - Spinner: `"Publishing to Socials..."`.
+5. **`PUBLISHED`**:
+   - Badge: `"Published"`.
+   - External links to live posts on TikTok, YouTube Shorts, and Instagram.
+6. **`FAILED`**:
+   - Destructive badge + error banner.
 
 ---
 
-## 4. Implementation Checklist
+## 9. Implementation Checklist
 
-- [ ] Install `@remotion/bundler` and `@remotion/renderer` in backend rendering package or service.
-- [ ] Implement `renderAndUploadEpisodeVideo` with Cloudflare R2 upload integration.
-- [ ] Connect `publishVideoToTargets` from `@faceless/socials` to episode publisher.
-- [ ] Record delivery outcomes in `SocialPublication` records.
-- [ ] Build secure `/api/cron/publish` endpoint with `CRON_SECRET` authorization.
-- [ ] Add `vercel.json` cron schedule for continuous publishing.
-- [ ] Run `bunx ultracite check` and `bun run check-types` to ensure zero regressions.
+- [x] **Database & Contracts Migration**:
+  - [x] Add `RENDERING` and `PUBLISHING` to `EpisodeStatus` enum in `packages/db/prisma/schema/series.prisma`.
+  - [x] Run `bun run db:generate`.
+  - [x] Update `@faceless/contracts/series` with new statuses, `renderEpisode`, and `publishEpisodeNow` schemas.
+- [x] **Remotion Server Architecture (`@faceless/remotion/server`)**:
+  - [x] Install `@remotion/bundler` and `@remotion/renderer` in `packages/remotion`.
+  - [x] Implement `LocalRemotionRenderer` with in-memory bundle caching and `/tmp` cleanup for local dev.
+  - [x] Implement `CloudflareContainerRenderer` adapter (HTTP client to `apps/render-service`).
+  - [x] Expose `./server` subpath export in `packages/remotion/package.json`.
+- [x] **Cloudflare Container Render App (`apps/render-service`)**:
+  - [x] Initialize `apps/render-service` with Dockerfile (Node 22 + Chromium + FFmpeg).
+  - [x] Create `wrangler.jsonc` configured for Cloudflare Containers.
+  - [x] Implement Hono server with `POST /jobs` and signed webhook callback.
+  - [x] Connect with `@faceless/storage` for direct Cloudflare R2 MP4 uploads.
+- [x] **Next.js Webhook & API Domain Services**:
+  - [x] Create `apps/web/src/app/api/render/webhook/route.ts` validating `RENDER_WEBHOOK_SECRET`.
+  - [x] Implement `services/publisher` in `packages/api`: orchestrates `publishVideoToSocials` and records `SocialPublication` rows.
+  - [x] Implement `services/renderer` in `packages/api`: prepares composition props and invokes `VideoRendererService`.
+- [x] **tRPC Router Procedures (`packages/api/src/routers/series.ts`)**:
+  - [x] `series.renderEpisode`: triggers render, sets `RENDERING`.
+  - [x] `series.publishEpisodeNow`: manual immediate publish.
+- [x] **Automated Cron Endpoint**:
+  - [x] Create `apps/web/src/app/api/cron/publish/route.ts` with `CRON_SECRET` bearer authentication.
+  - [x] Atomic DB claim (`updateMany` -> `PUBLISHING`).
+  - [x] Add cron configuration in `apps/web/vercel.json` (`*/15 * * * *`).
+- [x] **Episode Studio UI Updates**:
+  - [x] Enhance `StudioActionBar` with all state badges, "Publish Now", and "Download MP4".
+- [x] **Quality Assurance**:
+  - [x] Run `bunx ultracite check` and `bun run check-types`.
+  - [x] Vitest unit tests for renderer adapter, scheduler math, and publisher mapper.

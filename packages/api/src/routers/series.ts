@@ -14,8 +14,12 @@ import {
   getSeriesByIdInputSchema,
   getSeriesByIdOutputSchema,
   getSeriesListOutputSchema,
+  publishEpisodeNowInputSchema,
+  publishEpisodeNowOutputSchema,
   regenerateEpisodeSceneInputSchema,
   regenerateEpisodeSceneOutputSchema,
+  renderEpisodeInputSchema,
+  renderEpisodeOutputSchema,
   seriesEpisodeMetadataSchema,
   updateEpisodeCustomizationInputSchema,
   updateEpisodeCustomizationOutputSchema,
@@ -28,10 +32,17 @@ import {
   updateSeriesStatusInputSchema,
   updateSeriesStatusOutputSchema,
 } from "@faceless/contracts/series";
+import type { TargetPublicationOutcome } from "@faceless/socials";
+import { isNonEmptyString } from "@faceless/utils";
 import { TRPCError } from "@trpc/server";
 
 import { protectedProcedure } from "../middlewares/auth";
 import { seriesProcedure } from "../middlewares/billing";
+import { publishEpisodeToSocials } from "../services/publisher";
+import {
+  calculateNextScheduledFor,
+  renderEpisodeVideo,
+} from "../services/renderer";
 import {
   generateEpisodeScenes,
   regenerateSingleScene,
@@ -43,6 +54,15 @@ import type {
 import { synthesizeVoiceover } from "../services/voiceover";
 import type { SynthesizeVoiceoverOutput } from "../services/voiceover";
 import { router } from "../trpc";
+
+const mapOutcome = (o: TargetPublicationOutcome) => ({
+  accountId: o.accountId,
+  error: o.error,
+  platform: o.platform,
+  postId: o.postId,
+  postUrl: o.postUrl,
+  state: o.state,
+});
 
 export const seriesRouter = router({
   create: seriesProcedure
@@ -227,8 +247,8 @@ export const seriesRouter = router({
           videoUrl: ep.videoUrl,
           audioUrl: ep.audioUrl,
           thumbnailUrl: ep.thumbnailUrl,
-          scheduledFor: ep.scheduledFor ? ep.scheduledFor.toISOString() : null,
-          publishedAt: ep.publishedAt ? ep.publishedAt.toISOString() : null,
+          scheduledFor: ep.scheduledFor?.toISOString() ?? null,
+          publishedAt: ep.publishedAt?.toISOString() ?? null,
           createdAt: ep.createdAt.toISOString(),
           scenes: ep.scenes.map((scene) => ({
             id: scene.id,
@@ -714,13 +734,11 @@ export const seriesRouter = router({
         });
       }
 
-      const parsedMetadata =
-        episode.metadata !== null && episode.metadata !== undefined
-          ? seriesEpisodeMetadataSchema.safeParse(episode.metadata)
-          : null;
+      const parsedMetadata = seriesEpisodeMetadataSchema.safeParse(
+        episode.metadata
+      );
 
-      const safeMetadata =
-        parsedMetadata?.success === true ? parsedMetadata.data : null;
+      const safeMetadata = parsedMetadata.success ? parsedMetadata.data : null;
 
       return {
         episode: {
@@ -776,25 +794,21 @@ export const seriesRouter = router({
         });
       }
 
-      const parsedMetadata =
-        episode.metadata !== null && episode.metadata !== undefined
-          ? seriesEpisodeMetadataSchema.safeParse(episode.metadata)
-          : null;
+      const parsedMetadata = seriesEpisodeMetadataSchema.safeParse(
+        episode.metadata
+      );
 
-      const currentMetadata =
-        parsedMetadata?.success === true ? parsedMetadata.data : undefined;
+      const currentMetadata = parsedMetadata.success
+        ? parsedMetadata.data
+        : undefined;
 
-      const updatedMetadata = currentMetadata
-        ? {
-            ...currentMetadata,
-            customization: {
-              ...currentMetadata.customization,
-              ...input.customization,
-            },
-          }
-        : {
-            customization: input.customization,
-          };
+      const updatedMetadata = {
+        ...currentMetadata,
+        customization: {
+          ...currentMetadata?.customization,
+          ...input.customization,
+        },
+      };
 
       await ctx.db.seriesEpisode.update({
         where: { id: episode.id },
@@ -814,6 +828,9 @@ export const seriesRouter = router({
     .output(updateEpisodeStatusOutputSchema)
     .mutation(async ({ ctx, input }) => {
       const episode = await ctx.db.seriesEpisode.findFirst({
+        include: {
+          series: true,
+        },
         where: {
           id: input.episodeId,
           series: {
@@ -829,16 +846,41 @@ export const seriesRouter = router({
         });
       }
 
+      // If user marks APPROVED and video is not rendered yet, trigger rendering
+      if (input.status === "APPROVED" && !isNonEmptyString(episode.videoUrl)) {
+        const renderResult = await renderEpisodeVideo({
+          callbackUrl: `${ctx.baseUrl}/api/render/webhook`,
+          db: ctx.db,
+          episodeId: episode.id,
+          renderer: ctx.videoRenderer,
+          storage: ctx.files,
+          userId: ctx.session.user.id,
+        });
+
+        return {
+          status: renderResult.status,
+          success: true,
+        };
+      }
+
+      const scheduledFor =
+        input.status === "APPROVED" &&
+        (!episode.scheduledFor || episode.scheduledFor <= new Date())
+          ? calculateNextScheduledFor(episode.series.publishTime)
+          : undefined;
+
       const updated = await ctx.db.seriesEpisode.update({
-        where: { id: episode.id },
         data: {
+          ...(input.status !== "FAILED" && { error: null }),
+          scheduledFor,
           status: input.status,
         },
+        where: { id: episode.id },
       });
 
       return {
-        success: true,
         status: updated.status,
+        success: true,
       };
     }),
 
@@ -926,6 +968,48 @@ export const seriesRouter = router({
           duration: updatedScene.duration,
         },
         updatedScript,
+      };
+    }),
+
+  renderEpisode: protectedProcedure
+    .input(renderEpisodeInputSchema)
+    .output(renderEpisodeOutputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const result = await renderEpisodeVideo({
+        callbackUrl: `${ctx.baseUrl}/api/render/webhook`,
+        db: ctx.db,
+        episodeId: input.episodeId,
+        renderer: ctx.videoRenderer,
+        storage: ctx.files,
+        userId: ctx.session.user.id,
+      });
+
+      return {
+        status: result.status,
+        success: true,
+        videoUrl: result.status === "APPROVED" ? result.videoUrl : null,
+      };
+    }),
+
+  publishEpisodeNow: protectedProcedure
+    .input(publishEpisodeNowInputSchema)
+    .output(publishEpisodeNowOutputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const result = await publishEpisodeToSocials({
+        db: ctx.db,
+        episodeId: input.episodeId,
+        socials: ctx.socials,
+        userId: ctx.session.user.id,
+      });
+
+      return {
+        outcomes: result.outcomes.map(mapOutcome),
+        publishedAt:
+          result.status === "PUBLISHED"
+            ? result.publishedAt.toISOString()
+            : null,
+        status: result.status,
+        success: result.success,
       };
     }),
 });

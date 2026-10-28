@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "render-service",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-03-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+    "traces": {
+      "enabled": true,
+    },
+  },
+  "containers": [
+    {
+      "class_name": "RemotionRendererContainer",
+      "image": "./Dockerfile",
+      "max_instances": 10,
+    },
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "REMOTION_RENDERER",
+        "class_name": "RemotionRendererContainer",
+      },
+    ],
+  },
+}

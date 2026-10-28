@@ -241,7 +241,7 @@ const SeriesCard = ({ series }: { series: SeriesItem }) => {
               </span>
             </div>
 
-            {series.platforms && series.platforms.length > 0 && (
+            {series.platforms.length > 0 && (
               <div className="mt-1 flex items-center gap-2">
                 <Video className="size-4 shrink-0" />
                 <div className="flex items-center gap-1.5">
