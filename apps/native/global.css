@@ -1,3 +1,90 @@
 @import "tailwindcss";
 @import "uniwind";
 @import "heroui-native/styles";
+
+@theme {
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--accent-foreground);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+}
+
+@layer theme {
+  :root {
+    @variant light {
+      /* Claude Console Primary Button: Dark Charcoal (#1E1E1E) with White Text */
+      --accent: oklch(0.2 0.005 60);
+      --accent-foreground: oklch(100% 0 0);
+
+      /* Claude Brand Terracotta (#D97757) - for logo, brand highlights, focus */
+      --brand: oklch(0.6171 0.1375 39.0427);
+      --brand-foreground: oklch(100% 0 0);
+      --focus: oklch(0.6171 0.1375 39.0427);
+
+      /* Claude warm parchment background & surfaces */
+      --background: oklch(0.9818 0.0054 95.0986);
+      --foreground: oklch(0.3438 0.0269 95.7226);
+
+      --surface: oklch(100% 0 0);
+      --surface-foreground: var(--foreground);
+      --surface-secondary: oklch(0.9524 0.008 92.9892);
+      --surface-secondary-foreground: var(--foreground);
+      --surface-tertiary: oklch(0.9341 0.012 90.239);
+      --surface-tertiary-foreground: var(--foreground);
+
+      --overlay: oklch(100% 0 0);
+      --overlay-foreground: var(--foreground);
+
+      --muted: oklch(0.6059 0.0075 97.4233);
+      --default: oklch(0.9245 0.0138 92.9892);
+      --default-foreground: oklch(0.3438 0.0269 95.7226);
+
+      --border: oklch(0.8847 0.0069 97.3627);
+      --separator: oklch(0.82 0.0069 97.3627);
+
+      /* Status */
+      --danger: oklch(0.577 0.245 27.325);
+      --danger-foreground: oklch(100% 0 0);
+      --success: oklch(0.627 0.194 149.214);
+      --success-foreground: oklch(100% 0 0);
+    }
+
+    @variant dark {
+      /* Claude Console Primary Button (Dark Mode): White with Charcoal Text */
+      --accent: oklch(0.985 0 0);
+      --accent-foreground: oklch(0.2 0.005 60);
+
+      /* Claude Brand Terracotta (#E08569) */
+      --brand: oklch(0.6724 0.1308 38.7559);
+      --brand-foreground: oklch(100% 0 0);
+      --focus: oklch(0.6724 0.1308 38.7559);
+
+      /* Claude warm charcoal background & surfaces */
+      --background: oklch(0.22 0.005 106.6427);
+      --foreground: oklch(0.9211 0.004 106.4781);
+
+      --surface: oklch(0.2679 0.0036 106.6427);
+      --surface-foreground: var(--foreground);
+      --surface-secondary: oklch(0.3085 0.0035 106.6039);
+      --surface-secondary-foreground: var(--foreground);
+      --surface-tertiary: oklch(0.35 0.0035 106.6039);
+      --surface-tertiary-foreground: var(--foreground);
+
+      --overlay: oklch(0.2679 0.0036 106.6427);
+      --overlay-foreground: var(--foreground);
+
+      --muted: oklch(0.7713 0.0169 99.0657);
+      --default: oklch(0.3085 0.0035 106.6039);
+      --default-foreground: oklch(0.9211 0.004 106.4781);
+
+      --border: oklch(0.3618 0.0101 106.8928);
+      --separator: oklch(0.42 0.0101 106.8928);
+
+      /* Status */
+      --danger: oklch(0.6368 0.2078 25.3313);
+      --danger-foreground: oklch(100% 0 0);
+      --success: oklch(0.627 0.194 149.214);
+      --success-foreground: oklch(100% 0 0);
+    }
+  }
+}
