@@ -35,12 +35,7 @@ import {
   generateEpisodeScenes,
   regenerateSingleScene,
 } from "../../services/visual";
-import type {
-  GenerateEpisodeScenesOutput,
-  GeneratedSceneRecord,
-} from "../../services/visual";
 import { synthesizeVoiceover } from "../../services/voiceover";
-import type { SynthesizeVoiceoverOutput } from "../../services/voiceover";
 import { router } from "../../trpc";
 
 const mapOutcome = (o: TargetPublicationOutcome) => ({
@@ -104,10 +99,8 @@ export const episodesRouter = router({
         },
       });
 
-      let voiceover: SynthesizeVoiceoverOutput;
-
       try {
-        voiceover = await synthesizeVoiceover({
+        const voiceover = await synthesizeVoiceover({
           userId: series.userId,
           seriesId: series.id,
           episodeId: episode.id,
@@ -115,25 +108,8 @@ export const episodesRouter = router({
           voiceId: series.voiceId,
           storage: ctx.files,
         });
-      } catch {
-        await ctx.db.seriesEpisode.update({
-          where: { id: episode.id },
-          data: {
-            status: "FAILED",
-            error: "Failed to synthesize voiceover audio",
-          },
-        });
 
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to synthesize voiceover audio",
-        });
-      }
-
-      let visualResult: GenerateEpisodeScenesOutput;
-
-      try {
-        visualResult = await generateEpisodeScenes({
+        const visualResult = await generateEpisodeScenes({
           userId: series.userId,
           seriesId: series.id,
           episodeId: episode.id,
@@ -143,60 +119,50 @@ export const episodesRouter = router({
           audioDuration: voiceover.metadata.audioDuration,
           storage: ctx.files,
         });
+
+        await ctx.db.$transaction([
+          ctx.db.seriesEpisodeScene.createMany({
+            data: visualResult.scenes.map((scene) => ({
+              episodeId: episode.id,
+              ...scene,
+            })),
+          }),
+          ctx.db.seriesEpisode.update({
+            where: { id: episode.id },
+            data: {
+              audioUrl: voiceover.audioUrl,
+              thumbnailUrl: visualResult.thumbnailUrl,
+              status: "READY_FOR_REVIEW",
+              error: null,
+              metadata: {
+                script,
+                audio: voiceover.metadata,
+              },
+            },
+          }),
+        ]);
+
+        return {
+          episodeId: episode.id,
+          script,
+          audioUrl: voiceover.audioUrl,
+          thumbnailUrl: visualResult.thumbnailUrl,
+          sceneCount: visualResult.scenes.length,
+        };
       } catch {
         await ctx.db.seriesEpisode.update({
           where: { id: episode.id },
           data: {
-            audioUrl: voiceover.audioUrl,
             status: "FAILED",
-            error: "Failed to generate visual assets for episode",
-            metadata: {
-              script,
-              audio: voiceover.metadata,
-            },
+            error: "Failed to generate episode assets",
           },
         });
 
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to generate visual assets for episode",
+          message: "Failed to generate episode assets",
         });
       }
-
-      await ctx.db.$transaction([
-        ctx.db.seriesEpisodeScene.createMany({
-          data: visualResult.scenes.map((scene) => ({
-            episodeId: episode.id,
-            sceneNumber: scene.sceneNumber,
-            narrationText: scene.narrationText,
-            visualPrompt: scene.visualPrompt,
-            imageUrl: scene.imageUrl,
-            imageKey: scene.imageKey,
-            duration: scene.duration,
-          })),
-        }),
-        ctx.db.seriesEpisode.update({
-          where: { id: episode.id },
-          data: {
-            audioUrl: voiceover.audioUrl,
-            thumbnailUrl: visualResult.thumbnailUrl,
-            status: "READY_FOR_REVIEW",
-            error: null,
-            metadata: {
-              script,
-              audio: voiceover.metadata,
-            },
-          },
-        }),
-      ]);
-
-      return {
-        episodeId: episode.id,
-        script,
-        audioUrl: voiceover.audioUrl,
-        thumbnailUrl: visualResult.thumbnailUrl,
-        sceneCount: visualResult.scenes.length,
-      };
     }),
 
   generateEpisodeAudio: protectedProcedure
@@ -222,31 +188,45 @@ export const episodesRouter = router({
         });
       }
 
-      const parsedMetadata = seriesEpisodeMetadataSchema.safeParse(
+      const metadata = seriesEpisodeMetadataSchema.safeParse(
         episode.metadata
-      );
+      ).data;
 
-      if (!parsedMetadata.success) {
+      if (!metadata) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Episode script metadata is invalid or missing",
         });
       }
 
-      const voiceId = input.voiceIdOverride ?? episode.series.voiceId;
-      const rawNarration = episode.script;
-
-      let voiceover: SynthesizeVoiceoverOutput;
-
       try {
-        voiceover = await synthesizeVoiceover({
+        const voiceover = await synthesizeVoiceover({
           userId: episode.series.userId,
           seriesId: episode.seriesId,
           episodeId: episode.id,
-          rawNarration,
-          voiceId,
+          rawNarration: episode.script,
+          voiceId: input.voiceIdOverride ?? episode.series.voiceId,
           storage: ctx.files,
         });
+
+        await ctx.db.seriesEpisode.update({
+          where: { id: episode.id },
+          data: {
+            audioUrl: voiceover.audioUrl,
+            status: "READY_FOR_REVIEW",
+            error: null,
+            metadata: {
+              script: metadata.script,
+              audio: voiceover.metadata,
+            },
+          },
+        });
+
+        return {
+          episodeId: episode.id,
+          audioUrl: voiceover.audioUrl,
+          metadata: voiceover.metadata,
+        };
       } catch {
         await ctx.db.seriesEpisode.update({
           where: { id: episode.id },
@@ -261,25 +241,6 @@ export const episodesRouter = router({
           message: "Failed to synthesize voiceover audio",
         });
       }
-
-      await ctx.db.seriesEpisode.update({
-        where: { id: episode.id },
-        data: {
-          audioUrl: voiceover.audioUrl,
-          status: "READY_FOR_REVIEW",
-          error: null,
-          metadata: {
-            script: parsedMetadata.data.script,
-            audio: voiceover.metadata,
-          },
-        },
-      });
-
-      return {
-        episodeId: episode.id,
-        audioUrl: voiceover.audioUrl,
-        metadata: voiceover.metadata,
-      };
     }),
 
   regenerateEpisodeScene: protectedProcedure
@@ -319,27 +280,18 @@ export const episodesRouter = router({
         });
       }
 
-      let generated: GeneratedSceneRecord;
-
-      try {
-        generated = await regenerateSingleScene({
-          userId: episode.series.userId,
-          seriesId: episode.seriesId,
-          episodeId: episode.id,
-          artStyleId: episode.series.artStyleId,
-          sceneNumber: existingScene.sceneNumber,
-          narrationChunk: existingScene.narrationText,
-          visualPrompt: existingScene.visualPrompt,
-          duration: existingScene.duration,
-          promptOverride: input.promptOverride,
-          storage: ctx.files,
-        });
-      } catch {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: `Failed to regenerate scene #${input.sceneNumber}`,
-        });
-      }
+      const generated = await regenerateSingleScene({
+        userId: episode.series.userId,
+        seriesId: episode.seriesId,
+        episodeId: episode.id,
+        artStyleId: episode.series.artStyleId,
+        sceneNumber: existingScene.sceneNumber,
+        narrationChunk: existingScene.narrationText,
+        visualPrompt: existingScene.visualPrompt,
+        duration: existingScene.duration,
+        promptOverride: input.promptOverride,
+        storage: ctx.files,
+      });
 
       const updatedScene = await ctx.db.seriesEpisodeScene.update({
         where: {
@@ -353,31 +305,28 @@ export const episodesRouter = router({
           imageKey: generated.imageKey,
           visualPrompt: generated.visualPrompt,
         },
+        select: {
+          id: true,
+          sceneNumber: true,
+          narrationText: true,
+          visualPrompt: true,
+          imageUrl: true,
+          duration: true,
+        },
       });
 
-      let nextThumbnailUrl = episode.thumbnailUrl;
-
       if (input.sceneNumber === 1) {
-        nextThumbnailUrl = generated.imageUrl;
         await ctx.db.seriesEpisode.update({
           where: { id: episode.id },
-          data: {
-            thumbnailUrl: generated.imageUrl,
-          },
+          data: { thumbnailUrl: generated.imageUrl },
         });
       }
 
       return {
         success: true,
-        scene: {
-          id: updatedScene.id,
-          sceneNumber: updatedScene.sceneNumber,
-          narrationText: updatedScene.narrationText,
-          visualPrompt: updatedScene.visualPrompt,
-          imageUrl: updatedScene.imageUrl,
-          duration: updatedScene.duration,
-        },
-        thumbnailUrl: nextThumbnailUrl,
+        scene: updatedScene,
+        thumbnailUrl:
+          input.sceneNumber === 1 ? generated.imageUrl : episode.thumbnailUrl,
       };
     }),
 
@@ -408,6 +357,14 @@ export const episodesRouter = router({
             orderBy: {
               sceneNumber: "asc",
             },
+            select: {
+              id: true,
+              sceneNumber: true,
+              narrationText: true,
+              visualPrompt: true,
+              imageUrl: true,
+              duration: true,
+            },
           },
         },
       });
@@ -419,11 +376,8 @@ export const episodesRouter = router({
         });
       }
 
-      const parsedMetadata = seriesEpisodeMetadataSchema.safeParse(
-        episode.metadata
-      );
-
-      const safeMetadata = parsedMetadata.success ? parsedMetadata.data : null;
+      const metadata =
+        seriesEpisodeMetadataSchema.safeParse(episode.metadata).data ?? null;
 
       return {
         episode: {
@@ -438,7 +392,7 @@ export const episodesRouter = router({
           thumbnailUrl: episode.thumbnailUrl,
           videoUrl: episode.videoUrl,
           error: episode.error,
-          metadata: safeMetadata,
+          metadata,
           createdAt: episode.createdAt.toISOString(),
           updatedAt: episode.updatedAt.toISOString(),
         },
@@ -448,14 +402,7 @@ export const episodesRouter = router({
             episode.series.captionStyleId
           ),
         },
-        scenes: episode.scenes.map((s) => ({
-          id: s.id,
-          sceneNumber: s.sceneNumber,
-          narrationText: s.narrationText,
-          visualPrompt: s.visualPrompt,
-          imageUrl: s.imageUrl,
-          duration: s.duration,
-        })),
+        scenes: episode.scenes,
       };
     }),
 
@@ -479,26 +426,27 @@ export const episodesRouter = router({
         });
       }
 
-      const parsedMetadata = seriesEpisodeMetadataSchema.safeParse(
+      const current = seriesEpisodeMetadataSchema.safeParse(
         episode.metadata
-      );
+      ).data;
 
-      const currentMetadata = parsedMetadata.success
-        ? parsedMetadata.data
-        : undefined;
-
-      const updatedMetadata = {
-        ...currentMetadata,
-        customization: {
-          ...currentMetadata?.customization,
-          ...input.customization,
-        },
-      };
+      if (!current) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Episode metadata is invalid or missing",
+        });
+      }
 
       await ctx.db.seriesEpisode.update({
         where: { id: episode.id },
         data: {
-          metadata: updatedMetadata,
+          metadata: {
+            ...current,
+            customization: {
+              ...current.customization,
+              ...input.customization,
+            },
+          },
         },
       });
 
@@ -556,7 +504,7 @@ export const episodesRouter = router({
 
       const updated = await ctx.db.seriesEpisode.update({
         data: {
-          ...(input.status !== "FAILED" && { error: null }),
+          error: input.status === "FAILED" ? undefined : null,
           scheduledFor,
           status: input.status,
         },
@@ -580,6 +528,13 @@ export const episodesRouter = router({
             userId: ctx.session.user.id,
           },
         },
+        include: {
+          scenes: {
+            where: {
+              sceneNumber: input.sceneNumber,
+            },
+          },
+        },
       });
 
       if (!episode) {
@@ -589,14 +544,7 @@ export const episodesRouter = router({
         });
       }
 
-      const existingScene = await ctx.db.seriesEpisodeScene.findUnique({
-        where: {
-          episodeId_sceneNumber: {
-            episodeId: episode.id,
-            sceneNumber: input.sceneNumber,
-          },
-        },
-      });
+      const [existingScene] = episode.scenes;
 
       if (!existingScene) {
         throw new TRPCError({
@@ -605,15 +553,6 @@ export const episodesRouter = router({
         });
       }
 
-      const updateData = {
-        ...(input.narrationText !== undefined && {
-          narrationText: input.narrationText,
-        }),
-        ...(input.visualPrompt !== undefined && {
-          visualPrompt: input.visualPrompt,
-        }),
-      };
-
       const updatedScene = await ctx.db.seriesEpisodeScene.update({
         where: {
           episodeId_sceneNumber: {
@@ -621,37 +560,40 @@ export const episodesRouter = router({
             sceneNumber: input.sceneNumber,
           },
         },
-        data: updateData,
+        data: {
+          narrationText: input.narrationText,
+          visualPrompt: input.visualPrompt,
+        },
+        select: {
+          id: true,
+          sceneNumber: true,
+          narrationText: true,
+          visualPrompt: true,
+          imageUrl: true,
+          duration: true,
+        },
       });
 
       let updatedScript: string | undefined;
 
       if (input.narrationText !== undefined) {
-        const allScenes = await ctx.db.seriesEpisodeScene.findMany({
+        const scenes = await ctx.db.seriesEpisodeScene.findMany({
           where: { episodeId: episode.id },
           orderBy: { sceneNumber: "asc" },
+          select: { narrationText: true },
         });
 
-        updatedScript = allScenes.map((s) => s.narrationText).join("\n\n");
+        updatedScript = scenes.map((s) => s.narrationText).join("\n\n");
 
         await ctx.db.seriesEpisode.update({
           where: { id: episode.id },
-          data: {
-            script: updatedScript,
-          },
+          data: { script: updatedScript },
         });
       }
 
       return {
         success: true,
-        scene: {
-          id: updatedScene.id,
-          sceneNumber: updatedScene.sceneNumber,
-          narrationText: updatedScene.narrationText,
-          visualPrompt: updatedScene.visualPrompt,
-          imageUrl: updatedScene.imageUrl,
-          duration: updatedScene.duration,
-        },
+        scene: updatedScene,
         updatedScript,
       };
     }),
