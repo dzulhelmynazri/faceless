@@ -1,12 +1,12 @@
 import {
   disconnectSocialInputSchema,
+  disconnectSocialOutputSchema,
   getOAuthUrlInputSchema,
   getOAuthUrlOutputSchema,
   getSocialConnectionsOutputSchema,
   PLATFORM_TO_SDK_MAP,
 } from "@faceless/contracts/social";
 import { TRPCError } from "@trpc/server";
-import { z } from "zod";
 
 import { protectedProcedure } from "../middlewares/auth";
 import { router } from "../trpc";
@@ -19,6 +19,14 @@ export const socialRouter = router({
         where: {
           status: "CONNECTED",
           userId: ctx.session.user.id,
+        },
+        select: {
+          avatarUrl: true,
+          createdAt: true,
+          id: true,
+          platform: true,
+          platformUserName: true,
+          status: true,
         },
         orderBy: {
           createdAt: "desc",
@@ -37,13 +45,14 @@ export const socialRouter = router({
 
   disconnect: protectedProcedure
     .input(disconnectSocialInputSchema)
-    .output(z.object({ success: z.boolean() }))
+    .output(disconnectSocialOutputSchema)
     .mutation(async ({ ctx, input }) => {
       const existing = await ctx.db.socialConnection.findFirst({
         where: {
           platform: input.platform,
           userId: ctx.session.user.id,
         },
+        select: { id: true },
       });
 
       if (!existing) {
@@ -54,9 +63,7 @@ export const socialRouter = router({
       }
 
       await ctx.db.socialConnection.delete({
-        where: {
-          id: existing.id,
-        },
+        where: { id: existing.id },
       });
 
       return { success: true };

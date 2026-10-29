@@ -80,6 +80,14 @@ export const disconnectSocialInputSchema = z.object({
 
 export type DisconnectSocialInput = z.infer<typeof disconnectSocialInputSchema>;
 
+export const disconnectSocialOutputSchema = z.object({
+  success: z.boolean(),
+});
+
+export type DisconnectSocialOutput = z.infer<
+  typeof disconnectSocialOutputSchema
+>;
+
 export const getOAuthUrlInputSchema = z.object({
   platform: socialPlatformSchema,
   redirectUri: z.string().min(1),
