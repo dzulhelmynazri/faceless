@@ -15,25 +15,6 @@ const app = new Hono();
 const storage = createFiles(env);
 const renderer = new LocalRemotionRenderer();
 
-const isAuthorized = (
-  authHeader: string | undefined,
-  expectedToken: string
-): boolean => {
-  if (!isNonEmptyString(authHeader)) {
-    return false;
-  }
-
-  const encoder = new TextEncoder();
-  const headerBuffer = encoder.encode(authHeader);
-  const expectedBuffer = encoder.encode(`Bearer ${expectedToken}`);
-
-  if (headerBuffer.length !== expectedBuffer.length) {
-    return false;
-  }
-
-  return timingSafeEqual(headerBuffer, expectedBuffer);
-};
-
 const renderJobRequestSchema = z.object({
   callbackUrl: z.url(),
   compositionProps: videoCompositionPropsSchema,
@@ -41,6 +22,78 @@ const renderJobRequestSchema = z.object({
   seriesId: z.string().min(1),
   userId: z.string().min(1),
 });
+
+type RenderJobRequest = z.infer<typeof renderJobRequestSchema>;
+
+const isAuthorized = (authorization: string | undefined): boolean => {
+  if (!isNonEmptyString(authorization)) {
+    return false;
+  }
+
+  const encoder = new TextEncoder();
+  const actual = encoder.encode(authorization);
+  const expected = encoder.encode(`Bearer ${env.RENDER_SERVICE_TOKEN}`);
+
+  return (
+    actual.byteLength === expected.byteLength &&
+    timingSafeEqual(actual, expected)
+  );
+};
+
+const runJob = async ({
+  callbackUrl,
+  compositionProps,
+  episodeId,
+  seriesId,
+  userId,
+}: RenderJobRequest): Promise<void> => {
+  let payload: RenderWebhookPayload;
+
+  try {
+    const result = await renderer.renderVideo({
+      callbackUrl,
+      compositionProps,
+      episodeId,
+      seriesId,
+      storage,
+      userId,
+    });
+
+    payload = {
+      episodeId,
+      outputSizeBytes: result.outputSizeBytes,
+      renderDurationMs: result.renderDurationMs,
+      status: "completed",
+      videoUrl: result.videoUrl,
+    };
+  } catch (error) {
+    console.error("Video rendering failed:", error);
+
+    payload = {
+      episodeId,
+      error: "Video rendering failed",
+      status: "failed",
+    };
+  }
+
+  try {
+    const response = await fetch(callbackUrl, {
+      body: JSON.stringify(payload),
+      headers: {
+        Authorization: `Bearer ${env.RENDER_WEBHOOK_SECRET}`,
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+      signal: AbortSignal.timeout(10_000),
+    });
+
+    if (!response.ok) {
+      console.error("Webhook failed:", response.status);
+    }
+  } catch (error) {
+    console.error("Webhook delivery failed:", error);
+  }
+};
 
 app.get("/health", (c) =>
   c.json({
@@ -50,70 +103,22 @@ app.get("/health", (c) =>
 );
 
 app.post("/jobs", async (c) => {
-  const authHeader = c.req.header("Authorization");
-
-  if (!isAuthorized(authHeader, env.RENDER_SERVICE_TOKEN)) {
+  if (!isAuthorized(c.req.header("Authorization"))) {
     return c.json({ error: "Unauthorized" }, 401);
   }
 
-  const rawBody: unknown = await c.req.json().catch(() => null);
-  const parsed = renderJobRequestSchema.safeParse(rawBody);
+  const body: unknown = await c.req.json().catch(() => null);
+  const parsed = renderJobRequestSchema.safeParse(body);
 
   if (!parsed.success) {
     return c.json({ error: "Invalid job parameters" }, 400);
   }
 
-  const { episodeId, userId, seriesId, compositionProps, callbackUrl } =
-    parsed.data;
-
-  // Execute render asynchronously in background
-  const runJob = async () => {
-    let payload: RenderWebhookPayload;
-
-    try {
-      const result = await renderer.renderVideo({
-        callbackUrl,
-        compositionProps,
-        episodeId,
-        seriesId,
-        storage,
-        userId,
-      });
-
-      payload = {
-        episodeId,
-        outputSizeBytes: result.outputSizeBytes,
-        renderDurationMs: result.renderDurationMs,
-        status: "completed",
-        videoUrl: result.videoUrl,
-      };
-    } catch {
-      payload = {
-        episodeId,
-        error: "Video rendering failed",
-        status: "failed",
-      };
-    }
-
-    try {
-      await fetch(callbackUrl, {
-        body: JSON.stringify(payload),
-        headers: {
-          Authorization: `Bearer ${env.RENDER_WEBHOOK_SECRET}`,
-          "Content-Type": "application/json",
-        },
-        method: "POST",
-      });
-    } catch {
-      // Safe to ignore delivery failure in background task
-    }
-  };
-
-  void runJob();
+  void runJob(parsed.data);
 
   return c.json(
     {
-      jobId: `job_${episodeId}_${Date.now()}`,
+      jobId: `job_${parsed.data.episodeId}_${Date.now()}`,
       status: "processing",
     },
     202
@@ -125,13 +130,12 @@ const server = serve({
   port: env.PORT,
 });
 
-const onShutdown = () => {
+process.on("SIGINT", () => {
   server.close();
-  process.exit(0);
-};
+});
 
-process.on("SIGINT", onShutdown);
-
-process.on("SIGTERM", onShutdown);
+process.on("SIGTERM", () => {
+  server.close();
+});
 
 export default app;
