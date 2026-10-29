@@ -22,45 +22,28 @@ export const seriesCoreRouter = router({
     .input(createSeriesInputSchema)
     .output(createSeriesOutputSchema)
     .mutation(async ({ ctx, input }) => {
-      let validConnections: { id: string }[] = [];
+      const { socialConnectionIds, ...seriesFields } = input;
 
-      if (input.socialConnectionIds.includes("__ALL__")) {
-        validConnections = await ctx.db.socialConnection.findMany({
-          where: {
-            userId: ctx.session.user.id,
-            status: "CONNECTED",
-          },
-          select: { id: true },
-        });
-      } else if (input.socialConnectionIds.length > 0) {
-        validConnections = await ctx.db.socialConnection.findMany({
-          where: {
-            id: { in: input.socialConnectionIds },
-            userId: ctx.session.user.id,
-            status: "CONNECTED",
-          },
-          select: { id: true },
-        });
-      }
+      const idFilter = socialConnectionIds.includes("__ALL__")
+        ? undefined
+        : { id: { in: socialConnectionIds } };
+
+      const validConnections =
+        socialConnectionIds.length === 0
+          ? []
+          : await ctx.db.socialConnection.findMany({
+              where: {
+                ...idFilter,
+                userId: ctx.session.user.id,
+                status: "CONNECTED",
+              },
+              select: { id: true },
+            });
 
       const newSeries = await ctx.db.series.create({
         data: {
+          ...seriesFields,
           userId: ctx.session.user.id,
-          name: input.name,
-          nichePresetId: input.nichePresetId,
-          nichePrompt: input.nichePrompt,
-          exampleScript: input.exampleScript,
-          language: input.language,
-          voiceId: input.voiceId,
-          musicTrackId: input.musicTrackId,
-          customMusicKey: input.customMusicKey,
-          customMusicUrl: input.customMusicUrl,
-          tiktokSounds: input.tiktokSounds,
-          artStyleId: input.artStyleId,
-          captionStyleId: input.captionStyleId,
-          glitchEffect: input.glitchEffect,
-          videoDuration: input.videoDuration,
-          publishTime: input.publishTime,
           status: "ACTIVE",
           socialAccounts: {
             create: validConnections.map((conn) => ({
@@ -139,7 +122,13 @@ export const seriesCoreRouter = router({
         include: {
           socialAccounts: {
             include: {
-              socialConnection: true,
+              socialConnection: {
+                select: {
+                  platform: true,
+                  platformUserName: true,
+                  avatarUrl: true,
+                },
+              },
             },
           },
           episodes: {
@@ -150,6 +139,14 @@ export const seriesCoreRouter = router({
               scenes: {
                 orderBy: {
                   sceneNumber: "asc",
+                },
+                select: {
+                  id: true,
+                  sceneNumber: true,
+                  narrationText: true,
+                  visualPrompt: true,
+                  imageUrl: true,
+                  duration: true,
                 },
               },
             },
@@ -203,14 +200,7 @@ export const seriesCoreRouter = router({
           scheduledFor: ep.scheduledFor?.toISOString() ?? null,
           publishedAt: ep.publishedAt?.toISOString() ?? null,
           createdAt: ep.createdAt.toISOString(),
-          scenes: ep.scenes.map((scene) => ({
-            id: scene.id,
-            sceneNumber: scene.sceneNumber,
-            narrationText: scene.narrationText,
-            visualPrompt: scene.visualPrompt,
-            imageUrl: scene.imageUrl,
-            duration: scene.duration,
-          })),
+          scenes: ep.scenes,
         })),
       };
     }),
@@ -220,26 +210,17 @@ export const seriesCoreRouter = router({
     .output(updateSeriesStatusOutputSchema)
     .mutation(async ({ ctx, input }) => {
       const existing = await ctx.db.series.findFirst({
-        where: {
-          id: input.id,
-          userId: ctx.session.user.id,
-        },
+        where: { id: input.id, userId: ctx.session.user.id },
+        select: { id: true },
       });
 
       if (!existing) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Series not found",
-        });
+        throw new TRPCError({ code: "NOT_FOUND", message: "Series not found" });
       }
 
       const updated = await ctx.db.series.update({
-        where: {
-          id: input.id,
-        },
-        data: {
-          status: input.status,
-        },
+        where: { id: input.id },
+        data: { status: input.status },
       });
 
       return {
@@ -254,43 +235,24 @@ export const seriesCoreRouter = router({
     .output(updateSeriesOutputSchema)
     .mutation(async ({ ctx, input }) => {
       const existing = await ctx.db.series.findFirst({
-        where: {
-          id: input.id,
-          userId: ctx.session.user.id,
-        },
+        where: { id: input.id, userId: ctx.session.user.id },
+        select: { id: true },
       });
 
       if (!existing) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Series not found",
-        });
+        throw new TRPCError({ code: "NOT_FOUND", message: "Series not found" });
       }
 
-      type SeriesUpdateData = Parameters<
-        typeof ctx.db.series.update
-      >[0]["data"];
-
-      const updateData: SeriesUpdateData = {};
-
-      if (input.name !== undefined) {
-        updateData.name = input.name;
-      }
-
-      if (input.publishTime !== undefined) {
-        updateData.publishTime = input.publishTime;
-      }
+      const { id, ...fields } = input;
 
       await ctx.db.series.update({
-        where: {
-          id: input.id,
-        },
-        data: updateData,
+        where: { id },
+        data: fields,
       });
 
       return {
         success: true,
-        id: input.id,
+        id,
       };
     }),
 
@@ -299,23 +261,16 @@ export const seriesCoreRouter = router({
     .output(deleteSeriesOutputSchema)
     .mutation(async ({ ctx, input }) => {
       const existing = await ctx.db.series.findFirst({
-        where: {
-          id: input.id,
-          userId: ctx.session.user.id,
-        },
+        where: { id: input.id, userId: ctx.session.user.id },
+        select: { id: true },
       });
 
       if (!existing) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Series not found",
-        });
+        throw new TRPCError({ code: "NOT_FOUND", message: "Series not found" });
       }
 
       await ctx.db.series.delete({
-        where: {
-          id: input.id,
-        },
+        where: { id: input.id },
       });
 
       return { success: true };
