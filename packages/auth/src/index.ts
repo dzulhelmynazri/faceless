@@ -5,15 +5,15 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 
-interface Env {
-  BETTER_AUTH_URL: string;
+export interface AuthEnv {
+  AUTUMN_SECRET_KEY: string;
   BETTER_AUTH_SECRET: string;
+  BETTER_AUTH_URL: string;
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
-  AUTUMN_SECRET_KEY: string;
 }
 
-export const createAuth = (env: Env, database: Database) =>
+export const createAuth = (env: AuthEnv, database: Database) =>
   betterAuth({
     baseURL: env.BETTER_AUTH_URL,
     database: prismaAdapter(database, {
@@ -66,3 +66,5 @@ export const createAuth = (env: Env, database: Database) =>
   });
 
 export type Auth = ReturnType<typeof createAuth>;
+
+export type { TestAuth } from "./test-auth";

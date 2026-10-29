@@ -38,6 +38,9 @@
     "//#lint": {
       "tags": ["ci"]
     },
+    "//#test": {
+      "tags": ["ci"]
+    },
     "dev": {
       "cache": false,
       "persistent": true

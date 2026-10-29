@@ -35,6 +35,10 @@
     "fish-audio": {
       "type": "http",
       "url": "https://api.fish.audio/mcp"
+    },
+    "tester-army": {
+      "type": "http",
+      "url": "https://tester.army/mcp"
     }
   }
 }

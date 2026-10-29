@@ -3,10 +3,12 @@ import { TRPCError } from "@trpc/server";
 import type { Context } from "../context";
 import { protectedProcedure } from "./auth";
 
+export const SERIES_FEATURE_ID = "series" as const;
+
 export interface BillingCustomer {
   customerId: string;
-  name: string;
   email: string;
+  name: string;
 }
 
 export const getBillingCustomer = (ctx: {
@@ -17,20 +19,22 @@ export const getBillingCustomer = (ctx: {
   name: ctx.session.user.name,
 });
 
-export const seriesProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+export const checkSeriesEntitlement = async (ctx: {
+  autumn: Context["autumn"];
+  session: NonNullable<Context["session"]>;
+}) => {
   const customer = getBillingCustomer(ctx);
 
-  await ctx.autumn.customers.getOrCreate({
-    customerId: customer.customerId,
-    email: customer.email,
-    name: customer.name,
-  });
+  await ctx.autumn.customers.getOrCreate(customer);
 
-  const checkRes = await ctx.autumn.check({
+  return await ctx.autumn.check({
     customerId: customer.customerId,
-    featureId: "series",
-    requiredBalance: 1,
+    featureId: SERIES_FEATURE_ID,
   });
+};
+
+export const seriesProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  const checkRes = await checkSeriesEntitlement(ctx);
 
   if (!checkRes.allowed) {
     throw new TRPCError({

@@ -6,6 +6,11 @@ const withVarlock = varlockNextConfigPlugin();
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  serverExternalPackages: [
+    "@remotion/bundler",
+    "@remotion/renderer",
+    "esbuild",
+  ],
   experimental: {
     optimizePackageImports: ["lucide-react"],
     turbopackRustReactCompiler: true,

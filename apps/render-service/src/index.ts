@@ -1,7 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 
 import type { RenderWebhookPayload } from "@faceless/contracts/series";
-import { LocalRemotionRenderer } from "@faceless/remotion/server";
+import { LocalRemotionRenderer } from "@faceless/remotion/server/local";
 import { videoCompositionPropsSchema } from "@faceless/remotion/types";
 import { createFiles } from "@faceless/storage";
 import { isNonEmptyString } from "@faceless/utils";

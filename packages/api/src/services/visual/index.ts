@@ -55,12 +55,13 @@ export interface RegenerateSingleSceneInput {
 
 export const DEFAULT_VISUAL_MODEL = "black-forest-labs/flux-schnell";
 
-const gateway = createGatewayProvider({ apiKey: ENV.AI_GATEWAY_API_KEY });
+const getGateway = () =>
+  createGatewayProvider({ apiKey: ENV.AI_GATEWAY_API_KEY });
 
 export const generateEpisodeScenes = async (
   input: GenerateEpisodeScenesInput
 ): Promise<GenerateEpisodeScenesOutput> => {
-  const model = gateway.imageModel(DEFAULT_VISUAL_MODEL);
+  const model = getGateway().imageModel(DEFAULT_VISUAL_MODEL);
 
   const calibrated = calibrateSceneDurations({
     scenes: input.scenes,
@@ -178,7 +179,7 @@ export const generateEpisodeScenes = async (
 export const regenerateSingleScene = async (
   input: RegenerateSingleSceneInput
 ): Promise<GeneratedSceneRecord> => {
-  const model = gateway.imageModel(DEFAULT_VISUAL_MODEL);
+  const model = getGateway().imageModel(DEFAULT_VISUAL_MODEL);
 
   const effectivePrompt = isNonEmptyString(input.promptOverride)
     ? input.promptOverride

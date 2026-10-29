@@ -5,8 +5,8 @@ import type {
 } from "./types";
 
 export interface CloudflareContainerRendererOptions {
-  serviceUrl: string;
   serviceToken: string;
+  serviceUrl: string;
 }
 
 export class CloudflareContainerRenderer implements VideoRendererService {
@@ -50,3 +50,9 @@ export class CloudflareContainerRenderer implements VideoRendererService {
     };
   }
 }
+
+export type CreateVideoRendererOptions = CloudflareContainerRendererOptions;
+
+export const createVideoRenderer = (
+  options: CreateVideoRendererOptions
+): VideoRendererService => new CloudflareContainerRenderer(options);

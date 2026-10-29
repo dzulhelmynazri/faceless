@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./server": "./src/server/index.ts",
+    "./server/local": "./src/server/local-renderer.ts",
     "./compositions/*": "./src/compositions/*.tsx",
     "./core/*": "./src/core/*.ts",
     "./styles/*": "./src/styles/*.ts",

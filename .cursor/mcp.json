@@ -30,6 +30,9 @@
     },
     "fish-audio": {
       "url": "https://api.fish.audio/mcp"
+    },
+    "tester-army": {
+      "url": "https://tester.army/mcp"
     }
   }
 }

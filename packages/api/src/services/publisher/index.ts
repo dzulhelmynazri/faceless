@@ -28,7 +28,7 @@ export type PublishEpisodeServiceOutput =
       success: false;
     };
 
-const buildTargetForPlatform = (
+export const buildTargetForPlatform = (
   conn: SocialConnection
 ): SocialAccountTarget => {
   if (conn.platform === "YOUTUBE") {

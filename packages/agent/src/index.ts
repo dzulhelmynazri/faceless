@@ -14,7 +14,8 @@ export type { GeneratedScriptPayload } from "@faceless/contracts/series";
 
 export const DEFAULT_SCRIPTWRITER_MODEL = "openai/gpt-4o";
 
-const gateway = createGatewayProvider({ apiKey: ENV.AI_GATEWAY_API_KEY });
+const getGateway = () =>
+  createGatewayProvider({ apiKey: ENV.AI_GATEWAY_API_KEY });
 
 export interface ScriptwriterInput {
   userId: string;
@@ -73,7 +74,7 @@ export const runScriptwriterAgent = async (
     Generate a viral, high-retention episode script adhering strictly to the schema.
   `;
 
-  const model = gateway.languageModel(DEFAULT_SCRIPTWRITER_MODEL);
+  const model = getGateway().languageModel(DEFAULT_SCRIPTWRITER_MODEL);
 
   const result = await generateText({
     model,

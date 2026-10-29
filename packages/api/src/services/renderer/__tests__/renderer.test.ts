@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { calculateNextScheduledFor } from "../index";
+import { calculateNextScheduledFor, resolveScheduledFor } from "../index";
 
 describe("Renderer Module", () => {
   describe(calculateNextScheduledFor, () => {
@@ -48,6 +48,28 @@ describe("Renderer Module", () => {
       expect(() => calculateNextScheduledFor("invalid-time")).toThrow(
         "Invalid publish time: invalid-time"
       );
+    });
+  });
+
+  describe(resolveScheduledFor, () => {
+    it("preserves existing scheduled date if it is in the future", () => {
+      const futureDate = new Date(Date.now() + 86_400_000);
+      const resolved = resolveScheduledFor(futureDate, "12:00 PM");
+
+      expect(resolved.getTime()).toBe(futureDate.getTime());
+    });
+
+    it("calculates next scheduled date when existing date is null", () => {
+      const resolved = resolveScheduledFor(null, "12:00 PM");
+
+      expect(resolved.getTime()).toBeGreaterThan(Date.now());
+    });
+
+    it("recalculates scheduled date when existing date has already passed", () => {
+      const pastDate = new Date(Date.now() - 86_400_000);
+      const resolved = resolveScheduledFor(pastDate, "12:00 PM");
+
+      expect(resolved.getTime()).toBeGreaterThan(Date.now());
     });
   });
 });

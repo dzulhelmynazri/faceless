@@ -1,14 +1,9 @@
-export { LocalRemotionRenderer } from "./local-renderer";
-
 export {
   CloudflareContainerRenderer,
   type CloudflareContainerRendererOptions,
-} from "./remote-renderer";
-
-export {
   createVideoRenderer,
   type CreateVideoRendererOptions,
-} from "./factory";
+} from "./remote-renderer";
 
 export type {
   CompletedRenderVideoResult,
