@@ -28,13 +28,15 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
-    },
-    "lint": {
-      "dependsOn": ["^lint"]
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
+      "tags": ["ci"]
     },
     "check-types": {
-      "dependsOn": ["^check-types"]
+      "dependsOn": ["^check-types"],
+      "tags": ["ci"]
+    },
+    "//#lint": {
+      "tags": ["ci"]
     },
     "dev": {
       "cache": false,
