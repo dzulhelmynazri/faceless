@@ -1,7 +1,6 @@
 "use client";
 
 import type { GetSeriesByIdOutput } from "@faceless/contracts/series";
-import { Badge } from "@faceless/ui/components/badge";
 import { Button } from "@faceless/ui/components/button";
 import { Card, CardContent } from "@faceless/ui/components/card";
 import {
@@ -13,7 +12,7 @@ import {
 } from "@faceless/ui/components/empty";
 import { Tabs, TabsList, TabsTrigger } from "@faceless/ui/components/tabs";
 import { isNonEmptyString } from "@faceless/utils";
-import { ArrowUpRight, Images, Video, Volume2 } from "lucide-react";
+import { ArrowUpRight, Video } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import * as React from "react";
@@ -119,24 +118,7 @@ export const SeriesEpisodesFeed = ({
                     )}
 
                     <div className="flex flex-col gap-0.5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold">
-                          {ep.title}
-                        </span>
-                        <Badge>{ep.status}</Badge>
-                        {isNonEmptyString(ep.audioUrl) && (
-                          <Badge variant="outline">
-                            <Volume2 data-icon="inline-start" />
-                            Audio
-                          </Badge>
-                        )}
-                        {ep.scenes.length > 0 && (
-                          <Badge variant="outline">
-                            <Images data-icon="inline-start" />
-                            {ep.scenes.length} Scenes
-                          </Badge>
-                        )}
-                      </div>
+                      <span className="text-sm font-semibold">{ep.title}</span>
                       <span className="text-xs text-muted-foreground">
                         {isNonEmptyString(ep.topic)
                           ? `Topic: ${ep.topic}`
