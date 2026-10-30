@@ -22,8 +22,7 @@ export const useEpisodeStudio = ({
   initialData,
   seriesId,
 }: UseEpisodeStudioOptions) => {
-  const [episode, setEpisode] = React.useState(initialData.episode);
-  const { scenes } = initialData;
+  const { episode, scenes } = initialData;
 
   const [customization, setCustomization] =
     React.useState<EpisodeCustomization>(() => {
@@ -134,16 +133,6 @@ export const useEpisodeStudio = ({
     []
   );
 
-  const onStatusUpdated = React.useCallback(
-    (status: GetEpisodeByIdOutput["episode"]["status"]) => {
-      setEpisode((prev) => ({
-        ...prev,
-        status,
-      }));
-    },
-    []
-  );
-
   React.useEffect(() => {
     if (!playerInstance) {
       return noop;
@@ -189,6 +178,5 @@ export const useEpisodeStudio = ({
     togglePlay,
     seekToFrame,
     updateCustomization: updateCustomizationState,
-    onStatusUpdated,
   };
 };

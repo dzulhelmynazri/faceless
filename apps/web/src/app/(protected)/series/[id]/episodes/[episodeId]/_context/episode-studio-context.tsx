@@ -53,9 +53,14 @@ export const EpisodeStudioProvider = ({
   const seriesId = params.id;
   const { episodeId } = params;
 
-  const { data, isLoading, error } = useQuery(
-    trpc.series.getEpisodeById.queryOptions({ episodeId })
-  );
+  const { data, isLoading, error } = useQuery({
+    ...trpc.series.getEpisodeById.queryOptions({ episodeId }),
+    refetchInterval: (query) => {
+      const status = query.state.data?.episode.status;
+
+      return status === "RENDERING" || status === "PUBLISHING" ? 2000 : false;
+    },
+  });
 
   if (isLoading) {
     return <EpisodeStudioSkeleton />;

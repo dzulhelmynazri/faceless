@@ -36,7 +36,7 @@ export const createFiles = (env: Env, options?: StorageOptions) =>
       }),
       contentType({ onMismatch: "correct" }),
       validation({
-        maxSize: 15 * 1024 * 1024,
+        maxSize: 100 * 1024 * 1024,
         minSize: 1,
         allowedTypes: ["image/*", "video/*", "audio/*"],
       }),

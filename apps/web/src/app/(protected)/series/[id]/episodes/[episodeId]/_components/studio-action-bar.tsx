@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@faceless/ui/components/badge";
 import { Button } from "@faceless/ui/components/button";
 import { Spinner } from "@faceless/ui/components/spinner";
 import { isNonEmptyString } from "@faceless/utils";
@@ -22,16 +21,18 @@ import { trpc } from "@/utils/trpc";
 import { useEpisodeStudioContext } from "../_context/episode-studio-context";
 
 export const StudioActionBar = () => {
-  const { episode, seriesId, onStatusUpdated } = useEpisodeStudioContext();
+  const { episode, seriesId } = useEpisodeStudioContext();
 
   const { id: episodeId, episodeNumber, status, videoUrl, error } = episode;
 
   const queryClient = useQueryClient();
 
+  const episodeQueryFilter = trpc.series.getEpisodeById.queryFilter({
+    episodeId,
+  });
+
   const invalidateQueries = () => {
-    void queryClient.invalidateQueries(
-      trpc.series.getEpisodeById.queryFilter({ episodeId })
-    );
+    void queryClient.invalidateQueries(episodeQueryFilter);
     void queryClient.invalidateQueries(
       trpc.series.byId.queryFilter({ id: seriesId })
     );
@@ -42,8 +43,7 @@ export const StudioActionBar = () => {
       onError: () => {
         toast.error("Failed to update episode status");
       },
-      onSuccess: (data) => {
-        onStatusUpdated(data.status);
+      onSuccess: () => {
         invalidateQueries();
       },
     })
@@ -54,8 +54,7 @@ export const StudioActionBar = () => {
       onError: () => {
         toast.error("Failed to initiate video render");
       },
-      onSuccess: (data) => {
-        onStatusUpdated(data.status);
+      onSuccess: () => {
         invalidateQueries();
       },
     })
@@ -66,8 +65,7 @@ export const StudioActionBar = () => {
       onError: () => {
         toast.error("Failed to publish episode to socials");
       },
-      onSuccess: (data) => {
-        onStatusUpdated(data.status);
+      onSuccess: () => {
         invalidateQueries();
       },
     })
@@ -98,31 +96,31 @@ export const StudioActionBar = () => {
       {/* Right: Actions */}
       <div className="flex flex-wrap items-center gap-2">
         {status === "RENDERING" && (
-          <Badge variant="outline">
-            <Spinner className="size-3.5" />
+          <Button disabled variant="outline">
+            <Spinner data-icon="inline-start" />
             Rendering Video (1080x1920)...
-          </Badge>
+          </Button>
         )}
 
         {status === "PUBLISHING" && (
-          <Badge variant="outline">
-            <Spinner className="size-3.5" />
+          <Button disabled variant="outline">
+            <Spinner data-icon="inline-start" />
             Publishing to Socials...
-          </Badge>
+          </Button>
         )}
 
         {status === "APPROVED" && (
-          <Badge variant="secondary">
-            <CheckCircle2 className="size-3.5" />
+          <Button disabled variant="secondary">
+            <CheckCircle2 data-icon="inline-start" />
             Approved & Scheduled
-          </Badge>
+          </Button>
         )}
 
         {status === "PUBLISHED" && (
-          <Badge variant="default">
-            <Globe data-icon="inline-start" className="size-3.5" />
+          <Button disabled variant="default">
+            <Globe data-icon="inline-start" />
             Published Live
-          </Badge>
+          </Button>
         )}
 
         {/* Download MP4 button when video is available on R2 */}
