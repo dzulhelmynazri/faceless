@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./entry": "./src/entry.ts",
     "./server": "./src/server/index.ts",
     "./server/local": "./src/server/local-renderer.ts",
     "./compositions/*": "./src/compositions/*.tsx",
@@ -13,9 +14,9 @@
     "./types": "./src/types.ts"
   },
   "scripts": {
-    "build": "remotion bundle src/index.ts",
+    "build": "remotion bundle src/entry.ts",
     "check-types": "tsc --noEmit",
-    "dev": "remotion studio src/index.ts"
+    "dev": "remotion studio src/entry.ts"
   },
   "dependencies": {
     "@faceless/contracts": "workspace:*",

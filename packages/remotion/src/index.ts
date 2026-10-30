@@ -1,9 +1,3 @@
-import { registerRoot } from "remotion";
-
-import { RemotionRoot } from "./root";
-
-registerRoot(RemotionRoot);
-
 export { defaultVideoProps } from "./default-props";
 
 export { RemotionRoot } from "./root";

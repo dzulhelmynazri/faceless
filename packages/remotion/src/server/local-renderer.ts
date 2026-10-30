@@ -20,7 +20,7 @@ export class LocalRemotionRenderer implements VideoRendererService {
     }
 
     const currentDir = import.meta.dirname;
-    const entryPoint = path.resolve(currentDir, "../index.ts");
+    const entryPoint = path.resolve(currentDir, "../entry.ts");
 
     this.cachedBundleLocation = await bundle({
       entryPoint,
