@@ -164,36 +164,35 @@ const SceneItemCard = ({
         <div className="grid grid-cols-1 gap-4 md:grid-cols-[140px_1fr]">
           {/* Left: Keyframe Thumbnail */}
           <div className="flex flex-col gap-2">
-            <AspectRatio
-              className="group w-full max-w-[140px] overflow-hidden"
-              ratio={9 / 16}
-            >
-              {isNonEmptyString(scene.imageUrl) ? (
-                <Image
-                  alt={`Scene #${scene.sceneNumber} keyframe`}
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
-                  fill
-                  sizes="140px"
-                  src={scene.imageUrl}
-                />
-              ) : (
-                <div className="flex size-full items-center justify-center text-xs text-muted-foreground">
-                  <ImageIcon className="size-6 text-muted-foreground/50" />
-                </div>
-              )}
+            <div className="group relative w-full max-w-[140px] overflow-hidden rounded-lg border border-border bg-muted">
+              <AspectRatio ratio={9 / 16}>
+                {isNonEmptyString(scene.imageUrl) ? (
+                  <Image
+                    alt={`Scene #${scene.sceneNumber} keyframe`}
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    fill
+                    sizes="140px"
+                    src={scene.imageUrl}
+                  />
+                ) : (
+                  <div className="flex size-full items-center justify-center text-xs text-muted-foreground">
+                    <ImageIcon className="size-6 text-muted-foreground/50" />
+                  </div>
+                )}
 
-              {/* Hover overlay with full-size link */}
-              {isNonEmptyString(scene.imageUrl) && (
-                <a
-                  className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
-                  href={scene.imageUrl}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  <ExternalLink className="size-4 text-white" />
-                </a>
-              )}
-            </AspectRatio>
+                {/* Hover overlay with full-size link */}
+                {isNonEmptyString(scene.imageUrl) && (
+                  <a
+                    className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
+                    href={scene.imageUrl}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    <ExternalLink className="size-4 text-white" />
+                  </a>
+                )}
+              </AspectRatio>
+            </div>
 
             <Button
               disabled={regenerateMutation.isPending}

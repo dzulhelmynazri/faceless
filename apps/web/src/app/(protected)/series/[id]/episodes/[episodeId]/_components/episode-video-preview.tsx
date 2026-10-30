@@ -1,10 +1,8 @@
 "use client";
 
 import { MainVideo } from "@faceless/remotion";
-import { AspectRatio } from "@faceless/ui/components/aspect-ratio";
 import { Badge } from "@faceless/ui/components/badge";
 import { Button } from "@faceless/ui/components/button";
-import { Card } from "@faceless/ui/components/card";
 import { Slider } from "@faceless/ui/components/slider";
 import { Spinner } from "@faceless/ui/components/spinner";
 import { Player } from "@remotion/player";
@@ -54,6 +52,31 @@ export const EpisodeVideoPreview = () => {
   const [isMuted, setIsMuted] = React.useState(false);
   const [isLooping, setIsLooping] = React.useState(true);
 
+  // Compute scene time ranges sequentially
+  const sceneIntervals = React.useMemo(() => {
+    const intervals: { sceneNumber: number; start: number; end: number }[] = [];
+    let start = 0;
+
+    for (const sc of scenes) {
+      intervals.push({
+        sceneNumber: sc.sceneNumber,
+        start,
+        end: start + sc.duration,
+      });
+      start += sc.duration;
+    }
+
+    return intervals;
+  }, [scenes]);
+
+  const activeSceneNumber = React.useMemo(() => {
+    const match = sceneIntervals.find(
+      (inv) => currentTimeSeconds >= inv.start && currentTimeSeconds < inv.end
+    );
+
+    return match?.sceneNumber ?? scenes[0]?.sceneNumber ?? 1;
+  }, [sceneIntervals, currentTimeSeconds, scenes]);
+
   const handleMuteToggle = React.useCallback(() => {
     const player = playerRef.current;
 
@@ -96,48 +119,52 @@ export const EpisodeVideoPreview = () => {
   );
 
   return (
-    <Card className="items-center">
-      {/* 9:16 Vertical Video Frame with Studio Aspect Ratio */}
-      <AspectRatio
-        className="w-full max-w-[340px] overflow-hidden sm:max-w-[360px]"
-        ratio={9 / 16}
-      >
-        {isMounted ? (
-          <Player
-            acknowledgeRemotionLicense
-            autoPlay={false}
-            className="size-full object-contain"
-            clickToPlay
-            component={MainVideo}
-            compositionHeight={1920}
-            compositionWidth={1080}
-            controls={false}
-            durationInFrames={durationInFrames}
-            fps={FPS}
-            inputProps={compositionProps}
-            loop={isLooping}
-            ref={setPlayerRef}
-          />
-        ) : (
-          <div className="flex size-full flex-col items-center justify-center gap-3 bg-black text-muted-foreground">
-            <Spinner />
-            <span className="text-xs font-medium">Initializing Player...</span>
-          </div>
-        )}
-
-        {/* Top Floating Scene Badge */}
-        <div className="pointer-events-none absolute top-3 left-3 z-10 flex items-center gap-2">
-          <Badge variant="outline">9:16 Vertical HD</Badge>
-          {compositionProps.glitchEffect && (
-            <Badge variant="outline">Glitch FX</Badge>
+    <div className="flex w-full flex-col gap-3">
+      {/* Sleek Preview Enclosure */}
+      <div className="mx-auto flex w-full max-w-[340px] flex-col gap-3 rounded-xl border border-border bg-card p-3 shadow-xs sm:max-w-[360px]">
+        {/* 9:16 Vertical Screen Frame */}
+        <div className="relative aspect-[9/16] w-full overflow-hidden rounded-lg bg-black">
+          {isMounted ? (
+            <Player
+              acknowledgeRemotionLicense
+              autoPlay={false}
+              className="size-full object-contain"
+              clickToPlay
+              component={MainVideo}
+              compositionHeight={1920}
+              compositionWidth={1080}
+              controls={false}
+              durationInFrames={durationInFrames}
+              fps={FPS}
+              inputProps={compositionProps}
+              loop={isLooping}
+              ref={setPlayerRef}
+            />
+          ) : (
+            <div className="flex size-full flex-col items-center justify-center gap-3 bg-muted text-muted-foreground">
+              <Spinner />
+              <span className="text-xs font-medium">
+                Initializing Player...
+              </span>
+            </div>
           )}
-        </div>
-      </AspectRatio>
 
-      {/* Scrubbing Bar & Controls */}
-      <div className="flex w-full max-w-[360px] flex-col gap-3">
-        {/* Timeline Slider */}
-        <div className="flex items-center gap-2">
+          {/* Top Floating Scene & FX Badges */}
+          <div className="pointer-events-none absolute inset-x-2.5 top-2.5 z-10 flex items-center justify-between">
+            <Badge variant="secondary">Scene #{activeSceneNumber}</Badge>
+
+            <div className="flex items-center gap-1.5">
+              {compositionProps.glitchEffect && (
+                <Badge variant="outline">Glitch FX</Badge>
+              )}
+              <Badge variant="outline">9:16 HD</Badge>
+            </div>
+          </div>
+        </div>
+
+        {/* Integrated Scrubber & Controls */}
+        <div className="flex flex-col gap-2.5 px-0.5 pt-1">
+          {/* Timeline Slider */}
           <Slider
             aria-label="Video scrubber"
             className="cursor-pointer"
@@ -146,82 +173,93 @@ export const EpisodeVideoPreview = () => {
             onValueChange={handleSliderChange}
             value={[currentFrame]}
           />
-        </div>
 
-        {/* Playback Button Controls & Time Display */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <Button
-              aria-label={isPlaying ? "Pause video" : "Play video"}
-              onClick={togglePlay}
-              size="icon"
-              variant="default"
-            >
-              {isPlaying ? <Pause /> : <Play />}
-            </Button>
-
-            <Button
-              aria-label={isMuted ? "Unmute audio" : "Mute audio"}
-              onClick={handleMuteToggle}
-              size="icon"
-              variant="ghost"
-            >
-              {isMuted ? <VolumeX /> : <Volume2 />}
-            </Button>
-
-            <Button
-              aria-label="Toggle loop"
-              onClick={() => {
-                setIsLooping((prev) => !prev);
-              }}
-              size="icon"
-              variant="ghost"
-            >
-              <Repeat />
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-xs text-muted-foreground">
-              <strong className="text-foreground">
-                {formatTimestamp(currentTimeSeconds)}
-              </strong>
-              {" / "}
-              {formatTimestamp(totalDurationSeconds)}
-            </span>
-
-            <Button
-              aria-label="Fullscreen preview"
-              onClick={handleFullscreen}
-              size="icon"
-              variant="ghost"
-            >
-              <Maximize2 />
-            </Button>
-          </div>
-        </div>
-
-        {/* Scene Navigation Quick Pills */}
-        {scenes.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5 pt-1">
-            <span className="text-xs font-medium text-muted-foreground">
-              Seek:
-            </span>
-            {scenes.map((scene) => (
+          {/* Control buttons & time display */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1">
               <Button
-                key={scene.id}
-                onClick={() => {
-                  seekToScene(scene.sceneNumber);
-                }}
-                size="xs"
-                variant="outline"
+                aria-label={isPlaying ? "Pause video" : "Play video"}
+                onClick={togglePlay}
+                size="icon"
+                variant="default"
               >
-                Scene {scene.sceneNumber}
+                {isPlaying ? <Pause /> : <Play />}
               </Button>
-            ))}
+
+              <Button
+                aria-label={isMuted ? "Unmute audio" : "Mute audio"}
+                onClick={handleMuteToggle}
+                size="icon"
+                variant="ghost"
+              >
+                {isMuted ? <VolumeX /> : <Volume2 />}
+              </Button>
+
+              <Button
+                aria-label="Toggle loop"
+                onClick={() => {
+                  setIsLooping((prev) => !prev);
+                }}
+                size="icon"
+                variant={isLooping ? "secondary" : "ghost"}
+              >
+                <Repeat />
+              </Button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-xs text-muted-foreground">
+                <strong className="text-foreground">
+                  {formatTimestamp(currentTimeSeconds)}
+                </strong>
+                {" / "}
+                {formatTimestamp(totalDurationSeconds)}
+              </span>
+
+              <Button
+                aria-label="Fullscreen preview"
+                onClick={handleFullscreen}
+                size="icon"
+                variant="ghost"
+              >
+                <Maximize2 />
+              </Button>
+            </div>
           </div>
-        )}
+        </div>
       </div>
-    </Card>
+
+      {/* Quick Scene Jump Strip */}
+      {scenes.length > 0 && (
+        <div className="mx-auto flex w-full max-w-[340px] flex-col gap-1.5 sm:max-w-[360px]">
+          <div className="flex items-center justify-between px-0.5">
+            <span className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+              Jump to Scene
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {scenes.length} Scenes
+            </span>
+          </div>
+          <div className="grid grid-cols-6 gap-1">
+            {scenes.map((scene) => {
+              const isActive = activeSceneNumber === scene.sceneNumber;
+
+              return (
+                <Button
+                  key={scene.id}
+                  onClick={() => {
+                    seekToScene(scene.sceneNumber);
+                  }}
+                  size="sm"
+                  variant={isActive ? "default" : "outline"}
+                >
+                  #{scene.sceneNumber}
+                </Button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
   );
 };

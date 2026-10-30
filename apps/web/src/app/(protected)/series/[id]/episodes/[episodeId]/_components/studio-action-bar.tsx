@@ -87,7 +87,7 @@ export const StudioActionBar = () => {
     publishNowMutation.isPending;
 
   return (
-    <div className="sticky top-0 z-20 flex flex-col justify-between gap-3 border-b border-border/80 bg-background/80 py-3 backdrop-blur-xl sm:flex-row sm:items-center">
+    <div className="flex flex-col justify-between gap-3 border-b border-border/80 pb-4 sm:flex-row sm:items-center">
       {/* Left: Back Link & Episode Title */}
       <div className="flex items-center gap-3">
         <Button
