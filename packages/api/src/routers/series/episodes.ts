@@ -574,26 +574,29 @@ export const episodesRouter = router({
         },
       });
 
-      let updatedScript: string | undefined;
-
-      if (input.narrationText !== undefined) {
-        const scenes = await ctx.db.seriesEpisodeScene.findMany({
-          where: { episodeId: episode.id },
-          orderBy: { sceneNumber: "asc" },
-          select: { narrationText: true },
-        });
-
-        updatedScript = scenes.map((s) => s.narrationText).join("\n\n");
-
-        await ctx.db.seriesEpisode.update({
-          where: { id: episode.id },
-          data: { script: updatedScript },
-        });
+      if (input.narrationText === undefined) {
+        return {
+          scene: updatedScene,
+          success: true,
+        };
       }
 
+      const scenes = await ctx.db.seriesEpisodeScene.findMany({
+        orderBy: { sceneNumber: "asc" },
+        select: { narrationText: true },
+        where: { episodeId: episode.id },
+      });
+
+      const updatedScript = scenes.map((s) => s.narrationText).join("\n\n");
+
+      await ctx.db.seriesEpisode.update({
+        data: { script: updatedScript },
+        where: { id: episode.id },
+      });
+
       return {
-        success: true,
         scene: updatedScene,
+        success: true,
         updatedScript,
       };
     }),
