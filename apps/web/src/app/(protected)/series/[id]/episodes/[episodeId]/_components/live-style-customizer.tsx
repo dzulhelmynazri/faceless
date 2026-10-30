@@ -136,8 +136,8 @@ export const LiveStyleCustomizer = () => {
             </div>
           </div>
 
-          {/* Background Music Selector & Glitch FX in 2 Columns */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {/* Background Music Selector & Glitch FX */}
+          <div className="flex flex-col gap-4">
             {/* Background Music Track */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="bgm-select">Background Music (BGM)</Label>
