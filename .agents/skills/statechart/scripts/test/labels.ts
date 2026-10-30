@@ -396,10 +396,7 @@ const fromMermaid = (s: string) =>
     d ? fromRef(Number(d)) : (NAMED[n] ?? `&${n};`)
   );
 const decoded = (s: string) =>
-  s
-    .replace(/ﬂ°°/g, "&#")
-    .replace(/ﬂ°/g, "&")
-    .replace(/¶ß/g, ";");
+  s.replace(/ﬂ°°/g, "&#").replace(/ﬂ°/g, "&").replace(/¶ß/g, ";");
 const MARKER_END = /marker-end="url\([\d+./:=?A-Za-z-]*?#/g;
 const rewritten = (s: string) =>
   /ﬂ°|¶ß/.test(s) || s.replace(MARKER_END, 'marker-end="url(#') !== s;

@@ -37,6 +37,7 @@ export const createTestAuth = (
     emailAndPassword: { enabled: true },
     plugins: [
       expo(),
+      // oxlint-disable-next-line typescript/no-deprecated -- upstream autumn-js better-auth plugin deprecation
       autumn({
         customerScope: "user",
         secretKey: env.AUTUMN_SECRET_KEY,
