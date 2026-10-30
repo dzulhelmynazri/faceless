@@ -85,7 +85,6 @@ export const runScriptwriterAgent = async (
     providerOptions: {
       gateway: {
         user: input.userId,
-        quotaEntityId: input.userId,
         tags: [`series:${input.seriesId}`, `user:${input.userId}`],
       },
     },

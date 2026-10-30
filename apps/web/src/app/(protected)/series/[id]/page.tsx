@@ -96,8 +96,10 @@ const SeriesDetailPage = ({ params }: PageProps<"/series/[id]">) => {
       onSuccess: () => {
         toast.success("Episode generated with voiceover and visual keyframes!");
       },
-      onError: () => {
-        toast.error("Failed to generate episode. Please try again.");
+      onError: (error) => {
+        toast.error(
+          error.message || "Failed to generate episode. Please try again."
+        );
       },
       onSettled: () => {
         void queryClient.invalidateQueries(

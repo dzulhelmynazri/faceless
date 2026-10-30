@@ -53,7 +53,7 @@ export interface RegenerateSingleSceneInput {
   storage: Files;
 }
 
-export const DEFAULT_VISUAL_MODEL = "black-forest-labs/flux-schnell";
+export const DEFAULT_VISUAL_MODEL = "bfl/flux-2-flex";
 
 const getGateway = () =>
   createGatewayProvider({ apiKey: ENV.AI_GATEWAY_API_KEY });
@@ -93,7 +93,6 @@ export const generateEpisodeScenes = async (
       providerOptions: {
         gateway: {
           user: input.userId,
-          quotaEntityId: input.userId,
           tags: [`series:${input.seriesId}`, `episode:${input.episodeId}`],
         },
       },
@@ -199,7 +198,6 @@ export const regenerateSingleScene = async (
     providerOptions: {
       gateway: {
         user: input.userId,
-        quotaEntityId: input.userId,
         tags: [`series:${input.seriesId}`, `episode:${input.episodeId}`],
       },
     },
