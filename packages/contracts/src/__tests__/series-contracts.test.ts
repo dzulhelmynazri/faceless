@@ -3,7 +3,13 @@ import { describe, expect, it } from "vitest";
 import {
   captionStyleIdSchema,
   createSeriesInputSchema,
+  ELEVENLABS_MODELS,
+  ELEVENLABS_PRICING,
   episodeCustomizationSchema,
+  publishEpisodeNowOutputSchema,
+  SERIES_LANGUAGES,
+  SERIES_PRESETS,
+  updateEpisodeSceneInputSchema,
   wordTimestampSchema,
 } from "../series";
 
@@ -68,9 +74,11 @@ describe("captionStyleIdSchema contract", () => {
       "clarity",
     ];
 
-    for (const style of validStyles) {
-      expect(captionStyleIdSchema.safeParse(style).success).toBeTruthy();
-    }
+    const allValid = validStyles.every(
+      (style) => captionStyleIdSchema.safeParse(style).success
+    );
+
+    expect(allValid).toBeTruthy();
   });
 
   it("rejects unknown caption styles", () => {
@@ -111,5 +119,114 @@ describe("episodeCustomizationSchema contract", () => {
     };
 
     expect(episodeCustomizationSchema.safeParse(valid).success).toBeTruthy();
+  });
+});
+
+describe("SERIES_PRESETS constant definitions", () => {
+  it("ensures all presets have unique IDs and non-empty prompt content", () => {
+    const presetIds = SERIES_PRESETS.map((preset) => preset.id);
+    const uniqueIds = new Set(presetIds);
+
+    const allHaveContent = SERIES_PRESETS.every(
+      (preset) =>
+        preset.title.length > 0 &&
+        preset.description.length > 0 &&
+        preset.nichePrompt.length > 0 &&
+        preset.exampleScript.length > 0
+    );
+
+    expect(uniqueIds.size).toBe(SERIES_PRESETS.length);
+    expect(allHaveContent).toBeTruthy();
+  });
+});
+
+describe("SERIES_LANGUAGES constant definitions", () => {
+  it("ensures all supported languages have unique codes and non-empty labels", () => {
+    const languageCodes = SERIES_LANGUAGES.map((lang) => lang.code);
+    const uniqueCodes = new Set(languageCodes);
+
+    const allHaveMetadata = SERIES_LANGUAGES.every(
+      (lang) => lang.flag.length > 0 && lang.label.length > 0
+    );
+
+    expect(uniqueCodes.size).toBe(SERIES_LANGUAGES.length);
+    expect(allHaveMetadata).toBeTruthy();
+  });
+});
+
+describe("ELEVENLABS_PRICING configuration", () => {
+  it("defines positive rates for all supported ElevenLabs models", () => {
+    const allModelsPriced = ELEVENLABS_MODELS.every((model) => {
+      const pricing = ELEVENLABS_PRICING[model];
+
+      return pricing.pricePer1kChars > 0 && pricing.pricePerChar > 0;
+    });
+
+    expect(allModelsPriced).toBeTruthy();
+  });
+});
+
+describe("updateEpisodeSceneInputSchema contract", () => {
+  it("validates positive sceneNumber", () => {
+    const valid = {
+      episodeId: "ep_123",
+      narrationText: "Updated script line",
+      sceneNumber: 1,
+      visualPrompt: "Updated visual prompt",
+    };
+
+    expect(updateEpisodeSceneInputSchema.safeParse(valid).success).toBeTruthy();
+  });
+
+  it("rejects non-positive sceneNumber or empty episodeId", () => {
+    const nonPositiveScene = {
+      episodeId: "ep_123",
+      sceneNumber: 0,
+    };
+
+    const emptyEpisodeId = {
+      episodeId: "",
+      sceneNumber: 1,
+    };
+
+    expect(
+      updateEpisodeSceneInputSchema.safeParse(nonPositiveScene).success
+    ).toBeFalsy();
+    expect(
+      updateEpisodeSceneInputSchema.safeParse(emptyEpisodeId).success
+    ).toBeFalsy();
+  });
+});
+
+describe("publishEpisodeNowOutputSchema contract", () => {
+  it("validates successful publication payload with platform outcomes", () => {
+    const valid = {
+      outcomes: [
+        {
+          accountId: "acc_tiktok_1",
+          platform: "tiktok",
+          postId: "post_123",
+          state: "published",
+        },
+      ],
+      publishedAt: "2026-10-30T10:00:00.000Z",
+      status: "PUBLISHED" as const,
+      success: true,
+    };
+
+    expect(publishEpisodeNowOutputSchema.safeParse(valid).success).toBeTruthy();
+  });
+
+  it("rejects payload with invalid episode status value", () => {
+    const invalid = {
+      outcomes: [],
+      publishedAt: null,
+      status: "INVALID_STATUS",
+      success: false,
+    };
+
+    expect(
+      publishEpisodeNowOutputSchema.safeParse(invalid).success
+    ).toBeFalsy();
   });
 });
