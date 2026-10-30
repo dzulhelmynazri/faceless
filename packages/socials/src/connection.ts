@@ -4,13 +4,13 @@ import { z } from "zod";
 
 import type { SocialClient } from "./client";
 
-const zernioProfileSchema = z.object({
+export const zernioProfileSchema = z.object({
   _id: z.string().min(1),
 });
 
-const zernioProfileListSchema = z.array(zernioProfileSchema);
+export const zernioProfileListSchema = z.array(zernioProfileSchema);
 
-const zernioConnectionResultSchema = z.object({
+export const zernioConnectionResultSchema = z.object({
   url: z.url(),
 });
 
