@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { createSocialClient } from "../client";
 import {
@@ -23,6 +23,108 @@ describe("createPlatformConnectionUrl service", () => {
     ).rejects.toThrow(
       "Active social provider does not support hosted connection flows"
     );
+  });
+
+  it("rejects when listProfiles returns invalid payload", async () => {
+    const client = createSocialClient({
+      mockScenario: "immediate-text-success",
+      provider: "mock",
+    });
+
+    Object.defineProperty(client, "native", {
+      value: () => ({
+        createConnection: vi.fn<() => Promise<void>>(),
+        listProfiles: vi
+          .fn<() => Promise<string>>()
+          .mockResolvedValue("invalid"),
+      }),
+    });
+
+    await expect(
+      createPlatformConnectionUrl(client, {
+        platform: "tiktok",
+        redirectUrl: "https://example.com/oauth/callback",
+        tenantId: "tenant-1",
+      })
+    ).rejects.toThrow("Invalid profiles response from social provider");
+  });
+
+  it("rejects when no active profile is found in social provider", async () => {
+    const client = createSocialClient({
+      mockScenario: "immediate-text-success",
+      provider: "mock",
+    });
+
+    Object.defineProperty(client, "native", {
+      value: () => ({
+        createConnection: vi.fn<() => Promise<void>>(),
+        listProfiles: vi
+          .fn<() => Promise<{ _id: string }[]>>()
+          .mockResolvedValue([]),
+      }),
+    });
+
+    await expect(
+      createPlatformConnectionUrl(client, {
+        platform: "tiktok",
+        redirectUrl: "https://example.com/oauth/callback",
+        tenantId: "tenant-1",
+      })
+    ).rejects.toThrow("No active profile found in social provider");
+  });
+
+  it("rejects when connection creation returns invalid URL response", async () => {
+    const client = createSocialClient({
+      mockScenario: "immediate-text-success",
+      provider: "mock",
+    });
+
+    Object.defineProperty(client, "native", {
+      value: () => ({
+        createConnection: vi
+          .fn<() => Promise<{ url: string }>>()
+          .mockResolvedValue({ url: "not-a-valid-url" }),
+        listProfiles: vi
+          .fn<() => Promise<{ _id: string }[]>>()
+          .mockResolvedValue([{ _id: "profile_123" }]),
+      }),
+    });
+
+    await expect(
+      createPlatformConnectionUrl(client, {
+        platform: "tiktok",
+        redirectUrl: "https://example.com/oauth/callback",
+        tenantId: "tenant-1",
+      })
+    ).rejects.toThrow("Invalid connection response from social provider");
+  });
+
+  it("returns hosted connection URL when creation succeeds", async () => {
+    const client = createSocialClient({
+      mockScenario: "immediate-text-success",
+      provider: "mock",
+    });
+
+    Object.defineProperty(client, "native", {
+      value: () => ({
+        createConnection: vi
+          .fn<() => Promise<{ url: string }>>()
+          .mockResolvedValue({
+            url: "https://auth.zernio.com/oauth/authorize?state=xyz",
+          }),
+        listProfiles: vi
+          .fn<() => Promise<{ _id: string }[]>>()
+          .mockResolvedValue([{ _id: "profile_123" }]),
+      }),
+    });
+
+    const url = await createPlatformConnectionUrl(client, {
+      platform: "tiktok",
+      redirectUrl: "https://example.com/oauth/callback",
+      tenantId: "tenant-1",
+    });
+
+    expect(url).toBe("https://auth.zernio.com/oauth/authorize?state=xyz");
   });
 });
 
