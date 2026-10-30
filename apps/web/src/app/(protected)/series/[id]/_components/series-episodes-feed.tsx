@@ -2,7 +2,6 @@
 
 import type { GetSeriesByIdOutput } from "@faceless/contracts/series";
 import { Button } from "@faceless/ui/components/button";
-import { Card, CardContent } from "@faceless/ui/components/card";
 import {
   Empty,
   EmptyDescription,
@@ -10,6 +9,14 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@faceless/ui/components/empty";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemMedia,
+  ItemTitle,
+} from "@faceless/ui/components/item";
 import { Tabs, TabsList, TabsTrigger } from "@faceless/ui/components/tabs";
 import { isNonEmptyString } from "@faceless/utils";
 import { ArrowUpRight, Video } from "lucide-react";
@@ -57,12 +64,7 @@ export const SeriesEpisodesFeed = ({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-        <div>
-          <h2 className="text-lg font-semibold tracking-tight">Episode Feed</h2>
-          <p className="text-xs text-muted-foreground">
-            Review scripts, preview videos, and track publishing.
-          </p>
-        </div>
+        <h2 className="text-lg font-semibold tracking-tight">Episode Feed</h2>
 
         <Tabs
           onValueChange={(val: string) => {
@@ -97,51 +99,47 @@ export const SeriesEpisodesFeed = ({
       ) : (
         <div className="grid grid-cols-1 gap-3">
           {filteredEpisodes.map((ep) => (
-            <Card key={ep.id}>
-              <CardContent>
-                <div className="flex items-center justify-between py-2">
-                  <div className="flex items-center gap-3">
-                    {isNonEmptyString(ep.thumbnailUrl) ? (
-                      <div className="relative size-12 shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
-                        <Image
-                          alt={ep.title}
-                          className="object-cover"
-                          fill
-                          sizes="48px"
-                          src={ep.thumbnailUrl}
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-muted text-sm font-semibold">
-                        #{ep.episodeNumber}
-                      </div>
-                    )}
-
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-sm font-semibold">{ep.title}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {isNonEmptyString(ep.topic)
-                          ? `Topic: ${ep.topic}`
-                          : "Autonomous ideation"}
-                      </span>
-                    </div>
+            <Item key={ep.id} variant="outline">
+              <ItemMedia className="size-12" variant="image">
+                {isNonEmptyString(ep.thumbnailUrl) ? (
+                  <div className="relative size-full overflow-hidden rounded-lg border border-border bg-muted">
+                    <Image
+                      alt={ep.title}
+                      className="object-cover"
+                      fill
+                      sizes="48px"
+                      src={ep.thumbnailUrl}
+                    />
                   </div>
-
-                  <div className="flex items-center gap-2">
-                    <Button
-                      nativeButton={false}
-                      render={
-                        <Link href={`/series/${seriesId}/episodes/${ep.id}`} />
-                      }
-                      variant="outline"
-                    >
-                      Open in Studio
-                      <ArrowUpRight data-icon="inline-end" />
-                    </Button>
+                ) : (
+                  <div className="flex size-full items-center justify-center rounded-lg bg-muted text-sm font-semibold">
+                    #{ep.episodeNumber}
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                )}
+              </ItemMedia>
+
+              <ItemContent>
+                <ItemTitle>{ep.title}</ItemTitle>
+                <ItemDescription>
+                  {isNonEmptyString(ep.topic)
+                    ? `Topic: ${ep.topic}`
+                    : "Autonomous ideation"}
+                </ItemDescription>
+              </ItemContent>
+
+              <ItemActions>
+                <Button
+                  nativeButton={false}
+                  render={
+                    <Link href={`/series/${seriesId}/episodes/${ep.id}`} />
+                  }
+                  variant="outline"
+                >
+                  Open in Studio
+                  <ArrowUpRight data-icon="inline-end" />
+                </Button>
+              </ItemActions>
+            </Item>
           ))}
         </div>
       )}

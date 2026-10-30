@@ -11,7 +11,6 @@ import {
   AlertDialogTitle,
 } from "@faceless/ui/components/alert-dialog";
 import { Button } from "@faceless/ui/components/button";
-import { Card, CardHeader } from "@faceless/ui/components/card";
 import {
   Empty,
   EmptyContent,
@@ -20,7 +19,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@faceless/ui/components/empty";
-import { Skeleton } from "@faceless/ui/components/skeleton";
 import { Spinner } from "@faceless/ui/components/spinner";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Film, Pause, Play, Settings } from "lucide-react";
@@ -33,6 +31,7 @@ import { trpc } from "@/utils/trpc";
 
 import { SeriesEpisodesFeed } from "./_components/series-episodes-feed";
 import { SeriesSettingsDialog } from "./_components/series-settings-dialog";
+import SeriesDetailLoading from "./loading";
 
 const SeriesDetailPage = ({ params }: PageProps<"/series/[id]">) => {
   const { id } = React.use(params);
@@ -150,19 +149,7 @@ const SeriesDetailPage = ({ params }: PageProps<"/series/[id]">) => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center">
-          <Skeleton className="h-9 w-32" />
-        </div>
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-1/3" />
-            <Skeleton className="h-4 w-1/2" />
-          </CardHeader>
-        </Card>
-      </div>
-    );
+    return <SeriesDetailLoading />;
   }
 
   if (!series) {
