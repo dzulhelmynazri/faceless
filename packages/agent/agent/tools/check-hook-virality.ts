@@ -106,30 +106,32 @@ export default defineTool({
   async execute({ hook, niche }, ctx): Promise<ViralityEvaluationResult> {
     const isCliché = detectCliché(hook);
 
-    const state = isNonEmptyString(niche) ? { hook, niche } : { hook };
+    const state: Record<string, string> = isNonEmptyString(niche)
+      ? { hook, niche }
+      : { hook };
 
     const decision = await decide({
-      state,
       questions: {
-        viralityTier: {
-          type: "choice",
-          instructions:
-            "Rate the viral retention potential of this opening hook.",
-          criteria: {
-            viral:
-              "Irresistible, intense pattern interrupt, must-watch curiosity loop (score 8-10)",
-            average:
-              "Decent opening but predictable or mild tension (score 5-7)",
-            weak: "Boring, predictable, cliché opener, or instantly skipped (score 1-4)",
-          },
-        },
         hasCuriosityLoop: {
-          type: "boolean",
           instructions:
             "Does this hook establish an immediate, compelling curiosity gap that cannot be satisfied without watching the full video?",
+          type: "boolean",
+        },
+        viralityTier: {
+          criteria: {
+            average:
+              "Decent opening but predictable or mild tension (score 5-7)",
+            viral:
+              "Irresistible, intense pattern interrupt, must-watch curiosity loop (score 8-10)",
+            weak: "Boring, predictable, cliché opener, or instantly skipped (score 1-4)",
+          },
+          instructions:
+            "Rate the viral retention potential of this opening hook.",
+          type: "choice",
         },
       },
-      abortSignal: ctx.abortSignal,
+      signal: ctx.abortSignal,
+      state,
     });
 
     const viralityTierAnswer = decision.answers.viralityTier;

@@ -139,7 +139,7 @@ export default defineTool({
           },
         },
       },
-      abortSignal: ctx.abortSignal,
+      signal: ctx.abortSignal,
     });
 
     const isSafeAnswer = decision.answers.isSafeForSocialMedia;
