@@ -5,12 +5,19 @@ import { Button } from "@faceless/ui/components/button";
 import { Slider } from "@faceless/ui/components/slider";
 import { Spinner } from "@faceless/ui/components/spinner";
 import { Player } from "@remotion/player";
-import { Maximize2, Pause, Play, Repeat, Volume2, VolumeX } from "lucide-react";
+import { Maximize2, Pause, Play, Volume2, VolumeX } from "lucide-react";
 import * as React from "react";
 
 import { useEpisodeStudioContext } from "../_context/episode-studio-context";
 
 const FPS = 30;
+
+// oxlint-disable shadcn/no-inline-styles -- Remotion Player requires style.width/height to compute canvas scale
+const PLAYER_STYLE: React.CSSProperties = {
+  width: "100%",
+  height: "100%",
+};
+// oxlint-enable shadcn/no-inline-styles
 
 const formatTimestamp = (seconds: number): string => {
   const safeSec = Math.max(0, Math.floor(seconds));
@@ -47,7 +54,6 @@ export const EpisodeVideoPreview = () => {
 
   const isMounted = useIsMounted();
   const [isMuted, setIsMuted] = React.useState(false);
-  const [isLooping, setIsLooping] = React.useState(true);
 
   const handleMuteToggle = React.useCallback(() => {
     const player = playerRef.current;
@@ -98,7 +104,6 @@ export const EpisodeVideoPreview = () => {
           <Player
             acknowledgeRemotionLicense
             autoPlay={false}
-            className="size-full object-contain"
             clickToPlay
             component={MainVideo}
             compositionHeight={1920}
@@ -107,8 +112,9 @@ export const EpisodeVideoPreview = () => {
             durationInFrames={durationInFrames}
             fps={FPS}
             inputProps={compositionProps}
-            loop={isLooping}
+            loop
             ref={setPlayerRef}
+            style={PLAYER_STYLE}
           />
         ) : (
           <div className="flex size-full flex-col items-center justify-center gap-3 bg-muted text-muted-foreground">
@@ -137,7 +143,7 @@ export const EpisodeVideoPreview = () => {
               aria-label={isPlaying ? "Pause video" : "Play video"}
               onClick={togglePlay}
               size="icon"
-              variant="default"
+              variant="ghost"
             >
               {isPlaying ? <Pause /> : <Play />}
             </Button>
@@ -149,17 +155,6 @@ export const EpisodeVideoPreview = () => {
               variant="ghost"
             >
               {isMuted ? <VolumeX /> : <Volume2 />}
-            </Button>
-
-            <Button
-              aria-label="Toggle loop"
-              onClick={() => {
-                setIsLooping((prev) => !prev);
-              }}
-              size="icon"
-              variant={isLooping ? "secondary" : "ghost"}
-            >
-              <Repeat />
             </Button>
           </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { Toaster } from "@faceless/ui/components/sonner";
+import { TooltipProvider } from "@faceless/ui/components/tooltip";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { AutumnProvider } from "autumn-js/react";
@@ -19,7 +20,9 @@ const Providers = ({ children }: { children: React.ReactNode }) => (
   >
     <QueryClientProvider client={queryClient}>
       <AutumnProvider useBetterAuth={true}>
-        <NuqsAdapter>{children}</NuqsAdapter>
+        <TooltipProvider>
+          <NuqsAdapter>{children}</NuqsAdapter>
+        </TooltipProvider>
       </AutumnProvider>
       <ReactQueryDevtools />
     </QueryClientProvider>

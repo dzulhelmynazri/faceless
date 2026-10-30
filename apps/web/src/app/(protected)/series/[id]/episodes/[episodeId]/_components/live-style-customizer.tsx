@@ -4,24 +4,40 @@ import {
   SERIES_CAPTION_STYLES,
   SERIES_MUSIC_PRESETS,
 } from "@faceless/contracts/series";
-import { Badge } from "@faceless/ui/components/badge";
 import { Button } from "@faceless/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@faceless/ui/components/card";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemTitle,
+} from "@faceless/ui/components/item";
 import { Label } from "@faceless/ui/components/label";
 import {
-  NativeSelect,
-  NativeSelectOption,
-} from "@faceless/ui/components/native-select";
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@faceless/ui/components/select";
 import { Spinner } from "@faceless/ui/components/spinner";
 import { Switch } from "@faceless/ui/components/switch";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@faceless/ui/components/tooltip";
 import { isNonEmptyString } from "@faceless/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Info } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 
@@ -64,10 +80,28 @@ export const LiveStyleCustomizer = () => {
   // Find music value
   const selectedMusicVal = customization.bgmUrl ?? "none";
 
-  const handleMusicChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const val = e.target.value;
+  const selectedMusicPreset = React.useMemo(() => {
+    if (
+      !isNonEmptyString(customization.bgmUrl) ||
+      customization.bgmUrl === "none"
+    ) {
+      return null;
+    }
 
-    if (val === "none") {
+    if (
+      isNonEmptyString(series.customMusicUrl) &&
+      customization.bgmUrl === series.customMusicUrl
+    ) {
+      return { title: "Series Custom Music", description: "Uploaded audio" };
+    }
+
+    return (
+      SERIES_MUSIC_PRESETS.find((m) => m.url === customization.bgmUrl) ?? null
+    );
+  }, [customization.bgmUrl, series.customMusicUrl]);
+
+  const handleMusicChange = (val: string | null) => {
+    if (!isNonEmptyString(val) || val === "none") {
       onCustomizationChange({ bgmUrl: null });
 
       return;
@@ -89,20 +123,9 @@ export const LiveStyleCustomizer = () => {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Live Style Customizer</CardTitle>
-          <Button
-            disabled={updateMutation.isPending}
-            onClick={handleSave}
-            variant="outline"
-          >
-            {updateMutation.isPending && <Spinner data-icon="inline-start" />}
-            Save Overrides
-          </Button>
-        </div>
+        <CardTitle>Live Style Customizer</CardTitle>
         <CardDescription>
-          Overrides are saved specifically to this episode without affecting
-          series defaults.
+          Episode overrides won&apos;t affect series defaults.
         </CardDescription>
       </CardHeader>
 
@@ -110,14 +133,9 @@ export const LiveStyleCustomizer = () => {
         <div className="flex flex-col gap-5">
           {/* Caption Style Presets */}
           <div className="flex flex-col gap-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium">Caption Style Preset</span>
-              <Badge variant="secondary">
-                {customization.captionStyleId.replaceAll("-", " ")}
-              </Badge>
-            </div>
+            <span className="text-xs font-medium">Caption Style Preset</span>
 
-            <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-3">
+            <div className="grid grid-cols-2 gap-1.5">
               {SERIES_CAPTION_STYLES.map((preset) => {
                 const isSelected = customization.captionStyleId === preset.id;
 
@@ -127,7 +145,7 @@ export const LiveStyleCustomizer = () => {
                     onClick={() => {
                       onCustomizationChange({ captionStyleId: preset.id });
                     }}
-                    variant={isSelected ? "default" : "outline"}
+                    variant={isSelected ? "secondary" : "outline"}
                   >
                     <span className="truncate">{preset.name}</span>
                   </Button>
@@ -142,33 +160,62 @@ export const LiveStyleCustomizer = () => {
             <div className="flex flex-col gap-2">
               <Label htmlFor="bgm-select">Background Music (BGM)</Label>
 
-              <NativeSelect
-                aria-label="Select background music"
-                className="w-full"
-                id="bgm-select"
-                onChange={handleMusicChange}
+              <Select
+                onValueChange={handleMusicChange}
                 value={selectedMusicVal}
               >
-                <NativeSelectOption value="none">
-                  None (Voice Only)
-                </NativeSelectOption>
-                {isNonEmptyString(series.customMusicUrl) && (
-                  <NativeSelectOption value="custom">
-                    Series Custom Music
-                  </NativeSelectOption>
-                )}
-                {SERIES_MUSIC_PRESETS.map((preset) => (
-                  <NativeSelectOption key={preset.id} value={preset.url}>
-                    {preset.title} - {preset.description}
-                  </NativeSelectOption>
-                ))}
-              </NativeSelect>
+                <SelectTrigger
+                  aria-label="Select background music"
+                  className="w-full"
+                  id="bgm-select"
+                >
+                  <SelectValue>
+                    {selectedMusicPreset
+                      ? `${selectedMusicPreset.title} - ${selectedMusicPreset.description}`
+                      : "None (Voice Only)"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="none">None (Voice Only)</SelectItem>
+                    {isNonEmptyString(series.customMusicUrl) && (
+                      <SelectItem value="custom">
+                        Series Custom Music
+                      </SelectItem>
+                    )}
+                    {SERIES_MUSIC_PRESETS.map((preset) => (
+                      <SelectItem key={preset.id} value={preset.url}>
+                        {preset.title} - {preset.description}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Glitch Effect Switch */}
-            <div className="flex flex-col justify-between gap-2 rounded-lg border border-border/60 bg-muted/30 p-2.5">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="glitch-toggle">Glitch Effect (CRT / RGB)</Label>
+            <Item variant="outline">
+              <ItemContent>
+                <ItemTitle>
+                  <Label className="cursor-pointer" htmlFor="glitch-toggle">
+                    Glitch Effect (CRT / RGB)
+                  </Label>
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <Button variant="ghost" size="icon-sm">
+                          <Info />
+                        </Button>
+                      }
+                    />
+                    <TooltipContent>
+                      Adds chromatic distortion and scanline pulses at scene
+                      cuts.
+                    </TooltipContent>
+                  </Tooltip>
+                </ItemTitle>
+              </ItemContent>
+              <ItemActions>
                 <Switch
                   aria-label="Toggle glitch effect"
                   checked={customization.glitchEffect}
@@ -177,14 +224,22 @@ export const LiveStyleCustomizer = () => {
                     onCustomizationChange({ glitchEffect: checked });
                   }}
                 />
-              </div>
-              <p className="text-xs">
-                Applies chromatic distortion and scanline pulses at scene cuts.
-              </p>
-            </div>
+              </ItemActions>
+            </Item>
           </div>
         </div>
       </CardContent>
+
+      <CardFooter>
+        <Button
+          className="w-full"
+          disabled={updateMutation.isPending}
+          onClick={handleSave}
+        >
+          {updateMutation.isPending && <Spinner data-icon="inline-start" />}
+          Save Overrides
+        </Button>
+      </CardFooter>
     </Card>
   );
 };
