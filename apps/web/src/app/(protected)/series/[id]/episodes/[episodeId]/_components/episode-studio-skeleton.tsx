@@ -1,7 +1,7 @@
 import { Skeleton } from "@faceless/ui/components/skeleton";
 
 export const EpisodeStudioSkeleton = () => (
-  <div className="flex flex-col gap-6">
+  <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
     <div className="flex items-center justify-between border-b pb-4">
       <Skeleton className="h-8 w-64" />
       <Skeleton className="h-8 w-32" />

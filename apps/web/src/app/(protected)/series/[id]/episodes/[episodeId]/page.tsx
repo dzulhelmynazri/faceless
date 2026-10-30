@@ -11,7 +11,7 @@ import { EpisodeStudioProvider } from "./_context/episode-studio-context";
 
 const EpisodeStudio = () => (
   <EpisodeStudioProvider>
-    <div className="flex flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
       <StudioActionBar />
 
       <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[380px_1fr]">

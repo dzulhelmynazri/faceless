@@ -104,6 +104,7 @@ export const EpisodeVideoPreview = () => {
       >
         {isMounted ? (
           <Player
+            acknowledgeRemotionLicense
             autoPlay={false}
             className="size-full object-contain"
             clickToPlay
