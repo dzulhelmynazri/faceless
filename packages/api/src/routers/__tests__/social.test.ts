@@ -5,6 +5,7 @@ import { createSocialClient } from "@faceless/socials";
 import { createFiles } from "@faceless/storage";
 import { Autumn } from "autumn-js";
 import { describe, expect, it, vi } from "vitest";
+import { z } from "zod";
 
 import type { Context } from "../../context";
 import { createCallerFactory } from "../../trpc";
@@ -206,6 +207,33 @@ describe("socialRouter", () => {
         "redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fsettings%2Fsocial"
       );
       expect(result.url).toContain("state=");
+    });
+
+    it("encodes valid platform metadata and timestamp inside the OAuth state parameter", async () => {
+      const db = createPrismaClient({
+        DATABASE_URL: "postgresql://localhost:5432/test",
+      });
+
+      const caller = createCaller(createTestContext(db, "user_test_123"));
+
+      const result = await caller.social.getOAuthUrl({
+        platform: "INSTAGRAM",
+        redirectUri: "http://localhost:3000/dashboard/socials",
+      });
+
+      const parsedUrl = new URL(result.url);
+      const stateParam = parsedUrl.searchParams.get("state");
+
+      const stateSchema = z.object({
+        platform: z.literal("INSTAGRAM"),
+        ts: z.number(),
+      });
+
+      const decoded = decodeURIComponent(stateParam ?? "");
+      const parsedJson: unknown = JSON.parse(decoded);
+      const parsedState = stateSchema.safeParse(parsedJson);
+
+      expect(parsedState.success).toBeTruthy();
     });
   });
 });
