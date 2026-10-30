@@ -39,10 +39,14 @@ export const oauthInitiateQuerySchema = z.object({
 export type OAuthInitiateQuery = z.infer<typeof oauthInitiateQuerySchema>;
 
 export const oauthCallbackQuerySchema = z.object({
+  accountId: z.string().min(1).optional(),
   code: z.string().min(1).optional(),
+  connected: z.string().min(1).optional(),
   platform: socialPlatformParamSchema,
+  profileId: z.string().min(1).optional(),
   redirect_uri: z.string().min(1),
   state: z.string().min(1).optional(),
+  username: z.string().min(1).optional(),
 });
 
 export type OAuthCallbackQuery = z.infer<typeof oauthCallbackQuerySchema>;

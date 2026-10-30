@@ -52,6 +52,25 @@ describe("oauthCallbackQuerySchema contract", () => {
     expect(parsed.platform).toBe("INSTAGRAM");
   });
 
+  it("parses provider callback query parameters with accountId and username", () => {
+    const providerCallback = {
+      accountId: "acc_987",
+      connected: "instagram",
+      platform: "instagram",
+      profileId: "prof_456",
+      redirect_uri: "/settings",
+      username: "befday_com",
+    };
+
+    const parsed = oauthCallbackQuerySchema.parse(providerCallback);
+
+    expect(parsed.accountId).toBe("acc_987");
+    expect(parsed.username).toBe("befday_com");
+    expect(parsed.profileId).toBe("prof_456");
+    expect(parsed.connected).toBe("instagram");
+    expect(parsed.platform).toBe("INSTAGRAM");
+  });
+
   it("rejects callback query missing redirect_uri", () => {
     const missing = {
       code: "auth_code_123",

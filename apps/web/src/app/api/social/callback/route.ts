@@ -2,6 +2,7 @@ import {
   oauthCallbackQuerySchema,
   PLATFORM_TO_SDK_MAP,
 } from "@faceless/contracts/social";
+import { isNonEmptyString } from "@faceless/utils";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
@@ -30,51 +31,85 @@ export const GET = async (req: NextRequest) => {
     );
   }
 
-  const { platform, redirect_uri: redirectUri } = queryResult.data;
+  const {
+    accountId,
+    platform,
+    redirect_uri: redirectUri,
+    username,
+  } = queryResult.data;
+
   const platformKey = PLATFORM_TO_SDK_MAP[platform];
 
-  const accounts = await socials.accounts.list({
-    authorization: { tenantId: session.user.id },
-    backend: "default",
-  });
+  let platformUserId = accountId;
+  let platformUserName = username;
 
-  const matchedAccount = accounts.items.find(
-    (item) => item.ref.platform === platformKey
-  );
+  if (
+    !isNonEmptyString(platformUserId) ||
+    !isNonEmptyString(platformUserName)
+  ) {
+    try {
+      const accounts = await socials.accounts.list({
+        authorization: { tenantId: session.user.id },
+        backend: "default",
+      });
 
-  if (!matchedAccount) {
+      const matchedAccount = accounts.items.find(
+        (item) => item.ref.platform === platformKey
+      );
+
+      if (matchedAccount) {
+        platformUserId = matchedAccount.ref.accountId;
+        platformUserName = matchedAccount.displayName;
+      }
+    } catch {
+      return NextResponse.json(
+        { error: `No active ${platform} account found after authorization` },
+        { status: 404 }
+      );
+    }
+  }
+
+  if (
+    !isNonEmptyString(platformUserId) ||
+    !isNonEmptyString(platformUserName)
+  ) {
     return NextResponse.json(
       { error: `No active ${platform} account found after authorization` },
       { status: 404 }
     );
   }
 
-  const platformUserId = matchedAccount.ref.accountId;
-  const platformUserName = matchedAccount.displayName;
-  const db = getDb();
+  try {
+    const db = getDb();
 
-  await db.socialConnection.upsert({
-    create: {
-      platform,
-      platformUserId,
-      platformUserName,
-      status: "CONNECTED",
-      userId: session.user.id,
-    },
-    update: {
-      platformUserName,
-      status: "CONNECTED",
-    },
-    where: {
-      userId_platform_platformUserId: {
+    await db.socialConnection.upsert({
+      create: {
         platform,
         platformUserId,
+        platformUserName,
+        status: "CONNECTED",
         userId: session.user.id,
       },
-    },
-  });
+      update: {
+        platformUserName,
+        status: "CONNECTED",
+      },
+      where: {
+        userId_platform_platformUserId: {
+          platform,
+          platformUserId,
+          userId: session.user.id,
+        },
+      },
+    });
 
-  const targetUrl = new URL(redirectUri, env.BETTER_AUTH_URL);
+    const targetUrl = new URL(redirectUri, env.BETTER_AUTH_URL);
 
-  return NextResponse.redirect(targetUrl);
+    return NextResponse.redirect(targetUrl);
+  } catch {
+    return NextResponse.json(
+      { error: "Failed to save social account connection" },
+      { status: 500 }
+    );
+  }
 };
