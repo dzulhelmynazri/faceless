@@ -985,3 +985,156 @@ describe("episodesRouter - publishEpisodeNow", () => {
     expect(result.outcomes[0]?.state).toBe("published");
   });
 });
+
+describe("episodesRouter - generateEpisode", () => {
+  it("rejects with NOT_FOUND when series does not exist for session user", async () => {
+    const db = createPrismaClient({
+      DATABASE_URL: "postgresql://localhost:5432/test",
+    });
+
+    Object.defineProperty(db, "series", {
+      configurable: true,
+      value: {
+        findFirst: vi.fn<() => Promise<null>>().mockResolvedValue(null),
+      },
+    });
+
+    const caller = createCaller(createTestContext(db, "user_test_123"));
+
+    await expect(
+      caller.series.generateEpisode({
+        seriesId: "series_missing",
+      })
+    ).rejects.toMatchObject({
+      code: "NOT_FOUND",
+      message: "Series not found",
+    });
+  });
+});
+
+describe("episodesRouter - generateEpisodeAudio", () => {
+  it("rejects with NOT_FOUND when episode does not exist for session user", async () => {
+    const db = createPrismaClient({
+      DATABASE_URL: "postgresql://localhost:5432/test",
+    });
+
+    Object.defineProperty(db, "seriesEpisode", {
+      configurable: true,
+      value: {
+        findFirst: vi.fn<() => Promise<null>>().mockResolvedValue(null),
+      },
+    });
+
+    const caller = createCaller(createTestContext(db, "user_test_123"));
+
+    await expect(
+      caller.series.generateEpisodeAudio({
+        episodeId: "ep_missing",
+      })
+    ).rejects.toMatchObject({
+      code: "NOT_FOUND",
+      message: "Episode not found",
+    });
+  });
+
+  it("rejects with BAD_REQUEST when episode script metadata is missing or invalid", async () => {
+    const db = createPrismaClient({
+      DATABASE_URL: "postgresql://localhost:5432/test",
+    });
+
+    const mockEpisode = {
+      id: "ep_invalid_meta",
+      metadata: null,
+      script: "Narration text",
+      series: {
+        userId: "user_test_123",
+        voiceId: "voice_123",
+      },
+      seriesId: "series_123",
+    };
+
+    Object.defineProperty(db, "seriesEpisode", {
+      configurable: true,
+      value: {
+        findFirst: vi
+          .fn<() => Promise<typeof mockEpisode>>()
+          .mockResolvedValue(mockEpisode),
+      },
+    });
+
+    const caller = createCaller(createTestContext(db, "user_test_123"));
+
+    await expect(
+      caller.series.generateEpisodeAudio({
+        episodeId: "ep_invalid_meta",
+      })
+    ).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+      message: "Episode script metadata is invalid or missing",
+    });
+  });
+});
+
+describe("episodesRouter - regenerateEpisodeScene", () => {
+  it("rejects with NOT_FOUND when episode does not exist for session user", async () => {
+    const db = createPrismaClient({
+      DATABASE_URL: "postgresql://localhost:5432/test",
+    });
+
+    Object.defineProperty(db, "seriesEpisode", {
+      configurable: true,
+      value: {
+        findFirst: vi.fn<() => Promise<null>>().mockResolvedValue(null),
+      },
+    });
+
+    const caller = createCaller(createTestContext(db, "user_test_123"));
+
+    await expect(
+      caller.series.regenerateEpisodeScene({
+        episodeId: "ep_missing",
+        sceneNumber: 1,
+      })
+    ).rejects.toMatchObject({
+      code: "NOT_FOUND",
+      message: "Episode not found",
+    });
+  });
+
+  it("rejects with NOT_FOUND when requested scene number does not exist on episode", async () => {
+    const db = createPrismaClient({
+      DATABASE_URL: "postgresql://localhost:5432/test",
+    });
+
+    const mockEpisode = {
+      id: "ep_123",
+      scenes: [],
+      series: {
+        artStyleId: "anime",
+        userId: "user_test_123",
+      },
+      seriesId: "series_123",
+    };
+
+    Object.defineProperty(db, "seriesEpisode", {
+      configurable: true,
+      value: {
+        findFirst: vi
+          .fn<() => Promise<typeof mockEpisode>>()
+          .mockResolvedValue(mockEpisode),
+      },
+    });
+
+    const caller = createCaller(createTestContext(db, "user_test_123"));
+
+    await expect(
+      caller.series.regenerateEpisodeScene({
+        episodeId: "ep_123",
+        sceneNumber: 5,
+      })
+    ).rejects.toMatchObject({
+      code: "NOT_FOUND",
+      message: "Scene #5 not found",
+    });
+  });
+});
