@@ -2,7 +2,6 @@
 
 import { Badge } from "@faceless/ui/components/badge";
 import { Button } from "@faceless/ui/components/button";
-import { Separator } from "@faceless/ui/components/separator";
 import { Spinner } from "@faceless/ui/components/spinner";
 import { isNonEmptyString } from "@faceless/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -25,14 +24,7 @@ import { useEpisodeStudioContext } from "../_context/episode-studio-context";
 export const StudioActionBar = () => {
   const { episode, seriesId, onStatusUpdated } = useEpisodeStudioContext();
 
-  const {
-    id: episodeId,
-    title: episodeTitle,
-    episodeNumber,
-    status,
-    videoUrl,
-    error,
-  } = episode;
+  const { id: episodeId, episodeNumber, status, videoUrl, error } = episode;
 
   const queryClient = useQueryClient();
 
@@ -87,8 +79,8 @@ export const StudioActionBar = () => {
     publishNowMutation.isPending;
 
   return (
-    <div className="flex flex-col justify-between gap-3 border-b border-border/80 pb-4 sm:flex-row sm:items-center">
-      {/* Left: Back Link & Episode Title */}
+    <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+      {/* Left: Back Link */}
       <div className="flex items-center gap-3">
         <Button
           nativeButton={false}
@@ -98,17 +90,9 @@ export const StudioActionBar = () => {
           <ArrowLeft data-icon="inline-start" />
           <span className="hidden sm:inline">Back to Series</span>
         </Button>
-
-        <Separator orientation="vertical" className="h-4" />
-
-        <div className="flex flex-col gap-0.5">
-          <h1 className="text-base font-bold tracking-tight">
-            Episode #{episodeNumber}: {episodeTitle}
-          </h1>
-          {isNonEmptyString(error) && status === "FAILED" && (
-            <span className="text-xs text-destructive">{error}</span>
-          )}
-        </div>
+        {isNonEmptyString(error) && status === "FAILED" && (
+          <span className="text-xs text-destructive">{error}</span>
+        )}
       </div>
 
       {/* Right: Actions */}

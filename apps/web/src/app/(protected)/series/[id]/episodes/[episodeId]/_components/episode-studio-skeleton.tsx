@@ -3,10 +3,9 @@ import { Skeleton } from "@faceless/ui/components/skeleton";
 export const EpisodeStudioSkeleton = () => (
   <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
     {/* Studio Action Bar Skeleton */}
-    <div className="flex items-center justify-between border-b pb-3">
+    <div className="flex items-center justify-between">
       <div className="flex items-center gap-3">
         <Skeleton className="h-7 w-28" />
-        <Skeleton className="h-5 w-48" />
       </div>
       <div className="flex items-center gap-2">
         <Skeleton className="h-7 w-24" />
