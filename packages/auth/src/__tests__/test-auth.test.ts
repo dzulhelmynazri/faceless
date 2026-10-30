@@ -34,4 +34,31 @@ describe("Better Auth Test Utilities", () => {
     expect(user.email).toBe("creator@faceless.video");
     expect(user.name).toBe("Faceless Creator");
   });
+
+  it("configures expected mobile deep linking schemes and trusted origins", () => {
+    const auth = createTestAuth();
+
+    expect(auth.options.trustedOrigins).toStrictEqual([
+      "http://localhost:3000",
+      "faceless://",
+      "exp://",
+      "http://localhost:8081",
+    ]);
+    expect(auth.options.baseURL).toBe("http://localhost:3000");
+  });
+
+  it("propagates custom environment variables to auth options", () => {
+    const auth = createTestAuth({
+      AUTUMN_SECRET_KEY: "custom-autumn-key",
+      BETTER_AUTH_SECRET: "custom-secret-must-be-32-chars-long!",
+      BETTER_AUTH_URL: "https://auth.faceless.video",
+      GOOGLE_CLIENT_ID: "custom-google-id",
+      GOOGLE_CLIENT_SECRET: "custom-google-secret",
+    });
+
+    expect(auth.options.baseURL).toBe("https://auth.faceless.video");
+    expect(auth.options.socialProviders.google.clientId).toBe(
+      "custom-google-id"
+    );
+  });
 });
