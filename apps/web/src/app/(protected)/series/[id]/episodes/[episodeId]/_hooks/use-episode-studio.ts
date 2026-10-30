@@ -1,8 +1,6 @@
 import type {
   EpisodeCustomization,
   GetEpisodeByIdOutput,
-  SeriesEpisodeAudioMetadata,
-  StudioSceneItem,
 } from "@faceless/contracts/series";
 import type { VideoCompositionProps } from "@faceless/remotion";
 import type { CallbackListener, PlayerRef } from "@remotion/player";
@@ -25,12 +23,7 @@ export const useEpisodeStudio = ({
   seriesId,
 }: UseEpisodeStudioOptions) => {
   const [episode, setEpisode] = React.useState(initialData.episode);
-
-  const [scenes, setScenes] = React.useState<StudioSceneItem[]>(
-    initialData.scenes
-  );
-
-  const [isAudioStale, setIsAudioStale] = React.useState(false);
+  const { scenes } = initialData;
 
   const [customization, setCustomization] =
     React.useState<EpisodeCustomization>(() => {
@@ -131,23 +124,6 @@ export const useEpisodeStudio = ({
     [durationInFrames]
   );
 
-  const seekToScene = React.useCallback(
-    (sceneNumber: number) => {
-      let offsetSeconds = 0;
-
-      for (const scene of scenes) {
-        if (scene.sceneNumber === sceneNumber) {
-          break;
-        }
-
-        offsetSeconds += scene.duration;
-      }
-
-      seekToFrame(Math.round(offsetSeconds * FPS));
-    },
-    [scenes, seekToFrame]
-  );
-
   const updateCustomizationState = React.useCallback(
     (partial: Partial<EpisodeCustomization>) => {
       setCustomization((prev) => ({
@@ -156,42 +132,6 @@ export const useEpisodeStudio = ({
       }));
     },
     []
-  );
-
-  const updateSceneLocally = React.useCallback(
-    (sceneNumber: number, patch: Partial<StudioSceneItem>) => {
-      setScenes((prev) =>
-        prev.map((scene) =>
-          scene.sceneNumber === sceneNumber ? { ...scene, ...patch } : scene
-        )
-      );
-    },
-    []
-  );
-
-  const onAudioRegenerated = React.useCallback(
-    (audioUrl: string, audioMetadata: SeriesEpisodeAudioMetadata) => {
-      setEpisode((prev) => {
-        if (!prev.metadata) {
-          return {
-            ...prev,
-            audioUrl,
-          };
-        }
-
-        return {
-          ...prev,
-          audioUrl,
-          metadata: {
-            ...prev.metadata,
-            audio: audioMetadata,
-            customization,
-          },
-        };
-      });
-      setIsAudioStale(false);
-    },
-    [customization]
   );
 
   const onStatusUpdated = React.useCallback(
@@ -238,8 +178,6 @@ export const useEpisodeStudio = ({
     episode,
     scenes,
     customization,
-    isAudioStale,
-    setIsAudioStale,
     playerRef,
     setPlayerRef,
     isPlaying,
@@ -250,10 +188,7 @@ export const useEpisodeStudio = ({
     compositionProps,
     togglePlay,
     seekToFrame,
-    seekToScene,
     updateCustomization: updateCustomizationState,
-    updateSceneLocally,
-    onAudioRegenerated,
     onStatusUpdated,
   };
 };

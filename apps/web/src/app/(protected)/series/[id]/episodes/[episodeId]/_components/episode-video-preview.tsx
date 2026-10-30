@@ -41,40 +41,13 @@ export const EpisodeVideoPreview = () => {
     currentFrame,
     currentTimeSeconds,
     isPlaying,
-    scenes,
     togglePlay,
     seekToFrame,
-    seekToScene,
   } = useEpisodeStudioContext();
 
   const isMounted = useIsMounted();
   const [isMuted, setIsMuted] = React.useState(false);
   const [isLooping, setIsLooping] = React.useState(true);
-
-  // Compute scene time ranges sequentially
-  const sceneIntervals = React.useMemo(() => {
-    const intervals: { sceneNumber: number; start: number; end: number }[] = [];
-    let start = 0;
-
-    for (const sc of scenes) {
-      intervals.push({
-        sceneNumber: sc.sceneNumber,
-        start,
-        end: start + sc.duration,
-      });
-      start += sc.duration;
-    }
-
-    return intervals;
-  }, [scenes]);
-
-  const activeSceneNumber = React.useMemo(() => {
-    const match = sceneIntervals.find(
-      (inv) => currentTimeSeconds >= inv.start && currentTimeSeconds < inv.end
-    );
-
-    return match?.sceneNumber ?? scenes[0]?.sceneNumber ?? 1;
-  }, [sceneIntervals, currentTimeSeconds, scenes]);
 
   const handleMuteToggle = React.useCallback(() => {
     const player = playerRef.current;
@@ -215,38 +188,6 @@ export const EpisodeVideoPreview = () => {
           </div>
         </div>
       </div>
-
-      {/* Quick Scene Jump Strip */}
-      {scenes.length > 0 && (
-        <div className="mx-auto flex w-full max-w-[340px] flex-col gap-1.5 sm:max-w-[360px]">
-          <div className="flex items-center justify-between px-0.5">
-            <span className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-              Jump to Scene
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {scenes.length} Scenes
-            </span>
-          </div>
-          <div className="grid grid-cols-6 gap-1">
-            {scenes.map((scene) => {
-              const isActive = activeSceneNumber === scene.sceneNumber;
-
-              return (
-                <Button
-                  key={scene.id}
-                  onClick={() => {
-                    seekToScene(scene.sceneNumber);
-                  }}
-                  size="sm"
-                  variant={isActive ? "default" : "outline"}
-                >
-                  #{scene.sceneNumber}
-                </Button>
-              );
-            })}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

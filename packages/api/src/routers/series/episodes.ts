@@ -1,23 +1,17 @@
 import { runScriptwriterAgent } from "@faceless/agent";
 import {
   captionStyleIdSchema,
-  generateEpisodeAudioInputSchema,
-  generateEpisodeAudioOutputSchema,
   generateEpisodeInputSchema,
   generateEpisodeOutputSchema,
   getEpisodeByIdInputSchema,
   getEpisodeByIdOutputSchema,
   publishEpisodeNowInputSchema,
   publishEpisodeNowOutputSchema,
-  regenerateEpisodeSceneInputSchema,
-  regenerateEpisodeSceneOutputSchema,
   renderEpisodeInputSchema,
   renderEpisodeOutputSchema,
   seriesEpisodeMetadataSchema,
   updateEpisodeCustomizationInputSchema,
   updateEpisodeCustomizationOutputSchema,
-  updateEpisodeSceneInputSchema,
-  updateEpisodeSceneOutputSchema,
   updateEpisodeStatusInputSchema,
   updateEpisodeStatusOutputSchema,
 } from "@faceless/contracts/series";
@@ -31,10 +25,7 @@ import {
   calculateNextScheduledFor,
   renderEpisodeVideo,
 } from "../../services/renderer";
-import {
-  generateEpisodeScenes,
-  regenerateSingleScene,
-} from "../../services/visual";
+import { generateEpisodeScenes } from "../../services/visual";
 import { synthesizeVoiceover } from "../../services/voiceover";
 import { router } from "../../trpc";
 
@@ -163,171 +154,6 @@ export const episodesRouter = router({
           message: "Failed to generate episode assets",
         });
       }
-    }),
-
-  generateEpisodeAudio: protectedProcedure
-    .input(generateEpisodeAudioInputSchema)
-    .output(generateEpisodeAudioOutputSchema)
-    .mutation(async ({ ctx, input }) => {
-      const episode = await ctx.db.seriesEpisode.findFirst({
-        where: {
-          id: input.episodeId,
-          series: {
-            userId: ctx.session.user.id,
-          },
-        },
-        include: {
-          series: true,
-        },
-      });
-
-      if (!episode) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Episode not found",
-        });
-      }
-
-      const metadata = seriesEpisodeMetadataSchema.safeParse(
-        episode.metadata
-      ).data;
-
-      if (!metadata) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Episode script metadata is invalid or missing",
-        });
-      }
-
-      try {
-        const voiceover = await synthesizeVoiceover({
-          userId: episode.series.userId,
-          seriesId: episode.seriesId,
-          episodeId: episode.id,
-          rawNarration: episode.script,
-          voiceId: input.voiceIdOverride ?? episode.series.voiceId,
-          storage: ctx.files,
-        });
-
-        await ctx.db.seriesEpisode.update({
-          where: { id: episode.id },
-          data: {
-            audioUrl: voiceover.audioUrl,
-            status: "READY_FOR_REVIEW",
-            error: null,
-            metadata: {
-              script: metadata.script,
-              audio: voiceover.metadata,
-            },
-          },
-        });
-
-        return {
-          episodeId: episode.id,
-          audioUrl: voiceover.audioUrl,
-          metadata: voiceover.metadata,
-        };
-      } catch {
-        await ctx.db.seriesEpisode.update({
-          where: { id: episode.id },
-          data: {
-            status: "FAILED",
-            error: "Failed to synthesize voiceover audio",
-          },
-        });
-
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to synthesize voiceover audio",
-        });
-      }
-    }),
-
-  regenerateEpisodeScene: protectedProcedure
-    .input(regenerateEpisodeSceneInputSchema)
-    .output(regenerateEpisodeSceneOutputSchema)
-    .mutation(async ({ ctx, input }) => {
-      const episode = await ctx.db.seriesEpisode.findFirst({
-        where: {
-          id: input.episodeId,
-          series: {
-            userId: ctx.session.user.id,
-          },
-        },
-        include: {
-          series: true,
-          scenes: {
-            where: {
-              sceneNumber: input.sceneNumber,
-            },
-          },
-        },
-      });
-
-      if (!episode) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Episode not found",
-        });
-      }
-
-      const [existingScene] = episode.scenes;
-
-      if (!existingScene) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: `Scene #${input.sceneNumber} not found`,
-        });
-      }
-
-      const generated = await regenerateSingleScene({
-        userId: episode.series.userId,
-        seriesId: episode.seriesId,
-        episodeId: episode.id,
-        artStyleId: episode.series.artStyleId,
-        sceneNumber: existingScene.sceneNumber,
-        narrationChunk: existingScene.narrationText,
-        visualPrompt: existingScene.visualPrompt,
-        duration: existingScene.duration,
-        promptOverride: input.promptOverride,
-        storage: ctx.files,
-      });
-
-      const updatedScene = await ctx.db.seriesEpisodeScene.update({
-        where: {
-          episodeId_sceneNumber: {
-            episodeId: episode.id,
-            sceneNumber: existingScene.sceneNumber,
-          },
-        },
-        data: {
-          imageUrl: generated.imageUrl,
-          imageKey: generated.imageKey,
-          visualPrompt: generated.visualPrompt,
-        },
-        select: {
-          id: true,
-          sceneNumber: true,
-          narrationText: true,
-          visualPrompt: true,
-          imageUrl: true,
-          duration: true,
-        },
-      });
-
-      if (input.sceneNumber === 1) {
-        await ctx.db.seriesEpisode.update({
-          where: { id: episode.id },
-          data: { thumbnailUrl: generated.imageUrl },
-        });
-      }
-
-      return {
-        success: true,
-        scene: updatedScene,
-        thumbnailUrl:
-          input.sceneNumber === 1 ? generated.imageUrl : episode.thumbnailUrl,
-      };
     }),
 
   getEpisodeById: protectedProcedure
@@ -514,90 +340,6 @@ export const episodesRouter = router({
       return {
         status: updated.status,
         success: true,
-      };
-    }),
-
-  updateEpisodeScene: protectedProcedure
-    .input(updateEpisodeSceneInputSchema)
-    .output(updateEpisodeSceneOutputSchema)
-    .mutation(async ({ ctx, input }) => {
-      const episode = await ctx.db.seriesEpisode.findFirst({
-        where: {
-          id: input.episodeId,
-          series: {
-            userId: ctx.session.user.id,
-          },
-        },
-        include: {
-          scenes: {
-            where: {
-              sceneNumber: input.sceneNumber,
-            },
-          },
-        },
-      });
-
-      if (!episode) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Episode not found",
-        });
-      }
-
-      const [existingScene] = episode.scenes;
-
-      if (!existingScene) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: `Scene #${input.sceneNumber} not found`,
-        });
-      }
-
-      const updatedScene = await ctx.db.seriesEpisodeScene.update({
-        where: {
-          episodeId_sceneNumber: {
-            episodeId: episode.id,
-            sceneNumber: input.sceneNumber,
-          },
-        },
-        data: {
-          narrationText: input.narrationText,
-          visualPrompt: input.visualPrompt,
-        },
-        select: {
-          id: true,
-          sceneNumber: true,
-          narrationText: true,
-          visualPrompt: true,
-          imageUrl: true,
-          duration: true,
-        },
-      });
-
-      if (input.narrationText === undefined) {
-        return {
-          scene: updatedScene,
-          success: true,
-        };
-      }
-
-      const scenes = await ctx.db.seriesEpisodeScene.findMany({
-        orderBy: { sceneNumber: "asc" },
-        select: { narrationText: true },
-        where: { episodeId: episode.id },
-      });
-
-      const updatedScript = scenes.map((s) => s.narrationText).join("\n\n");
-
-      await ctx.db.seriesEpisode.update({
-        data: { script: updatedScript },
-        where: { id: episode.id },
-      });
-
-      return {
-        scene: updatedScene,
-        success: true,
-        updatedScript,
       };
     }),
 

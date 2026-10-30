@@ -2325,16 +2325,6 @@ export const generateEpisodeOutputSchema = z.object({
 
 export type GenerateEpisodeOutput = z.infer<typeof generateEpisodeOutputSchema>;
 
-export const regenerateEpisodeSceneInputSchema = z.object({
-  episodeId: z.string().min(1),
-  sceneNumber: z.number().int().min(1),
-  promptOverride: z.string().min(1).optional(),
-});
-
-export type RegenerateEpisodeSceneInput = z.infer<
-  typeof regenerateEpisodeSceneInputSchema
->;
-
 export const studioSceneItemSchema = z.object({
   id: z.string(),
   sceneNumber: z.number().int(),
@@ -2345,16 +2335,6 @@ export const studioSceneItemSchema = z.object({
 });
 
 export type StudioSceneItem = z.infer<typeof studioSceneItemSchema>;
-
-export const regenerateEpisodeSceneOutputSchema = z.object({
-  success: z.boolean(),
-  scene: studioSceneItemSchema,
-  thumbnailUrl: z.string().nullable(),
-});
-
-export type RegenerateEpisodeSceneOutput = z.infer<
-  typeof regenerateEpisodeSceneOutputSchema
->;
 
 export const wordTimestampSchema = z.object({
   word: z.string().min(1),
@@ -2394,25 +2374,6 @@ export const seriesEpisodeMetadataSchema = z.object({
 });
 
 export type SeriesEpisodeMetadata = z.infer<typeof seriesEpisodeMetadataSchema>;
-
-export const generateEpisodeAudioInputSchema = z.object({
-  episodeId: z.string().min(1),
-  voiceIdOverride: z.string().optional(),
-});
-
-export type GenerateEpisodeAudioInput = z.infer<
-  typeof generateEpisodeAudioInputSchema
->;
-
-export const generateEpisodeAudioOutputSchema = z.object({
-  episodeId: z.string(),
-  audioUrl: z.string(),
-  metadata: seriesEpisodeAudioMetadataSchema,
-});
-
-export type GenerateEpisodeAudioOutput = z.infer<
-  typeof generateEpisodeAudioOutputSchema
->;
 
 export const getEpisodeByIdInputSchema = z.object({
   episodeId: z.string().min(1),
@@ -2485,27 +2446,6 @@ export const updateEpisodeStatusOutputSchema = z.object({
 
 export type UpdateEpisodeStatusOutput = z.infer<
   typeof updateEpisodeStatusOutputSchema
->;
-
-export const updateEpisodeSceneInputSchema = z.object({
-  episodeId: z.string().min(1),
-  sceneNumber: z.number().int().min(1),
-  narrationText: z.string().min(1).optional(),
-  visualPrompt: z.string().min(1).optional(),
-});
-
-export type UpdateEpisodeSceneInput = z.infer<
-  typeof updateEpisodeSceneInputSchema
->;
-
-export const updateEpisodeSceneOutputSchema = z.object({
-  success: z.boolean(),
-  scene: studioSceneItemSchema,
-  updatedScript: z.string().optional(),
-});
-
-export type UpdateEpisodeSceneOutput = z.infer<
-  typeof updateEpisodeSceneOutputSchema
 >;
 
 export const renderEpisodeInputSchema = z.object({

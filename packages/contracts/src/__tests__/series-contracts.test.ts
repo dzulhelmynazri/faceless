@@ -9,10 +9,8 @@ import {
   generateEpisodeInputSchema,
   generatedScriptPayloadSchema,
   publishEpisodeNowOutputSchema,
-  regenerateEpisodeSceneInputSchema,
   SERIES_LANGUAGES,
   SERIES_PRESETS,
-  updateEpisodeSceneInputSchema,
   wordTimestampSchema,
 } from "../series";
 
@@ -169,38 +167,6 @@ describe("ELEVENLABS_PRICING configuration", () => {
   });
 });
 
-describe("updateEpisodeSceneInputSchema contract", () => {
-  it("validates positive sceneNumber", () => {
-    const valid = {
-      episodeId: "ep_123",
-      narrationText: "Updated script line",
-      sceneNumber: 1,
-      visualPrompt: "Updated visual prompt",
-    };
-
-    expect(updateEpisodeSceneInputSchema.safeParse(valid).success).toBeTruthy();
-  });
-
-  it("rejects non-positive sceneNumber or empty episodeId", () => {
-    const nonPositiveScene = {
-      episodeId: "ep_123",
-      sceneNumber: 0,
-    };
-
-    const emptyEpisodeId = {
-      episodeId: "",
-      sceneNumber: 1,
-    };
-
-    expect(
-      updateEpisodeSceneInputSchema.safeParse(nonPositiveScene).success
-    ).toBeFalsy();
-    expect(
-      updateEpisodeSceneInputSchema.safeParse(emptyEpisodeId).success
-    ).toBeFalsy();
-  });
-});
-
 describe("publishEpisodeNowOutputSchema contract", () => {
   it("validates successful publication payload with platform outcomes", () => {
     const valid = {
@@ -292,7 +258,7 @@ describe("generatedScriptPayloadSchema contract", () => {
   });
 });
 
-describe("generateEpisodeInputSchema & regenerateEpisodeSceneInputSchema contracts", () => {
+describe("generateEpisodeInputSchema contract", () => {
   it("validates generateEpisode input with optional topic override", () => {
     const valid = {
       seriesId: "series_test_123",
@@ -309,28 +275,5 @@ describe("generateEpisodeInputSchema & regenerateEpisodeSceneInputSchema contrac
     };
 
     expect(generateEpisodeInputSchema.safeParse(invalid).success).toBeFalsy();
-  });
-
-  it("validates regenerateEpisodeScene input with prompt override", () => {
-    const valid = {
-      episodeId: "ep_123",
-      promptOverride: "Cinematic close-up of an ancient golden compass",
-      sceneNumber: 2,
-    };
-
-    expect(
-      regenerateEpisodeSceneInputSchema.safeParse(valid).success
-    ).toBeTruthy();
-  });
-
-  it("rejects regenerateEpisodeScene when sceneNumber is zero or negative", () => {
-    const invalid = {
-      episodeId: "ep_123",
-      sceneNumber: 0,
-    };
-
-    expect(
-      regenerateEpisodeSceneInputSchema.safeParse(invalid).success
-    ).toBeFalsy();
   });
 });

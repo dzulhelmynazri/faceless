@@ -1,7 +1,6 @@
 import { createGatewayProvider } from "@ai-sdk/gateway";
 import type { WordTimestamp } from "@faceless/contracts/series";
 import type { Files } from "@faceless/storage";
-import { isNonEmptyString } from "@faceless/utils";
 import { generateImage } from "ai";
 
 import { ENV } from "../../env";
@@ -38,19 +37,6 @@ export interface GeneratedSceneRecord {
 export interface GenerateEpisodeScenesOutput {
   scenes: GeneratedSceneRecord[];
   thumbnailUrl: string;
-}
-
-export interface RegenerateSingleSceneInput {
-  userId: string;
-  seriesId: string;
-  episodeId: string;
-  artStyleId: string;
-  sceneNumber: number;
-  narrationChunk: string;
-  visualPrompt: string;
-  duration: number;
-  promptOverride?: string;
-  storage: Files;
 }
 
 export const DEFAULT_VISUAL_MODEL = "bfl/flux-2-flex";
@@ -194,58 +180,4 @@ export const generateEpisodeScenes = async (
     scenes: results,
     thumbnailUrl: primaryScene.imageUrl,
   };
-};
-
-export const regenerateSingleScene = async (
-  input: RegenerateSingleSceneInput
-): Promise<GeneratedSceneRecord> => {
-  const model = getGateway().imageModel(DEFAULT_VISUAL_MODEL);
-
-  const effectivePrompt = isNonEmptyString(input.promptOverride)
-    ? input.promptOverride
-    : input.visualPrompt;
-
-  const storageKey = `users/${input.userId}/series/${input.seriesId}/episodes/${input.episodeId}/scenes/scene_${input.sceneNumber}.webp`;
-
-  const attemptGenerate = async (promptToUse: string) => {
-    const enrichedPrompt = enrichPromptWithStyle({
-      visualPrompt: promptToUse,
-      artStyleId: input.artStyleId,
-    });
-
-    const { image } = await generateImage({
-      model,
-      prompt: enrichedPrompt,
-      aspectRatio: "9:16",
-      providerOptions: {
-        gateway: {
-          user: input.userId,
-          tags: [`series:${input.seriesId}`, `episode:${input.episodeId}`],
-        },
-      },
-    });
-
-    await input.storage.upload(storageKey, image.uint8Array, {
-      contentType: image.mediaType,
-    });
-
-    const imageUrl = await input.storage.url(storageKey);
-
-    return {
-      sceneNumber: input.sceneNumber,
-      narrationText: input.narrationChunk,
-      visualPrompt: promptToUse,
-      imageUrl,
-      imageKey: storageKey,
-      duration: input.duration,
-    };
-  };
-
-  try {
-    return await attemptGenerate(effectivePrompt);
-  } catch {
-    const sanitizedPrompt = sanitizeModeratedPrompt(effectivePrompt);
-
-    return await attemptGenerate(sanitizedPrompt);
-  }
 };

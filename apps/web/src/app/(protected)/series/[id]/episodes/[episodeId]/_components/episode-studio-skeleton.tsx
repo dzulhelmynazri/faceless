@@ -20,27 +20,13 @@ export const EpisodeStudioSkeleton = () => (
       <div className="flex justify-center">
         <div className="w-full max-w-[360px] space-y-3">
           <Skeleton className="aspect-[9/16] w-full" />
-          <div className="grid grid-cols-6 gap-1">
-            {Array.from({ length: 6 }).map((_, i) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: skeleton items
-              <Skeleton className="h-10" key={i} />
-            ))}
-          </div>
+          <Skeleton className="h-10 w-full" />
         </div>
       </div>
 
-      {/* Tabs & Content Skeleton */}
+      {/* Style Customizer Skeleton */}
       <div className="flex min-w-0 flex-col gap-4">
-        <div className="flex items-center gap-6 border-b pb-3">
-          <Skeleton className="h-6 w-36" />
-          <Skeleton className="h-6 w-32" />
-        </div>
-
-        <div className="flex flex-col gap-3 pt-2">
-          <Skeleton className="h-44 w-full" />
-          <Skeleton className="h-44 w-full" />
-          <Skeleton className="h-44 w-full" />
-        </div>
+        <Skeleton className="h-80 w-full" />
       </div>
     </div>
   </div>
