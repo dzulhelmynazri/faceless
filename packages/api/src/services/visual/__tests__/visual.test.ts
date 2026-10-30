@@ -28,6 +28,25 @@ describe("Visual Service", () => {
       expect(result).toContain("halftone dot shading");
     });
 
+    it("enriches prompt with ghibli and pixel-art styles while trimming prompt whitespace", () => {
+      const ghibliResult = enrichPromptWithStyle({
+        visualPrompt: "  A tranquil cottage in a grassy meadow  ",
+        artStyleId: "ghibli",
+      });
+
+      const pixelResult = enrichPromptWithStyle({
+        visualPrompt: "Cyberpunk alleyway with neon signs",
+        artStyleId: "pixel-art",
+      });
+
+      expect(
+        ghibliResult.startsWith(
+          "A tranquil cottage in a grassy meadow, hand-painted Studio Ghibli"
+        )
+      ).toBeTruthy();
+      expect(pixelResult).toContain("retro 16-bit pixel art");
+    });
+
     it("falls back to realism when unknown artStyleId is passed", () => {
       const result = enrichPromptWithStyle({
         visualPrompt: "A lone cabin in the woods",
