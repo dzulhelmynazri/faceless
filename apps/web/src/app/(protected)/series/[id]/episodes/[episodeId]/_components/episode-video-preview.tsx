@@ -91,100 +91,95 @@ export const EpisodeVideoPreview = () => {
   );
 
   return (
-    <div className="flex w-full flex-col gap-3">
-      {/* Sleek Preview Enclosure */}
-      <div className="mx-auto flex w-full max-w-[340px] flex-col gap-3 rounded-xl border border-border bg-card p-3 shadow-xs sm:max-w-[360px]">
-        {/* 9:16 Vertical Screen Frame */}
-        <div className="relative aspect-[9/16] w-full overflow-hidden rounded-lg bg-black">
-          {isMounted ? (
-            <Player
-              acknowledgeRemotionLicense
-              autoPlay={false}
-              className="size-full object-contain"
-              clickToPlay
-              component={MainVideo}
-              compositionHeight={1920}
-              compositionWidth={1080}
-              controls={false}
-              durationInFrames={durationInFrames}
-              fps={FPS}
-              inputProps={compositionProps}
-              loop={isLooping}
-              ref={setPlayerRef}
-            />
-          ) : (
-            <div className="flex size-full flex-col items-center justify-center gap-3 bg-muted text-muted-foreground">
-              <Spinner />
-              <span className="text-xs font-medium">
-                Initializing Player...
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Integrated Scrubber & Controls */}
-        <div className="flex flex-col gap-2.5 px-0.5 pt-1">
-          {/* Timeline Slider */}
-          <Slider
-            aria-label="Video scrubber"
-            className="cursor-pointer"
-            max={durationInFrames}
-            min={0}
-            onValueChange={handleSliderChange}
-            value={[currentFrame]}
+    <div className="flex w-full flex-col gap-3 rounded-xl border border-border bg-card p-3 shadow-xs">
+      {/* 9:16 Vertical Screen Frame */}
+      <div className="relative aspect-[9/16] w-full overflow-hidden rounded-lg bg-black">
+        {isMounted ? (
+          <Player
+            acknowledgeRemotionLicense
+            autoPlay={false}
+            className="size-full object-contain"
+            clickToPlay
+            component={MainVideo}
+            compositionHeight={1920}
+            compositionWidth={1080}
+            controls={false}
+            durationInFrames={durationInFrames}
+            fps={FPS}
+            inputProps={compositionProps}
+            loop={isLooping}
+            ref={setPlayerRef}
           />
+        ) : (
+          <div className="flex size-full flex-col items-center justify-center gap-3 bg-muted text-muted-foreground">
+            <Spinner />
+            <span className="text-xs font-medium">Initializing Player...</span>
+          </div>
+        )}
+      </div>
 
-          {/* Control buttons & time display */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              <Button
-                aria-label={isPlaying ? "Pause video" : "Play video"}
-                onClick={togglePlay}
-                size="icon"
-                variant="default"
-              >
-                {isPlaying ? <Pause /> : <Play />}
-              </Button>
+      {/* Integrated Scrubber & Controls */}
+      <div className="flex flex-col gap-2.5 px-0.5 pt-1">
+        {/* Timeline Slider */}
+        <Slider
+          aria-label="Video scrubber"
+          className="cursor-pointer"
+          max={durationInFrames}
+          min={0}
+          onValueChange={handleSliderChange}
+          value={[currentFrame]}
+        />
 
-              <Button
-                aria-label={isMuted ? "Unmute audio" : "Mute audio"}
-                onClick={handleMuteToggle}
-                size="icon"
-                variant="ghost"
-              >
-                {isMuted ? <VolumeX /> : <Volume2 />}
-              </Button>
+        {/* Control buttons & time display */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            <Button
+              aria-label={isPlaying ? "Pause video" : "Play video"}
+              onClick={togglePlay}
+              size="icon"
+              variant="default"
+            >
+              {isPlaying ? <Pause /> : <Play />}
+            </Button>
 
-              <Button
-                aria-label="Toggle loop"
-                onClick={() => {
-                  setIsLooping((prev) => !prev);
-                }}
-                size="icon"
-                variant={isLooping ? "secondary" : "ghost"}
-              >
-                <Repeat />
-              </Button>
-            </div>
+            <Button
+              aria-label={isMuted ? "Unmute audio" : "Mute audio"}
+              onClick={handleMuteToggle}
+              size="icon"
+              variant="ghost"
+            >
+              {isMuted ? <VolumeX /> : <Volume2 />}
+            </Button>
 
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-xs text-muted-foreground">
-                <strong className="text-foreground">
-                  {formatTimestamp(currentTimeSeconds)}
-                </strong>
-                {" / "}
-                {formatTimestamp(totalDurationSeconds)}
-              </span>
+            <Button
+              aria-label="Toggle loop"
+              onClick={() => {
+                setIsLooping((prev) => !prev);
+              }}
+              size="icon"
+              variant={isLooping ? "secondary" : "ghost"}
+            >
+              <Repeat />
+            </Button>
+          </div>
 
-              <Button
-                aria-label="Fullscreen preview"
-                onClick={handleFullscreen}
-                size="icon"
-                variant="ghost"
-              >
-                <Maximize2 />
-              </Button>
-            </div>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-xs text-muted-foreground">
+              <strong className="text-foreground">
+                {formatTimestamp(currentTimeSeconds)}
+              </strong>
+              {" / "}
+              {formatTimestamp(totalDurationSeconds)}
+            </span>
+
+            <Button
+              aria-label="Fullscreen preview"
+              onClick={handleFullscreen}
+              size="icon"
+              variant="ghost"
+            >
+              <Maximize2 />
+            </Button>
           </div>
         </div>
       </div>

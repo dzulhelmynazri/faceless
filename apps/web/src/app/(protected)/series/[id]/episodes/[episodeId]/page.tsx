@@ -9,7 +9,7 @@ import { StudioActionBar } from "./_components/studio-action-bar";
 import { EpisodeStudioProvider } from "./_context/episode-studio-context";
 
 const EpisodeStudioContent = () => (
-  <div className="flex w-full flex-col gap-6">
+  <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
     <StudioActionBar />
 
     <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[360px_1fr]">
