@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun run src/index.ts",
-    "start": "bun run src/index.ts",
+    "dev": "varlock run -- bun run src/index.ts",
+    "start": "varlock run -- bun run src/index.ts",
     "deploy": "wrangler deploy",
     "check-types": "tsc --noEmit",
     "env:generate": "varlock codegen"

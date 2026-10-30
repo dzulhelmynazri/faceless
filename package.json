@@ -42,6 +42,7 @@
     "lint": "ultracite check",
     "dev:native": "turbo run dev -F native --",
     "dev:web": "turbo run dev -F web --",
+    "dev:render": "turbo run dev -F render-service --",
     "db:push": "turbo run db:push -F @faceless/db --",
     "db:studio": "turbo run db:studio -F @faceless/db --",
     "db:generate": "turbo run db:generate -F @faceless/db --",
