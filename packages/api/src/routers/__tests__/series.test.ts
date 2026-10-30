@@ -19,6 +19,29 @@ interface AutumnCheckResponse {
   };
 }
 
+const createMockAutumn = (allowed = true) => {
+  const autumn = new Autumn({ secretKey: "am_sk_test_key" });
+
+  Object.defineProperty(autumn, "customers", {
+    configurable: true,
+    value: {
+      getOrCreate: vi
+        .fn<() => Promise<{ id: string }>>()
+        .mockResolvedValue({ id: "user_test_123" }),
+    },
+  });
+
+  Object.defineProperty(autumn, "check", {
+    configurable: true,
+    value: vi.fn<() => Promise<AutumnCheckResponse>>().mockResolvedValue({
+      allowed,
+      balance: { granted: 10, remaining: 5, usage: 5 },
+    }),
+  });
+
+  return autumn;
+};
+
 const createTestContext = (
   db = createPrismaClient({ DATABASE_URL: "postgresql://localhost:5432/test" }),
   sessionUserId = "user_test_123",
@@ -282,6 +305,137 @@ describe("seriesCoreRouter", () => {
           voiceId: "voice_123",
         },
       });
+    });
+
+    it("links all connected accounts when socialConnectionIds contains __ALL__", async () => {
+      const autumn = createMockAutumn(true);
+
+      const db = createPrismaClient({
+        DATABASE_URL: "postgresql://localhost:5432/test",
+      });
+
+      const findManyConnectionsSpy = vi
+        .fn<() => Promise<{ id: string }[]>>()
+        .mockResolvedValue([{ id: "conn_1" }, { id: "conn_2" }]);
+
+      Object.defineProperty(db, "socialConnection", {
+        configurable: true,
+        value: {
+          findMany: findManyConnectionsSpy,
+        },
+      });
+
+      const createSeriesSpy = vi
+        .fn<
+          (params: {
+            data: {
+              socialAccounts?: {
+                create?: { socialConnectionId: string }[];
+              };
+            };
+          }) => Promise<{ id: string; name: string }>
+        >()
+        .mockResolvedValue({
+          id: "series_all_123",
+          name: "Broadcasting Series",
+        });
+
+      Object.defineProperty(db, "series", {
+        configurable: true,
+        value: {
+          create: createSeriesSpy,
+        },
+      });
+
+      const caller = createCaller(
+        createTestContext(db, "user_test_123", autumn)
+      );
+
+      const result = await caller.series.create({
+        artStyleId: "anime",
+        captionStyleId: "default",
+        name: "Broadcasting Series",
+        nichePrompt: "Tech stories",
+        socialConnectionIds: ["__ALL__"],
+        voiceId: "voice_123",
+      });
+
+      expect(result.success).toBeTruthy();
+      expect(findManyConnectionsSpy).toHaveBeenCalledWith({
+        select: { id: true },
+        where: {
+          status: "CONNECTED",
+          userId: "user_test_123",
+        },
+      });
+
+      const createCall = createSeriesSpy.mock.calls[0]?.[0];
+
+      expect(createCall?.data.socialAccounts?.create).toStrictEqual([
+        { socialConnectionId: "conn_1" },
+        { socialConnectionId: "conn_2" },
+      ]);
+    });
+
+    it("skips social connection queries when socialConnectionIds is empty", async () => {
+      const autumn = createMockAutumn(true);
+
+      const db = createPrismaClient({
+        DATABASE_URL: "postgresql://localhost:5432/test",
+      });
+
+      const findManyConnectionsSpy = vi
+        .fn<() => Promise<{ id: string }[]>>()
+        .mockResolvedValue([]);
+
+      Object.defineProperty(db, "socialConnection", {
+        configurable: true,
+        value: {
+          findMany: findManyConnectionsSpy,
+        },
+      });
+
+      const createSeriesSpy = vi
+        .fn<
+          (params: {
+            data: {
+              socialAccounts?: {
+                create?: { socialConnectionId: string }[];
+              };
+            };
+          }) => Promise<{ id: string; name: string }>
+        >()
+        .mockResolvedValue({
+          id: "series_empty_123",
+          name: "Standalone Series",
+        });
+
+      Object.defineProperty(db, "series", {
+        configurable: true,
+        value: {
+          create: createSeriesSpy,
+        },
+      });
+
+      const caller = createCaller(
+        createTestContext(db, "user_test_123", autumn)
+      );
+
+      const result = await caller.series.create({
+        artStyleId: "anime",
+        captionStyleId: "default",
+        name: "Standalone Series",
+        nichePrompt: "Tech stories",
+        socialConnectionIds: [],
+        voiceId: "voice_123",
+      });
+
+      expect(result.success).toBeTruthy();
+      expect(findManyConnectionsSpy).not.toHaveBeenCalled();
+
+      const createCall = createSeriesSpy.mock.calls[0]?.[0];
+
+      expect(createCall?.data.socialAccounts?.create).toStrictEqual([]);
     });
   });
 
@@ -591,6 +745,71 @@ describe("seriesCoreRouter", () => {
       expect(result.status).toBe("PAUSED");
       expect(updateSpy).toHaveBeenCalledWith({
         data: { status: "PAUSED" },
+        where: { id: "series_1" },
+      });
+    });
+  });
+
+  describe("update", () => {
+    it("rejects cross-tenant series update", async () => {
+      const db = createPrismaClient({
+        DATABASE_URL: "postgresql://localhost:5432/test",
+      });
+
+      Object.defineProperty(db, "series", {
+        configurable: true,
+        value: {
+          findFirst: vi.fn<() => Promise<null>>().mockResolvedValue(null),
+        },
+      });
+
+      const caller = createCaller(createTestContext(db, "user_attacker"));
+
+      await expect(
+        caller.series.update({
+          id: "series_victim",
+          name: "Hijacked Series Name",
+        })
+      ).rejects.toMatchObject({
+        code: "NOT_FOUND",
+        message: "Series not found",
+      });
+    });
+
+    it("updates series name and publish time for verified owner", async () => {
+      const db = createPrismaClient({
+        DATABASE_URL: "postgresql://localhost:5432/test",
+      });
+
+      const updateSpy = vi
+        .fn<() => Promise<{ id: string }>>()
+        .mockResolvedValue({ id: "series_1" });
+
+      Object.defineProperty(db, "series", {
+        configurable: true,
+        value: {
+          findFirst: vi
+            .fn<() => Promise<{ id: string }>>()
+            .mockResolvedValue({ id: "series_1" }),
+          update: updateSpy,
+        },
+      });
+
+      const caller = createCaller(createTestContext(db, "user_owner"));
+
+      const result = await caller.series.update({
+        id: "series_1",
+        name: "Renamed Series",
+        publishTime: "06:00 PM",
+      });
+
+      expect(result.success).toBeTruthy();
+      expect(result.id).toBe("series_1");
+      expect(updateSpy).toHaveBeenCalledWith({
+        data: {
+          name: "Renamed Series",
+          publishTime: "06:00 PM",
+        },
         where: { id: "series_1" },
       });
     });
