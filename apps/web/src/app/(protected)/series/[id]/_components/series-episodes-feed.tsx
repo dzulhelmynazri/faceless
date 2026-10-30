@@ -18,8 +18,6 @@ import Image from "next/image";
 import Link from "next/link";
 import * as React from "react";
 
-import { SceneGalleryDialog } from "./scene-gallery-dialog";
-
 type EpisodeTab = "ALL" | "READY" | "SCHEDULED" | "PUBLISHED";
 
 type EpisodeItem = GetSeriesByIdOutput["episodes"][number];
@@ -40,9 +38,6 @@ export const SeriesEpisodesFeed = ({
   episodes,
 }: SeriesEpisodesFeedProps) => {
   const [activeTab, setActiveTab] = React.useState<EpisodeTab>("ALL");
-
-  const [galleryEpisode, setGalleryEpisode] =
-    React.useState<EpisodeItem | null>(null);
 
   const filteredEpisodes = React.useMemo(() => {
     if (activeTab === "READY") {
@@ -151,17 +146,6 @@ export const SeriesEpisodesFeed = ({
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {ep.scenes.length > 0 && (
-                      <Button
-                        onClick={() => {
-                          setGalleryEpisode(ep);
-                        }}
-                        variant="outline"
-                      >
-                        <Images data-icon="inline-start" />
-                        Preview Scenes
-                      </Button>
-                    )}
                     <Button
                       nativeButton={false}
                       render={
@@ -179,17 +163,6 @@ export const SeriesEpisodesFeed = ({
           ))}
         </div>
       )}
-
-      <SceneGalleryDialog
-        episode={galleryEpisode}
-        isOpen={galleryEpisode !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setGalleryEpisode(null);
-          }
-        }}
-        seriesId={seriesId}
-      />
     </div>
   );
 };
