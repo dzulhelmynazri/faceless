@@ -180,8 +180,9 @@ export const StudioActionBar = () => {
           </>
         )}
 
-        {/* APPROVED: Direct Publish Now */}
-        {status === "APPROVED" && (
+        {/* APPROVED or FAILED (with videoUrl): Direct Publish Now / Retry */}
+        {(status === "APPROVED" ||
+          (status === "FAILED" && isNonEmptyString(videoUrl))) && (
           <Button
             disabled={isPending}
             onClick={() => {
@@ -194,7 +195,7 @@ export const StudioActionBar = () => {
             ) : (
               <Send data-icon="inline-start" />
             )}
-            Publish Now
+            {status === "FAILED" ? "Retry Publishing" : "Publish Now"}
           </Button>
         )}
       </div>

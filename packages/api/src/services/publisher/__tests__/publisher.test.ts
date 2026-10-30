@@ -101,8 +101,13 @@ describe("Publisher Module", () => {
       expect(target).toStrictEqual({
         accountId: "tt_user_789",
         aiGenerated: true,
+        brandedContent: false,
         consentGiven: true,
+        disableComments: false,
+        disableDuet: false,
+        disableStitch: false,
         isDraft: false,
+        ownBrand: false,
         platform: "tiktok",
         privacy: "PUBLIC_TO_EVERYONE",
       });

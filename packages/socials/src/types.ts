@@ -38,17 +38,17 @@ export interface TikTokTarget {
   isDraft: boolean;
   /** Required — TikTok adapter rejects if not explicitly set. */
   aiGenerated: boolean;
-  disableComments?: boolean;
-  disableDuet?: boolean;
-  disableStitch?: boolean;
-  brandedContent?: boolean;
-  ownBrand?: boolean;
+  disableComments: boolean;
+  disableDuet: boolean;
+  disableStitch: boolean;
+  brandedContent: boolean;
+  ownBrand: boolean;
 }
 
 export interface InstagramTarget {
   platform: "instagram";
   accountId: string;
-  shareToFeed?: boolean;
+  shareToFeed: boolean;
 }
 
 export type SocialAccountTarget =

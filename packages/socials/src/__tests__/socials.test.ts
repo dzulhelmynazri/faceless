@@ -35,6 +35,11 @@ describe("@faceless/socials", () => {
           consentGiven: true,
           isDraft: false,
           aiGenerated: false,
+          disableComments: false,
+          disableDuet: false,
+          disableStitch: false,
+          brandedContent: false,
+          ownBrand: false,
         },
         {
           platform: "youtube",
@@ -45,6 +50,7 @@ describe("@faceless/socials", () => {
         {
           platform: "instagram",
           accountId: "instagram-account-1",
+          shareToFeed: true,
         },
       ],
     });
@@ -82,6 +88,11 @@ describe("@faceless/socials", () => {
           consentGiven: true,
           isDraft: false,
           aiGenerated: false,
+          disableComments: false,
+          disableDuet: false,
+          disableStitch: false,
+          brandedContent: false,
+          ownBrand: false,
         },
         {
           platform: "youtube",
@@ -190,6 +201,7 @@ describe("@faceless/socials", () => {
         {
           accountId: "instagram-account-1",
           platform: "instagram",
+          shareToFeed: true,
         },
       ],
       title: "No Description Video",
@@ -210,6 +222,7 @@ describe("@faceless/socials", () => {
     const target: SocialAccountTarget = {
       accountId: "twitter-1",
       platform: "instagram",
+      shareToFeed: true,
     };
 
     Reflect.set(target, "platform", "twitter");

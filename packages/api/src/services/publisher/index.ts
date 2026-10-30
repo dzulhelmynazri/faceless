@@ -44,8 +44,13 @@ export const buildTargetForPlatform = (
     return {
       accountId: conn.platformUserId,
       aiGenerated: true,
+      brandedContent: false,
       consentGiven: true,
+      disableComments: false,
+      disableDuet: false,
+      disableStitch: false,
       isDraft: false,
+      ownBrand: false,
       platform: "tiktok",
       privacy: "PUBLIC_TO_EVERYONE",
     };
@@ -238,9 +243,20 @@ export const publishEpisodeToSocials = async ({
       };
     }
 
+    const firstIssue = publishResult.issues?.[0]?.message;
+
+    const firstOutcomeError = publishResult.outcomes.find((o) =>
+      isNonEmptyString(o.error)
+    )?.error;
+
+    const failureError =
+      firstIssue ??
+      firstOutcomeError ??
+      "Failed to publish to all target platforms";
+
     await db.seriesEpisode.update({
       data: {
-        error: "Failed to publish to all target platforms",
+        error: failureError,
         status: "FAILED",
       },
       where: { id: episode.id },

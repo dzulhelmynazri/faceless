@@ -207,6 +207,7 @@ export const publishVideoToSocials = async (
   const media: PublishRequest["content"]["media"] = [
     {
       kind: "video",
+      mimeType: "video/mp4",
       source: {
         kind: "https-url",
         url: input.videoUrl,
