@@ -102,12 +102,9 @@ export const StudioActionBar = () => {
         <Separator orientation="vertical" className="h-4" />
 
         <div className="flex flex-col gap-0.5">
-          <div className="flex items-center gap-2">
-            <h1 className="text-base font-bold tracking-tight">
-              Episode #{episodeNumber}: {episodeTitle}
-            </h1>
-            <Badge variant="outline">{status}</Badge>
-          </div>
+          <h1 className="text-base font-bold tracking-tight">
+            Episode #{episodeNumber}: {episodeTitle}
+          </h1>
           {isNonEmptyString(error) && status === "FAILED" && (
             <span className="text-xs text-destructive">{error}</span>
           )}
