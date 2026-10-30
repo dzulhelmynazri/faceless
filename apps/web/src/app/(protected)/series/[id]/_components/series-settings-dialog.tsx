@@ -19,6 +19,7 @@ import * as React from "react";
 interface SeriesSettingsFormProps {
   initialName: string;
   initialPublishTime: string;
+  nichePrompt?: string;
   status: "ACTIVE" | "PAUSED" | "ARCHIVED";
   isSaving: boolean;
   onClose: () => void;
@@ -30,6 +31,7 @@ interface SeriesSettingsFormProps {
 const SeriesSettingsForm = ({
   initialName,
   initialPublishTime,
+  nichePrompt,
   status,
   isSaving,
   onClose,
@@ -73,6 +75,20 @@ const SeriesSettingsForm = ({
             Episodes trigger automated generation 2 hours before this time.
           </span>
         </div>
+
+        {Boolean(nichePrompt) && (
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="series-prompt-preview">
+              Generation Concept &amp; Prompt
+            </Label>
+            <div
+              id="series-prompt-preview"
+              className="max-h-28 overflow-y-auto rounded-md border border-input bg-muted/30 p-2.5 text-xs leading-relaxed text-muted-foreground select-text"
+            >
+              {nichePrompt}
+            </div>
+          </div>
+        )}
 
         <Separator />
 
@@ -131,6 +147,7 @@ interface SeriesSettingsDialogProps {
   onOpenChange: (open: boolean) => void;
   initialName: string;
   initialPublishTime: string;
+  nichePrompt?: string;
   status: "ACTIVE" | "PAUSED" | "ARCHIVED";
   isSaving: boolean;
   onSave: (data: { name: string; publishTime: string }) => void;
@@ -143,6 +160,7 @@ export const SeriesSettingsDialog = ({
   onOpenChange,
   initialName,
   initialPublishTime,
+  nichePrompt,
   status,
   isSaving,
   onSave,
@@ -164,6 +182,7 @@ export const SeriesSettingsDialog = ({
           initialPublishTime={initialPublishTime}
           isSaving={isSaving}
           key={`${initialName}-${initialPublishTime}`}
+          nichePrompt={nichePrompt}
           onClose={() => {
             onOpenChange(false);
           }}

@@ -6,7 +6,6 @@ import { Button } from "@faceless/ui/components/button";
 import { Card, CardContent } from "@faceless/ui/components/card";
 import {
   Empty,
-  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
@@ -14,7 +13,7 @@ import {
 } from "@faceless/ui/components/empty";
 import { Tabs, TabsList, TabsTrigger } from "@faceless/ui/components/tabs";
 import { isNonEmptyString } from "@faceless/utils";
-import { ArrowUpRight, Images, Sparkles, Video, Volume2 } from "lucide-react";
+import { ArrowUpRight, Images, Video, Volume2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import * as React from "react";
@@ -28,8 +27,6 @@ type EpisodeItem = GetSeriesByIdOutput["episodes"][number];
 interface SeriesEpisodesFeedProps {
   seriesId: string;
   episodes: EpisodeItem[];
-  isGenerating?: boolean;
-  onGenerateEpisode: () => void;
 }
 
 const isEpisodeTab = (val: string): val is EpisodeTab =>
@@ -38,31 +35,9 @@ const isEpisodeTab = (val: string): val is EpisodeTab =>
   val === "SCHEDULED" ||
   val === "PUBLISHED";
 
-const getStatusBadgeVariant = (status: EpisodeItem["status"]) => {
-  if (status === "PUBLISHED") {
-    return "default";
-  }
-
-  if (
-    status === "APPROVED" ||
-    status === "GENERATING" ||
-    status === "PENDING"
-  ) {
-    return "secondary";
-  }
-
-  if (status === "FAILED") {
-    return "destructive";
-  }
-
-  return "outline";
-};
-
 export const SeriesEpisodesFeed = ({
   seriesId,
   episodes,
-  isGenerating = false,
-  onGenerateEpisode,
 }: SeriesEpisodesFeedProps) => {
   const [activeTab, setActiveTab] = React.useState<EpisodeTab>("ALL");
 
@@ -91,8 +66,7 @@ export const SeriesEpisodesFeed = ({
         <div>
           <h2 className="text-lg font-semibold tracking-tight">Episode Feed</h2>
           <p className="text-xs text-muted-foreground">
-            Review generated scripts, preview live Remotion videos, and track
-            social publication.
+            Review scripts, preview videos, and track publishing.
           </p>
         </div>
 
@@ -125,14 +99,6 @@ export const SeriesEpisodesFeed = ({
               or you can create one right now on demand.
             </EmptyDescription>
           </EmptyHeader>
-          <EmptyContent>
-            <Button disabled={isGenerating} onClick={onGenerateEpisode}>
-              <Sparkles data-icon="inline-start" />
-              {isGenerating
-                ? "Generating Episode..."
-                : "Generate First Episode"}
-            </Button>
-          </EmptyContent>
         </Empty>
       ) : (
         <div className="grid grid-cols-1 gap-3">
@@ -162,9 +128,7 @@ export const SeriesEpisodesFeed = ({
                         <span className="text-sm font-semibold">
                           {ep.title}
                         </span>
-                        <Badge variant={getStatusBadgeVariant(ep.status)}>
-                          {ep.status}
-                        </Badge>
+                        <Badge>{ep.status}</Badge>
                         {isNonEmptyString(ep.audioUrl) && (
                           <Badge variant="outline">
                             <Volume2 data-icon="inline-start" />

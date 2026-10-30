@@ -17,7 +17,6 @@ import {
   Card,
   CardAction,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -44,10 +43,7 @@ import { isNonEmptyString } from "@faceless/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Archive,
-  ArrowRight,
   Clock,
-  Layers,
-  Mic,
   MoreVertical,
   Pause,
   Play,
@@ -67,18 +63,6 @@ type FilterTab = "ALL" | "ACTIVE" | "PAUSED" | "ARCHIVED";
 
 const isFilterTab = (val: string): val is FilterTab =>
   val === "ALL" || val === "ACTIVE" || val === "PAUSED" || val === "ARCHIVED";
-
-const getSeriesStatusVariant = (status: "ACTIVE" | "PAUSED" | "ARCHIVED") => {
-  if (status === "ACTIVE") {
-    return "default";
-  }
-
-  if (status === "PAUSED") {
-    return "secondary";
-  }
-
-  return "outline";
-};
 
 const SocialIcon = ({
   platform,
@@ -160,15 +144,8 @@ const SeriesCard = ({ series }: { series: SeriesItem }) => {
                   {series.name}
                 </Link>
               </CardTitle>
-              <Badge variant={getSeriesStatusVariant(series.status)}>
-                {series.status}
-              </Badge>
+              <Badge>{series.status}</Badge>
             </div>
-            <CardDescription>
-              {isNonEmptyString(series.nichePresetId)
-                ? `Niche: ${series.nichePresetId}`
-                : "Custom Series"}
-            </CardDescription>
           </div>
 
           <CardAction>
@@ -183,18 +160,18 @@ const SeriesCard = ({ series }: { series: SeriesItem }) => {
                 <DropdownMenuItem onClick={handleTogglePause}>
                   {series.status === "ACTIVE" ? (
                     <>
-                      <Pause className="size-4" />
+                      <Pause data-icon="inline-start" />
                       Pause Series
                     </>
                   ) : (
                     <>
-                      <Play className="size-4" />
+                      <Play data-icon="inline-start" />
                       Resume Series
                     </>
                   )}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleToggleArchive}>
-                  <Archive className="size-4" />
+                  <Archive data-icon="inline-start" />
                   {series.status === "ARCHIVED" ? "Unarchive" : "Archive"}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -202,11 +179,10 @@ const SeriesCard = ({ series }: { series: SeriesItem }) => {
                   onClick={() => {
                     setShowDeleteDialog(true);
                   }}
+                  variant="destructive"
                 >
-                  <span className="flex items-center text-destructive">
-                    <Trash2 className="size-4" />
-                    Delete Series
-                  </span>
+                  <Trash2 data-icon="inline-start" />
+                  Delete Series
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -221,23 +197,6 @@ const SeriesCard = ({ series }: { series: SeriesItem }) => {
                 {isNonEmptyString(series.publishTime)
                   ? `Posts at ${series.publishTime}`
                   : "Manual schedule"}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Mic className="size-4 shrink-0" />
-              <span>
-                {series.voiceId}
-                {isNonEmptyString(series.language) && ` (${series.language})`}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Layers className="size-4 shrink-0" />
-              <span>
-                {isNonEmptyString(series.artStyleId)
-                  ? `Style: ${series.artStyleId}`
-                  : "Standard art style"}
               </span>
             </div>
 
@@ -261,11 +220,9 @@ const SeriesCard = ({ series }: { series: SeriesItem }) => {
           <Button
             nativeButton={false}
             render={<Link href={`/series/${series.id}`} />}
-            size="sm"
             variant="ghost"
           >
             Manage
-            <ArrowRight data-icon="inline-end" />
           </Button>
         </CardFooter>
       </Card>

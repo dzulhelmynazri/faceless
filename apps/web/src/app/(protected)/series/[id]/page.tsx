@@ -31,7 +31,6 @@ import { toast } from "sonner";
 
 import { trpc } from "@/utils/trpc";
 
-import { SeriesDetailHeader } from "./_components/series-detail-header";
 import { SeriesEpisodesFeed } from "./_components/series-episodes-feed";
 import { SeriesSettingsDialog } from "./_components/series-settings-dialog";
 
@@ -241,16 +240,8 @@ const SeriesDetailPage = ({ params }: PageProps<"/series/[id]">) => {
         </div>
       </div>
 
-      {/* Series Header Card */}
-      <SeriesDetailHeader series={series} />
-
       {/* Episodes Section */}
-      <SeriesEpisodesFeed
-        episodes={series.episodes}
-        isGenerating={generateEpisodeMutation.isPending}
-        onGenerateEpisode={handleGenerateEpisode}
-        seriesId={series.id}
-      />
+      <SeriesEpisodesFeed episodes={series.episodes} seriesId={series.id} />
 
       {/* Settings Dialog */}
       <SeriesSettingsDialog
@@ -258,6 +249,7 @@ const SeriesDetailPage = ({ params }: PageProps<"/series/[id]">) => {
         initialPublishTime={series.publishTime}
         isOpen={isSettingsOpen}
         isSaving={updateSeriesMutation.isPending}
+        nichePrompt={series.nichePrompt}
         onOpenChange={setIsSettingsOpen}
         onOpenDeleteDialog={() => {
           setShowDeleteDialog(true);
