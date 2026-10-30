@@ -6,7 +6,10 @@ import {
   ELEVENLABS_MODELS,
   ELEVENLABS_PRICING,
   episodeCustomizationSchema,
+  generateEpisodeInputSchema,
+  generatedScriptPayloadSchema,
   publishEpisodeNowOutputSchema,
+  regenerateEpisodeSceneInputSchema,
   SERIES_LANGUAGES,
   SERIES_PRESETS,
   updateEpisodeSceneInputSchema,
@@ -227,6 +230,107 @@ describe("publishEpisodeNowOutputSchema contract", () => {
 
     expect(
       publishEpisodeNowOutputSchema.safeParse(invalid).success
+    ).toBeFalsy();
+  });
+});
+
+describe("generatedScriptPayloadSchema contract", () => {
+  const validScript = {
+    fullNarration:
+      "Deep inside an abandoned research station in Antarctica, scientists made an impossible discovery that was classified for decades.",
+    hook: "In 1998, Russian drillers stopped three miles deep because of this sound.",
+    reasoning: "High-curiosity historical hook with escalating pacing",
+    scenes: [
+      {
+        estimatedSeconds: 4,
+        narrationChunk:
+          "Deep inside an abandoned research station in Antarctica,",
+        sceneNumber: 1,
+        visualPrompt: "Desolate Antarctic snowstorm engulfing a rusted outpost",
+      },
+      {
+        estimatedSeconds: 4,
+        narrationChunk: "scientists made an impossible discovery",
+        sceneNumber: 2,
+        visualPrompt:
+          "Subterranean ice cave with mysterious glowing thermal vent",
+      },
+      {
+        estimatedSeconds: 4,
+        narrationChunk: "that was classified for decades.",
+        sceneNumber: 3,
+        visualPrompt: "Declassified red-stamped confidential documents",
+      },
+    ],
+    targetDurationSeconds: 12,
+    title: "The Antarctic Anomaly",
+    viralityScore: 9,
+  };
+
+  it("validates compliant script payload with minimum 3 scenes", () => {
+    expect(
+      generatedScriptPayloadSchema.safeParse(validScript).success
+    ).toBeTruthy();
+  });
+
+  it("rejects payload when scenes array has fewer than 3 scenes", () => {
+    const invalid = {
+      ...validScript,
+      scenes: validScript.scenes.slice(0, 2),
+    };
+
+    expect(generatedScriptPayloadSchema.safeParse(invalid).success).toBeFalsy();
+  });
+
+  it("rejects payload when hook is shorter than 5 characters", () => {
+    const invalid = {
+      ...validScript,
+      hook: "Hey!",
+    };
+
+    expect(generatedScriptPayloadSchema.safeParse(invalid).success).toBeFalsy();
+  });
+});
+
+describe("generateEpisodeInputSchema & regenerateEpisodeSceneInputSchema contracts", () => {
+  it("validates generateEpisode input with optional topic override", () => {
+    const valid = {
+      seriesId: "series_test_123",
+      topicOverride: "The mysterious Bermuda Triangle disappearance",
+    };
+
+    expect(generateEpisodeInputSchema.safeParse(valid).success).toBeTruthy();
+  });
+
+  it("rejects generateEpisode input when topic override exceeds 200 characters", () => {
+    const invalid = {
+      seriesId: "series_test_123",
+      topicOverride: "T".repeat(201),
+    };
+
+    expect(generateEpisodeInputSchema.safeParse(invalid).success).toBeFalsy();
+  });
+
+  it("validates regenerateEpisodeScene input with prompt override", () => {
+    const valid = {
+      episodeId: "ep_123",
+      promptOverride: "Cinematic close-up of an ancient golden compass",
+      sceneNumber: 2,
+    };
+
+    expect(
+      regenerateEpisodeSceneInputSchema.safeParse(valid).success
+    ).toBeTruthy();
+  });
+
+  it("rejects regenerateEpisodeScene when sceneNumber is zero or negative", () => {
+    const invalid = {
+      episodeId: "ep_123",
+      sceneNumber: 0,
+    };
+
+    expect(
+      regenerateEpisodeSceneInputSchema.safeParse(invalid).success
     ).toBeFalsy();
   });
 });
