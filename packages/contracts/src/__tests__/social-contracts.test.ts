@@ -7,7 +7,7 @@ import {
   socialPlatformSchema,
 } from "../social";
 
-describe(socialPlatformSchema, () => {
+describe("socialPlatformSchema contract", () => {
   it("accepts supported uppercase platforms", () => {
     expect(socialPlatformSchema.safeParse("TIKTOK").success).toBeTruthy();
     expect(socialPlatformSchema.safeParse("YOUTUBE").success).toBeTruthy();
@@ -20,7 +20,7 @@ describe(socialPlatformSchema, () => {
   });
 });
 
-describe(socialPlatformParamSchema, () => {
+describe("socialPlatformParamSchema contract", () => {
   it("normalizes case-insensitive input to uppercase platform enum", () => {
     expect(socialPlatformParamSchema.parse("tiktok")).toBe("TIKTOK");
     expect(socialPlatformParamSchema.parse("YouTube")).toBe("YOUTUBE");
@@ -31,7 +31,7 @@ describe(socialPlatformParamSchema, () => {
   });
 });
 
-describe(oauthCallbackQuerySchema, () => {
+describe("oauthCallbackQuerySchema contract", () => {
   it("validates successful callback query with platform transform", () => {
     const valid = {
       code: "auth_code_123",
@@ -55,7 +55,7 @@ describe(oauthCallbackQuerySchema, () => {
   });
 });
 
-describe(socialConnectionItemSchema, () => {
+describe("socialConnectionItemSchema contract", () => {
   it("validates valid connection object with ISO datetime", () => {
     const valid = {
       avatarUrl: "https://r2.faceless.video/avatars/u1.png",

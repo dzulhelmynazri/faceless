@@ -7,7 +7,7 @@ import {
   wordTimestampSchema,
 } from "../series";
 
-describe(createSeriesInputSchema, () => {
+describe("createSeriesInputSchema contract", () => {
   it("validates minimal valid payload and populates schema defaults", () => {
     const minimal = {
       artStyleId: "polaroid",
@@ -54,7 +54,7 @@ describe(createSeriesInputSchema, () => {
   });
 });
 
-describe(captionStyleIdSchema, () => {
+describe("captionStyleIdSchema contract", () => {
   it("accepts known caption style identifiers", () => {
     const validStyles = [
       "bold-stroke",
@@ -78,7 +78,7 @@ describe(captionStyleIdSchema, () => {
   });
 });
 
-describe(wordTimestampSchema, () => {
+describe("wordTimestampSchema contract", () => {
   it("validates clean word and non-negative timestamps", () => {
     const valid = {
       cleanWord: "ancient",
@@ -102,7 +102,7 @@ describe(wordTimestampSchema, () => {
   });
 });
 
-describe(episodeCustomizationSchema, () => {
+describe("episodeCustomizationSchema contract", () => {
   it("validates customization with nullable bgmUrl and glitch toggle", () => {
     const valid = {
       bgmUrl: null,
