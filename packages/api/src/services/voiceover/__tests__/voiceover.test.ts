@@ -32,9 +32,103 @@ describe("Voiceover Module", () => {
 
       expect(result).toBe("Word one word two");
     });
+
+    it("strips strikethrough and blockquote markdown markers", () => {
+      const input = "> ~Outdated theory~ New discovery.";
+      const result = sanitizeNarration(input);
+
+      expect(result).toBe("Outdated theory New discovery.");
+    });
   });
 
   describe(parseAlignmentToWords, () => {
+    it("returns empty array and zero duration for empty character alignment", () => {
+      const alignment: RawElevenLabsAlignment = {
+        character_end_times_seconds: [],
+        character_start_times_seconds: [],
+        characters: [],
+      };
+
+      const { words, audioDuration } = parseAlignmentToWords(alignment);
+
+      expect(words).toHaveLength(0);
+      expect(audioDuration).toBe(0);
+    });
+
+    it("handles multiple consecutive whitespace and newline separators", () => {
+      const alignment: RawElevenLabsAlignment = {
+        character_end_times_seconds: [
+          0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9,
+        ],
+        character_start_times_seconds: [
+          0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8,
+        ],
+        characters: ["A", " ", " ", " ", "\n", "\n", " ", " ", "B"],
+      };
+
+      const { words, audioDuration } = parseAlignmentToWords(alignment);
+
+      expect(words).toStrictEqual([
+        { cleanWord: "A", end: 0.1, start: 0, word: "A" },
+        { cleanWord: "B", end: 0.9, start: 0.8, word: "B" },
+      ]);
+      expect(audioDuration).toBe(0.9);
+    });
+
+    it("strips outer punctuation while keeping internal hyphens and clean word", () => {
+      const alignment: RawElevenLabsAlignment = {
+        character_end_times_seconds: [
+          0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.3, 1.4,
+        ],
+        character_start_times_seconds: [
+          0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.3,
+        ],
+        characters: [
+          '"',
+          "h",
+          "e",
+          "l",
+          "l",
+          "o",
+          "-",
+          "w",
+          "o",
+          "r",
+          "l",
+          "d",
+          "!",
+          '"',
+        ],
+      };
+
+      const { words, audioDuration } = parseAlignmentToWords(alignment);
+
+      expect(words).toStrictEqual([
+        {
+          cleanWord: "hello-world",
+          end: 1.4,
+          start: 0,
+          word: '"hello-world!"',
+        },
+      ]);
+      expect(audioDuration).toBe(1.4);
+    });
+
+    it("falls back to trimmed token when word is composed entirely of punctuation", () => {
+      const alignment: RawElevenLabsAlignment = {
+        character_end_times_seconds: [0.2, 0.3, 0.4],
+        character_start_times_seconds: [0.1, 0.2, 0.3],
+        characters: [".", ".", "."],
+      };
+
+      const { words, audioDuration } = parseAlignmentToWords(alignment);
+
+      expect(words).toStrictEqual([
+        { cleanWord: "...", end: 0.4, start: 0.1, word: "..." },
+      ]);
+      expect(audioDuration).toBe(0.4);
+    });
+
     it("groups character-level timing into dual-token word timestamps", () => {
       // "nine hikers,"
       // characters: ['n','i','n','e',' ','h','i','k','e','r','s',',']
