@@ -22,7 +22,6 @@ import { Spinner } from "@faceless/ui/components/spinner";
 import { Switch } from "@faceless/ui/components/switch";
 import { isNonEmptyString } from "@faceless/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Music, Save, Sparkles, Type, Wand2 } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 
@@ -91,20 +90,13 @@ export const LiveStyleCustomizer = () => {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sparkles className="size-4 text-primary" />
-            <CardTitle>Live Style Customizer</CardTitle>
-          </div>
+          <CardTitle>Live Style Customizer</CardTitle>
           <Button
             disabled={updateMutation.isPending}
             onClick={handleSave}
             variant="outline"
           >
-            {updateMutation.isPending ? (
-              <Spinner data-icon="inline-start" />
-            ) : (
-              <Save data-icon="inline-start" />
-            )}
+            {updateMutation.isPending && <Spinner data-icon="inline-start" />}
             Save Overrides
           </Button>
         </div>
@@ -119,12 +111,7 @@ export const LiveStyleCustomizer = () => {
           {/* Caption Style Presets */}
           <div className="flex flex-col gap-2.5">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <Type className="size-3.5" />
-                <span className="text-xs font-medium">
-                  Caption Style Preset
-                </span>
-              </div>
+              <span className="text-xs font-medium">Caption Style Preset</span>
               <Badge variant="secondary">
                 {customization.captionStyleId.replaceAll("-", " ")}
               </Badge>
@@ -153,10 +140,7 @@ export const LiveStyleCustomizer = () => {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {/* Background Music Track */}
             <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-1.5">
-                <Music className="size-3.5" />
-                <Label htmlFor="bgm-select">Background Music (BGM)</Label>
-              </div>
+              <Label htmlFor="bgm-select">Background Music (BGM)</Label>
 
               <NativeSelect
                 aria-label="Select background music"
@@ -184,12 +168,7 @@ export const LiveStyleCustomizer = () => {
             {/* Glitch Effect Switch */}
             <div className="flex flex-col justify-between gap-2 rounded-lg border border-border/60 bg-muted/30 p-2.5">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <Wand2 className="size-3.5" />
-                  <Label htmlFor="glitch-toggle">
-                    Glitch Effect (CRT / RGB)
-                  </Label>
-                </div>
+                <Label htmlFor="glitch-toggle">Glitch Effect (CRT / RGB)</Label>
                 <Switch
                   aria-label="Toggle glitch effect"
                   checked={customization.glitchEffect}
