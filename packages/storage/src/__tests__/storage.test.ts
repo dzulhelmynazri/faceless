@@ -64,4 +64,34 @@ describe(createFiles, () => {
     expect(storage).toBeDefined();
     expect(storage.adapter).toBeDefined();
   });
+
+  it("wires cache, versioning, and soft-delete plugins onto client instance", () => {
+    const storage = createFiles({
+      R2_ACCESS_KEY_ID: "mock-key",
+      R2_ACCOUNT_ID: "mock-account",
+      R2_BUCKET: "mock-bucket",
+      R2_PUBLIC_BASE_URL: "https://r2.example.com",
+      R2_SECRET_ACCESS_KEY: "mock-secret",
+    });
+
+    expect(storage.cacheStats).toBeDefined();
+    expect(storage.restoreVersion).toBeDefined();
+    expect(storage.purge).toBeDefined();
+    expect(storage.restoreTrashed).toBeDefined();
+  });
+
+  it("passes optional custom scoping prefix to the Files instance", () => {
+    const storage = createFiles(
+      {
+        R2_ACCESS_KEY_ID: "mock-key",
+        R2_ACCOUNT_ID: "mock-account",
+        R2_BUCKET: "mock-bucket",
+        R2_PUBLIC_BASE_URL: "https://r2.example.com",
+        R2_SECRET_ACCESS_KEY: "mock-secret",
+      },
+      { prefix: "users/u_123" }
+    );
+
+    expect(storage.prefix).toBe("users/u_123");
+  });
 });
