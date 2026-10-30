@@ -104,7 +104,7 @@ export const SeriesEpisodesFeed = ({
                 {isNonEmptyString(ep.thumbnailUrl) ? (
                   <div className="relative size-full overflow-hidden rounded-lg border border-border bg-muted">
                     <Image
-                      alt={ep.title}
+                      alt={`Episode #${ep.episodeNumber}`}
                       className="object-cover"
                       fill
                       sizes="48px"
@@ -119,12 +119,8 @@ export const SeriesEpisodesFeed = ({
               </ItemMedia>
 
               <ItemContent>
-                <ItemTitle>{ep.title}</ItemTitle>
-                <ItemDescription>
-                  {isNonEmptyString(ep.topic)
-                    ? `Topic: ${ep.topic}`
-                    : "Autonomous ideation"}
-                </ItemDescription>
+                <ItemTitle>Episode #{ep.episodeNumber}</ItemTitle>
+                <ItemDescription>{ep.title}</ItemDescription>
               </ItemContent>
 
               <ItemActions>
