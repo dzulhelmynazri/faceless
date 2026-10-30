@@ -101,4 +101,6 @@ export const deleteTenantFiles = async (files: Files, orgId: string) => {
 
 export { Files, FilesError } from "files-sdk";
 
+export { memory } from "files-sdk/memory";
+
 export type { FileInfo, StoredFile } from "files-sdk";
