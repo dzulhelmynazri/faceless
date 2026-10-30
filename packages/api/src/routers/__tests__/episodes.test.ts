@@ -1,4 +1,5 @@
 import { createTestAuth } from "@faceless/auth/test";
+import type { SocialConnection } from "@faceless/db";
 import { createPrismaClient } from "@faceless/db";
 import type {
   RenderVideoParams,
@@ -689,5 +690,298 @@ describe("episodesRouter - updateEpisodeStatus", () => {
     expect(updateCall?.where).toStrictEqual({ id: "ep_123" });
     expect(updateCall?.data.status).toBe("APPROVED");
     expect(updateCall?.data.scheduledFor).toBeInstanceOf(Date);
+  });
+});
+
+const createMockConnection = (
+  platform: SocialConnection["platform"],
+  platformUserId = "user_123"
+): SocialConnection => ({
+  avatarUrl: null,
+  createdAt: new Date(),
+  id: "conn_123",
+  platform,
+  platformUserId,
+  platformUserName: "Test Creator",
+  status: "CONNECTED",
+  updatedAt: new Date(),
+  userId: "user_test_123",
+});
+
+const createMockEpisodeForPublication = (
+  status:
+    | "APPROVED"
+    | "PUBLISHED"
+    | "PUBLISHING"
+    | "FAILED"
+    | "PENDING" = "APPROVED"
+) => ({
+  audioUrl: "https://storage.example.com/audio/alice1.mp3",
+  createdAt: new Date(),
+  episodeNumber: 1,
+  error: null,
+  id: "ep_pub_123",
+  metadata: null,
+  publishedAt: null,
+  scheduledFor: null,
+  script: "Script narration chunk",
+  series: {
+    artStyleId: "anime",
+    captionStyleId: "default",
+    createdAt: new Date(),
+    customMusicKey: null,
+    customMusicUrl: null,
+    exampleScript: null,
+    glitchEffect: true,
+    id: "series_pub_123",
+    language: "en",
+    musicTrackId: null,
+    name: "Channel",
+    nichePresetId: null,
+    nichePrompt: "Tech stories",
+    publishTime: "12:00 PM",
+    socialAccounts: [
+      {
+        createdAt: new Date(),
+        id: "sa_0",
+        seriesId: "series_pub_123",
+        socialConnection: createMockConnection("TIKTOK", "tt_user_1"),
+        socialConnectionId: "conn_123",
+      },
+    ],
+    status: "ACTIVE" as const,
+    tiktokSounds: null,
+    updatedAt: new Date(),
+    userId: "user_test_123",
+    videoDuration: "30-40",
+    voiceId: "voice_1",
+  },
+  seriesId: "series_pub_123",
+  status,
+  thumbnailUrl: "https://storage.example.com/thumbs/alice1.jpg",
+  title: "Episode One",
+  topic: "Technology",
+  updatedAt: new Date(),
+  videoUrl: "https://storage.example.com/videos/alice1.mp4",
+});
+
+describe("episodesRouter - renderEpisode", () => {
+  it("rejects with NOT_FOUND when episode does not exist for session user", async () => {
+    const db = createPrismaClient({
+      DATABASE_URL: "postgresql://localhost:5432/test",
+    });
+
+    Object.defineProperty(db, "seriesEpisode", {
+      configurable: true,
+      value: {
+        findFirst: vi.fn<() => Promise<null>>().mockResolvedValue(null),
+      },
+    });
+
+    const caller = createCaller(createTestContext(db, "user_test_123"));
+
+    await expect(
+      caller.series.renderEpisode({
+        episodeId: "ep_missing",
+      })
+    ).rejects.toThrow(TRPCError);
+  });
+
+  it("rejects with CONFLICT when episode is already rendering", async () => {
+    const db = createPrismaClient({
+      DATABASE_URL: "postgresql://localhost:5432/test",
+    });
+
+    const mockEpisode = {
+      audioUrl: "https://r2.faceless.video/audio.mp3",
+      id: "ep_rendering_123",
+      scenes: [],
+      series: {
+        userId: "user_test_123",
+      },
+      status: "RENDERING" as const,
+    };
+
+    Object.defineProperty(db, "seriesEpisode", {
+      configurable: true,
+      value: {
+        findFirst: vi
+          .fn<() => Promise<typeof mockEpisode>>()
+          .mockResolvedValue(mockEpisode),
+      },
+    });
+
+    const caller = createCaller(createTestContext(db, "user_test_123"));
+
+    await expect(
+      caller.series.renderEpisode({
+        episodeId: "ep_rendering_123",
+      })
+    ).rejects.toThrow(TRPCError);
+  });
+
+  it("submits video render and returns RENDERING status for async renderers", async () => {
+    const db = createPrismaClient({
+      DATABASE_URL: "postgresql://localhost:5432/test",
+    });
+
+    const mockEpisode = {
+      audioUrl: "https://r2.faceless.video/audio.mp3",
+      id: "ep_123",
+      metadata: {
+        audio: mockAudioMetadata,
+        script: mockScriptPayload,
+      },
+      scenes: [
+        {
+          duration: 4,
+          id: "sc_1",
+          imageUrl: "https://r2.faceless.video/img.png",
+          narrationText: "Hello world",
+          sceneNumber: 1,
+          visualPrompt: "Futuristic digital landscape",
+        },
+      ],
+      series: {
+        captionStyleId: "bold-stroke",
+        customMusicUrl: null,
+        glitchEffect: false,
+        musicTrackId: null,
+        userId: "user_test_123",
+      },
+      seriesId: "series_456",
+      status: "READY_FOR_REVIEW" as const,
+      videoUrl: null,
+    };
+
+    const updateSpy = vi
+      .fn<() => Promise<typeof mockEpisode>>()
+      .mockResolvedValue(mockEpisode);
+
+    Object.defineProperty(db, "seriesEpisode", {
+      configurable: true,
+      value: {
+        findFirst: vi
+          .fn<() => Promise<typeof mockEpisode>>()
+          .mockResolvedValue(mockEpisode),
+        update: updateSpy,
+      },
+    });
+
+    const mockRenderer: VideoRendererService = {
+      renderVideo: vi
+        .fn<(params: RenderVideoParams) => Promise<RenderVideoResult>>()
+        .mockResolvedValue({
+          renderDurationMs: 500,
+          status: "submitted",
+        }),
+    };
+
+    const caller = createCaller(
+      createTestContext(db, "user_test_123", mockRenderer)
+    );
+
+    const result = await caller.series.renderEpisode({
+      episodeId: "ep_123",
+    });
+
+    expect(result.success).toBeTruthy();
+    expect(result.status).toBe("RENDERING");
+    expect(result.videoUrl).toBeNull();
+    expect(mockRenderer.renderVideo).toHaveBeenCalledOnce();
+  });
+});
+
+describe("episodesRouter - publishEpisodeNow", () => {
+  it("rejects with NOT_FOUND when episode does not exist for session user", async () => {
+    const db = createPrismaClient({
+      DATABASE_URL: "postgresql://localhost:5432/test",
+    });
+
+    Object.defineProperty(db, "seriesEpisode", {
+      configurable: true,
+      value: {
+        findFirst: vi.fn<() => Promise<null>>().mockResolvedValue(null),
+      },
+    });
+
+    const caller = createCaller(createTestContext(db, "user_test_123"));
+
+    await expect(
+      caller.series.publishEpisodeNow({
+        episodeId: "ep_missing",
+      })
+    ).rejects.toThrow(TRPCError);
+  });
+
+  it("rejects with CONFLICT when episode is already published", async () => {
+    const db = createPrismaClient({
+      DATABASE_URL: "postgresql://localhost:5432/test",
+    });
+
+    const mockEpisode = createMockEpisodeForPublication("PUBLISHED");
+
+    Object.defineProperty(db, "seriesEpisode", {
+      configurable: true,
+      value: {
+        findFirst: vi
+          .fn<() => Promise<typeof mockEpisode>>()
+          .mockResolvedValue(mockEpisode),
+      },
+    });
+
+    const caller = createCaller(createTestContext(db, "user_test_123"));
+
+    await expect(
+      caller.series.publishEpisodeNow({
+        episodeId: "ep_pub_123",
+      })
+    ).rejects.toThrow(TRPCError);
+  });
+
+  it("publishes episode to connected social platforms and records outcomes", async () => {
+    const db = createPrismaClient({
+      DATABASE_URL: "postgresql://localhost:5432/test",
+    });
+
+    const mockEpisode = createMockEpisodeForPublication("APPROVED");
+
+    const updateSpy = vi
+      .fn<() => Promise<typeof mockEpisode>>()
+      .mockResolvedValue(mockEpisode);
+
+    Object.defineProperty(db, "seriesEpisode", {
+      configurable: true,
+      value: {
+        findFirst: vi
+          .fn<() => Promise<typeof mockEpisode>>()
+          .mockResolvedValue(mockEpisode),
+        update: updateSpy,
+        updateMany: vi
+          .fn<() => Promise<{ count: number }>>()
+          .mockResolvedValue({ count: 1 }),
+      },
+    });
+
+    Object.defineProperty(db, "socialPublication", {
+      configurable: true,
+      value: {
+        createMany: vi
+          .fn<() => Promise<{ count: number }>>()
+          .mockResolvedValue({ count: 1 }),
+      },
+    });
+
+    const caller = createCaller(createTestContext(db, "user_test_123"));
+
+    const result = await caller.series.publishEpisodeNow({
+      episodeId: "ep_pub_123",
+    });
+
+    expect(result.success).toBeTruthy();
+    expect(result.status).toBe("PUBLISHED");
+    expect(result.outcomes).toHaveLength(1);
+    expect(result.outcomes[0]?.platform).toBe("tiktok");
+    expect(result.outcomes[0]?.state).toBe("published");
   });
 });
