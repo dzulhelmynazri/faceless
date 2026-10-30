@@ -2,7 +2,7 @@ const ART_STYLE_MODIFIERS = {
   comic:
     "vintage American comic book style, bold ink line art, halftone dot shading, dynamic action angle, vibrant graphic novel aesthetic",
   "creepy-comic":
-    "eerie graphic novel horror aesthetic, deep stark shadows, grotesque ink hatching, desaturated palette with blood red accents, gritty atmosphere",
+    "eerie graphic novel horror aesthetic, deep stark shadows, intricate ink hatching, dramatic noir contrast, moody muted palette, gritty atmosphere",
   "modern-cartoon":
     "modern vibrant 2D cartoon style, clean vector outlines, playful bright lighting, contemporary animation studio aesthetic",
   disney:

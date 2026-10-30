@@ -58,6 +58,22 @@ export const DEFAULT_VISUAL_MODEL = "bfl/flux-2-flex";
 const getGateway = () =>
   createGatewayProvider({ apiKey: ENV.AI_GATEWAY_API_KEY });
 
+const sanitizeModeratedPrompt = (prompt: string): string =>
+  prompt
+    .replaceAll(
+      /\b(?:dead bodies|dead body|corpses?|lifeless bodies|lifeless body|lifeless face)\b/giu,
+      "eerie abandoned scene"
+    )
+    .replaceAll(
+      /\b(?:injur(?:y|ies)|wounds?|mutilat(?:ed|ion)?|guts?|gore|bloody?|slain)\b/giu,
+      "dark mystery"
+    )
+    .replaceAll(
+      /\b(?:crushed bones|torn open bodies?|severed limbs?)\b/giu,
+      "unexplained remnants"
+    )
+    .replaceAll(/\b(?:killing|murder(?:ed|ing)?|slaughter)\b/giu, "dark event");
+
 export const generateEpisodeScenes = async (
   input: GenerateEpisodeScenesInput
 ): Promise<GenerateEpisodeScenesOutput> => {
@@ -136,8 +152,13 @@ export const generateEpisodeScenes = async (
   }
 
   if (failedScenes.length > 0) {
+    const sanitizedScenes = failedScenes.map((s) => ({
+      ...s,
+      visualPrompt: sanitizeModeratedPrompt(s.visualPrompt),
+    }));
+
     const retryAttempts = await Promise.allSettled(
-      failedScenes.map(generateSingle)
+      sanitizedScenes.map(generateSingle)
     );
 
     for (const retry of retryAttempts) {
@@ -184,37 +205,47 @@ export const regenerateSingleScene = async (
     ? input.promptOverride
     : input.visualPrompt;
 
-  const enrichedPrompt = enrichPromptWithStyle({
-    visualPrompt: effectivePrompt,
-    artStyleId: input.artStyleId,
-  });
-
   const storageKey = `users/${input.userId}/series/${input.seriesId}/episodes/${input.episodeId}/scenes/scene_${input.sceneNumber}.webp`;
 
-  const { image } = await generateImage({
-    model,
-    prompt: enrichedPrompt,
-    aspectRatio: "9:16",
-    providerOptions: {
-      gateway: {
-        user: input.userId,
-        tags: [`series:${input.seriesId}`, `episode:${input.episodeId}`],
+  const attemptGenerate = async (promptToUse: string) => {
+    const enrichedPrompt = enrichPromptWithStyle({
+      visualPrompt: promptToUse,
+      artStyleId: input.artStyleId,
+    });
+
+    const { image } = await generateImage({
+      model,
+      prompt: enrichedPrompt,
+      aspectRatio: "9:16",
+      providerOptions: {
+        gateway: {
+          user: input.userId,
+          tags: [`series:${input.seriesId}`, `episode:${input.episodeId}`],
+        },
       },
-    },
-  });
+    });
 
-  await input.storage.upload(storageKey, image.uint8Array, {
-    contentType: image.mediaType,
-  });
+    await input.storage.upload(storageKey, image.uint8Array, {
+      contentType: image.mediaType,
+    });
 
-  const imageUrl = await input.storage.url(storageKey);
+    const imageUrl = await input.storage.url(storageKey);
 
-  return {
-    sceneNumber: input.sceneNumber,
-    narrationText: input.narrationChunk,
-    visualPrompt: effectivePrompt,
-    imageUrl,
-    imageKey: storageKey,
-    duration: input.duration,
+    return {
+      sceneNumber: input.sceneNumber,
+      narrationText: input.narrationChunk,
+      visualPrompt: promptToUse,
+      imageUrl,
+      imageKey: storageKey,
+      duration: input.duration,
+    };
   };
+
+  try {
+    return await attemptGenerate(effectivePrompt);
+  } catch {
+    const sanitizedPrompt = sanitizeModeratedPrompt(effectivePrompt);
+
+    return await attemptGenerate(sanitizedPrompt);
+  }
 };

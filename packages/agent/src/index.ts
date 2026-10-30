@@ -56,6 +56,7 @@ export const runScriptwriterAgent = async (
        - estimatedSeconds (duration of this visual, between 4 and 8 seconds)
     4. LANGUAGE: Generate the narration and title in the requested language: "${input.language}".
     5. NO REPEATS: Do not duplicate or closely mirror any of these previous episode titles: ${input.previousTitles.length > 0 ? JSON.stringify(input.previousTitles) : "None"}.
+    6. VISUAL PROMPT SAFETY: AI image generators strictly moderate and block prompts depicting corpses, dead bodies, gore, blood, or physical injuries. For horror, dark events, and true crime, NEVER describe dead bodies, wounds, severed limbs, or blood in visualPrompt. Instead, create suspense entirely through atmospheric, cinematic, and investigative environmental storytelling (e.g. abandoned gear in freezing blizzards, cordoned investigative perimeter under stark flashlight beams, ominous silhouettes, dramatic fog, tense investigator expressions, archival documents).
   `;
 
   const exampleBlock = isNonEmptyString(input.exampleScript)
