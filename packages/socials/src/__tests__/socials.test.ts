@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { createSocialClient } from "../client";
 import { publishVideoToSocials } from "../publisher";
+import type { SocialAccountTarget } from "../types";
 import { verifyAndDecodeSocialWebhook } from "../webhook";
 
 describe("@faceless/socials", () => {
@@ -147,5 +148,81 @@ describe("@faceless/socials", () => {
 
     expect(event).toBeDefined();
     expect(event.type).toBeDefined();
+  });
+
+  it("slices YouTube video title to maximum 100 characters", async () => {
+    const client = createSocialClient({
+      mockScenario: "immediate-text-success",
+      provider: "mock",
+    });
+
+    const longTitle = "A".repeat(120);
+
+    const result = await publishVideoToSocials(client, {
+      idempotencyKey: "test-title-truncation",
+      targets: [
+        {
+          accountId: "youtube-channel-1",
+          madeForKids: false,
+          platform: "youtube",
+          visibility: "public",
+        },
+      ],
+      title: longTitle,
+      videoUrl: "https://storage.example.com/videos/test.mp4",
+    });
+
+    expect(result.status).toBe("complete");
+    expect(result.outcomes).toHaveLength(1);
+    expect(result.outcomes[0]?.state).toBe("published");
+  });
+
+  it("omits text property from content payload when description is empty", async () => {
+    const client = createSocialClient({
+      mockScenario: "immediate-text-success",
+      provider: "mock",
+    });
+
+    const result = await publishVideoToSocials(client, {
+      description: "",
+      idempotencyKey: "test-no-desc",
+      targets: [
+        {
+          accountId: "instagram-account-1",
+          platform: "instagram",
+        },
+      ],
+      title: "No Description Video",
+      videoUrl: "https://storage.example.com/videos/test.mp4",
+    });
+
+    expect(result.status).toBe("complete");
+    expect(result.outcomes).toHaveLength(1);
+    expect(result.outcomes[0]?.state).toBe("published");
+  });
+
+  it("rejects unsupported platform with descriptive error", async () => {
+    const client = createSocialClient({
+      mockScenario: "immediate-text-success",
+      provider: "mock",
+    });
+
+    const target: SocialAccountTarget = {
+      accountId: "twitter-1",
+      platform: "instagram",
+    };
+
+    Reflect.set(target, "platform", "twitter");
+
+    await expect(
+      publishVideoToSocials(client, {
+        idempotencyKey: "test-invalid-platform",
+        targets: [target],
+        title: "Test Video",
+        videoUrl: "https://storage.example.com/videos/test.mp4",
+      })
+    ).rejects.toThrow(
+      'Unsupported platform. Only "youtube", "tiktok", and "instagram" are supported.'
+    );
   });
 });
