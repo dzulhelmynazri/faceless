@@ -135,6 +135,22 @@ describe("render service", () => {
         error: "Unauthorized",
       });
     });
+
+    it("rejects with 401 when Authorization header scheme is not Bearer", async () => {
+      const response = await app.request("/jobs", {
+        body: JSON.stringify(validPayload),
+        headers: {
+          Authorization: `Basic ${env.RENDER_SERVICE_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+      });
+
+      expect(response.status).toBe(401);
+      await expect(response.json()).resolves.toStrictEqual({
+        error: "Unauthorized",
+      });
+    });
   });
 
   describe("POST /jobs validation", () => {
@@ -248,6 +264,45 @@ describe("render service", () => {
 
     it("delivers failed status webhook when rendering throws", async () => {
       mockRenderVideo.mockRejectedValueOnce(new Error("Rendering crashed"));
+
+      const response = await app.request("/jobs", {
+        body: JSON.stringify(validPayload),
+        headers: {
+          Authorization: `Bearer ${env.RENDER_SERVICE_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+      });
+
+      expect(response.status).toBe(202);
+
+      await vi.waitFor(() => {
+        expect(mockRenderVideo).toHaveBeenCalledOnce();
+        expect(mockFetch).toHaveBeenCalledOnce();
+      });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        validPayload.callbackUrl,
+        expect.objectContaining({
+          body: JSON.stringify({
+            episodeId: validPayload.episodeId,
+            error: "Video rendering failed",
+            status: "failed",
+          }),
+          headers: {
+            Authorization: `Bearer ${env.RENDER_WEBHOOK_SECRET}`,
+            "Content-Type": "application/json",
+          },
+          method: "POST",
+        })
+      );
+    });
+
+    it("delivers failed status webhook when renderer returns non-completed status", async () => {
+      mockRenderVideo.mockResolvedValueOnce({
+        renderDurationMs: 100,
+        status: "submitted",
+      });
 
       const response = await app.request("/jobs", {
         body: JSON.stringify(validPayload),
