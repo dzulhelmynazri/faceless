@@ -3,7 +3,7 @@ import { localDev } from "eve/channels/auth";
 import type { AuthFn, AuthResult } from "eve/channels/auth";
 import { eveChannel } from "eve/channels/eve";
 
-const tenantChannelAuth: AuthFn = (request): AuthResult | null => {
+export const tenantChannelAuth: AuthFn = (request): AuthResult | null => {
   const userId =
     request.headers.get("x-user-id") ?? request.headers.get("x-tenant-id");
 
