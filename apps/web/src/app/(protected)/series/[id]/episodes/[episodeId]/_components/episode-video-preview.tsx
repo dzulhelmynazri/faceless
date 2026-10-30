@@ -1,7 +1,6 @@
 "use client";
 
 import { MainVideo } from "@faceless/remotion";
-import { Badge } from "@faceless/ui/components/badge";
 import { Button } from "@faceless/ui/components/button";
 import { Slider } from "@faceless/ui/components/slider";
 import { Spinner } from "@faceless/ui/components/spinner";
@@ -148,18 +147,6 @@ export const EpisodeVideoPreview = () => {
               </span>
             </div>
           )}
-
-          {/* Top Floating Scene & FX Badges */}
-          <div className="pointer-events-none absolute inset-x-2.5 top-2.5 z-10 flex items-center justify-between">
-            <Badge variant="secondary">Scene #{activeSceneNumber}</Badge>
-
-            <div className="flex items-center gap-1.5">
-              {compositionProps.glitchEffect && (
-                <Badge variant="outline">Glitch FX</Badge>
-              )}
-              <Badge variant="outline">9:16 HD</Badge>
-            </div>
-          </div>
         </div>
 
         {/* Integrated Scrubber & Controls */}
