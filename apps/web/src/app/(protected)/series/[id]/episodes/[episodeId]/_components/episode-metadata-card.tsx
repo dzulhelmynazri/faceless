@@ -76,7 +76,7 @@ export const EpisodeMetadataCard = () => {
       <CardHeader>
         <CardTitle>Title & Description</CardTitle>
         <CardDescription>
-          Social post metadata for manual posting and automated publishing.
+          Post details for manual and auto publishing.
         </CardDescription>
       </CardHeader>
 
