@@ -1,9 +1,9 @@
 "use client";
 
 import type { SocialPlatform } from "@faceless/contracts";
-import { Badge } from "@faceless/ui/components/badge";
 import { Button } from "@faceless/ui/components/button";
 import { Spinner } from "@faceless/ui/components/spinner";
+import { Instagram, Tiktok, Youtube } from "@faceless/ui/socials";
 import { isNonEmptyString } from "@faceless/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -11,7 +11,6 @@ import {
   CalendarCheck,
   CheckCircle2,
   Download,
-  ExternalLink,
   Film,
   Send,
 } from "lucide-react";
@@ -56,6 +55,15 @@ const PLATFORM_LABELS: Record<SocialPlatform, string> = {
   YOUTUBE: "YouTube",
 };
 
+const PLATFORM_ICONS: Record<
+  SocialPlatform,
+  React.ComponentType<React.ComponentProps<"svg">>
+> = {
+  INSTAGRAM: Instagram,
+  TIKTOK: Tiktok,
+  YOUTUBE: Youtube,
+};
+
 export const StudioActionBar = () => {
   const { episode, seriesId, publications } = useEpisodeStudioContext();
 
@@ -68,7 +76,12 @@ export const StudioActionBar = () => {
           const url = getSocialPostUrl(pub.platform, pub.externalPostId);
 
           return isNonEmptyString(url)
-            ? { ...pub, label: PLATFORM_LABELS[pub.platform], url }
+            ? {
+                ...pub,
+                icon: PLATFORM_ICONS[pub.platform],
+                label: PLATFORM_LABELS[pub.platform],
+                url,
+              }
             : null;
         })
         .filter((item): item is NonNullable<typeof item> => item !== null),
@@ -168,29 +181,34 @@ export const StudioActionBar = () => {
 
         {status === "PUBLISHED" && (
           <>
-            <Badge variant="outline">
+            <div className="inline-flex items-center gap-2 rounded-md border border-border px-2 py-1">
               <span className="size-1.5 rounded-full bg-success" />
-              Published Live
-            </Badge>
+              <span className="text-xs font-medium">Published Live</span>
+            </div>
 
-            {livePublications.map((pub) => (
-              <Button
-                key={pub.id}
-                nativeButton={false}
-                render={
-                  <a
-                    aria-label={`View live post on ${pub.label}`}
-                    href={pub.url}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                  />
-                }
-                variant="outline"
-              >
-                View on {pub.label}
-                <ExternalLink data-icon="inline-end" />
-              </Button>
-            ))}
+            {livePublications.map((pub) => {
+              const Icon = pub.icon;
+
+              return (
+                <Button
+                  key={pub.id}
+                  nativeButton={false}
+                  render={
+                    <a
+                      aria-label={`View live post on ${pub.label}`}
+                      href={pub.url}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                      title={`View live post on ${pub.label}`}
+                    />
+                  }
+                  size="icon"
+                  variant="outline"
+                >
+                  <Icon className="size-3.5" />
+                </Button>
+              );
+            })}
           </>
         )}
 
