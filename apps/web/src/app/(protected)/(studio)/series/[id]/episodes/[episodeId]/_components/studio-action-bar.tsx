@@ -22,47 +22,29 @@ import { trpc } from "@/utils/trpc";
 
 import { useEpisodeStudioContext } from "../_context/episode-studio-context";
 
-const getSocialPostUrl = (
-  platform: SocialPlatform,
-  postId: string | null
-): string | null => {
-  if (!isNonEmptyString(postId)) {
-    return null;
-  }
+interface SocialPlatformConfig {
+  getUrl: (postId: string) => string;
+  icon: React.ComponentType<React.ComponentProps<"svg">>;
+  label: string;
+}
 
-  switch (platform) {
-    case "YOUTUBE": {
-      return `https://youtube.com/shorts/${postId}`;
-    }
-
-    case "TIKTOK": {
-      return `https://www.tiktok.com/@/video/${postId}`;
-    }
-
-    case "INSTAGRAM": {
-      return `https://www.instagram.com/reel/${postId}`;
-    }
-
-    default: {
-      return null;
-    }
-  }
-};
-
-const PLATFORM_LABELS: Record<SocialPlatform, string> = {
-  INSTAGRAM: "Instagram",
-  TIKTOK: "TikTok",
-  YOUTUBE: "YouTube",
-};
-
-const PLATFORM_ICONS: Record<
-  SocialPlatform,
-  React.ComponentType<React.ComponentProps<"svg">>
-> = {
-  INSTAGRAM: Instagram,
-  TIKTOK: Tiktok,
-  YOUTUBE: Youtube,
-};
+const SOCIAL_PLATFORMS = {
+  INSTAGRAM: {
+    getUrl: (id: string) => `https://www.instagram.com/reel/${id}`,
+    icon: Instagram,
+    label: "Instagram",
+  },
+  TIKTOK: {
+    getUrl: (id: string) => `https://www.tiktok.com/@/video/${id}`,
+    icon: Tiktok,
+    label: "TikTok",
+  },
+  YOUTUBE: {
+    getUrl: (id: string) => `https://youtube.com/shorts/${id}`,
+    icon: Youtube,
+    label: "YouTube",
+  },
+} as const satisfies Record<SocialPlatform, SocialPlatformConfig>;
 
 export const StudioActionBar = () => {
   const { episode, seriesId, publications } = useEpisodeStudioContext();
@@ -73,18 +55,20 @@ export const StudioActionBar = () => {
     () =>
       publications
         .map((pub) => {
-          const url = getSocialPostUrl(pub.platform, pub.externalPostId);
+          if (!isNonEmptyString(pub.externalPostId)) {
+            return null;
+          }
 
-          return isNonEmptyString(url)
-            ? {
-                ...pub,
-                icon: PLATFORM_ICONS[pub.platform],
-                label: PLATFORM_LABELS[pub.platform],
-                url,
-              }
-            : null;
+          const platform = SOCIAL_PLATFORMS[pub.platform];
+
+          return {
+            ...pub,
+            icon: platform.icon,
+            label: platform.label,
+            url: platform.getUrl(pub.externalPostId),
+          };
         })
-        .filter((item): item is NonNullable<typeof item> => item !== null),
+        .filter((item) => item !== null),
     [publications]
   );
 
@@ -181,7 +165,7 @@ export const StudioActionBar = () => {
 
         {status === "PUBLISHED" && (
           <>
-            <div className="inline-flex items-center gap-2 rounded-md border border-border px-2 py-1">
+            <div className="inline-flex items-center gap-2 rounded-md border border-border px-2 py-1.25">
               <span className="size-1.5 rounded-full bg-success" />
               <span className="text-xs font-medium">Published Live</span>
             </div>
