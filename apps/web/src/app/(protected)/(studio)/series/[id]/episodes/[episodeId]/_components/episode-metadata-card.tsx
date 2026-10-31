@@ -123,8 +123,7 @@ export const EpisodeMetadataCard = () => {
                       value={field.state.value}
                     />
                     <FieldDescription>
-                      Only supported by YouTube. Max 100 characters. Cannot
-                      contain &lt; or &gt; symbols.
+                      Only supported by YouTube.
                     </FieldDescription>
                     {isInvalid ? (
                       <FieldError errors={field.state.meta.errors} />

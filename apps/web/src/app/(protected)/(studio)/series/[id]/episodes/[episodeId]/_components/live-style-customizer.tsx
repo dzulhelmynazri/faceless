@@ -135,7 +135,7 @@ export const LiveStyleCustomizer = () => {
           <div className="flex flex-col gap-2.5">
             <span className="text-xs font-medium">Caption Style Preset</span>
 
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-3 gap-1.5">
               {SERIES_CAPTION_STYLES.map((preset) => {
                 const isSelected = customization.captionStyleId === preset.id;
 
