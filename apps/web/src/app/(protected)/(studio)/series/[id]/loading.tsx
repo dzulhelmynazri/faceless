@@ -9,7 +9,7 @@ import {
 import { Skeleton } from "@faceless/ui/components/skeleton";
 
 const SeriesDetailLoading = () => (
-  <div className="flex flex-col gap-6">
+  <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
     {/* Back button & Action Toolbar Skeleton */}
     <div className="flex items-center justify-between">
       <Skeleton className="h-7 w-32" />
