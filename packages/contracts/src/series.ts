@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { socialPlatformSchema } from "./social";
+
 export interface SeriesPreset {
   id: string;
   title: string;
@@ -2392,6 +2394,16 @@ export const getEpisodeByIdInputSchema = z.object({
 
 export type GetEpisodeByIdInput = z.infer<typeof getEpisodeByIdInputSchema>;
 
+export const episodePublicationSchema = z.object({
+  externalPostId: z.string().nullable(),
+  id: z.string(),
+  platform: socialPlatformSchema,
+  publishedAt: z.string().nullable(),
+  status: z.string(),
+});
+
+export type EpisodePublication = z.infer<typeof episodePublicationSchema>;
+
 export const getEpisodeByIdOutputSchema = z.object({
   episode: z.object({
     id: z.string(),
@@ -2410,16 +2422,17 @@ export const getEpisodeByIdOutputSchema = z.object({
     createdAt: z.string(),
     updatedAt: z.string(),
   }),
+  publications: z.array(episodePublicationSchema).default([]),
+  scenes: z.array(studioSceneItemSchema),
   series: z.object({
-    id: z.string(),
-    name: z.string(),
-    voiceId: z.string(),
     captionStyleId: captionStyleIdSchema,
-    musicTrackId: z.string().nullable(),
     customMusicUrl: z.string().nullable(),
     glitchEffect: z.boolean(),
+    id: z.string(),
+    musicTrackId: z.string().nullable(),
+    name: z.string(),
+    voiceId: z.string(),
   }),
-  scenes: z.array(studioSceneItemSchema),
 });
 
 export type GetEpisodeByIdOutput = z.infer<typeof getEpisodeByIdOutputSchema>;

@@ -168,21 +168,22 @@ export const useEpisodeStudio = ({
   }, [playerInstance]);
 
   return {
-    seriesId,
-    series: initialData.series,
-    episode,
-    scenes,
-    customization,
-    playerRef,
-    setPlayerRef,
-    isPlaying,
+    compositionProps,
     currentFrame,
     currentTimeSeconds: currentFrame / FPS,
-    totalDurationSeconds,
+    customization,
     durationInFrames,
-    compositionProps,
-    togglePlay,
+    episode,
+    isPlaying,
+    playerRef,
+    publications: initialData.publications ?? [],
+    scenes,
     seekToFrame,
+    series: initialData.series,
+    seriesId,
+    setPlayerRef,
+    togglePlay,
+    totalDurationSeconds,
     updateCustomization: updateCustomizationState,
   };
 };

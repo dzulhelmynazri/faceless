@@ -171,15 +171,24 @@ export const episodesRouter = router({
           },
         },
         include: {
+          publications: {
+            select: {
+              externalPostId: true,
+              id: true,
+              platform: true,
+              publishedAt: true,
+              status: true,
+            },
+          },
           series: {
             select: {
-              id: true,
-              name: true,
-              voiceId: true,
               captionStyleId: true,
-              musicTrackId: true,
               customMusicUrl: true,
               glitchEffect: true,
+              id: true,
+              musicTrackId: true,
+              name: true,
+              voiceId: true,
             },
           },
           scenes: {
@@ -187,12 +196,12 @@ export const episodesRouter = router({
               sceneNumber: "asc",
             },
             select: {
-              id: true,
-              sceneNumber: true,
-              narrationText: true,
-              visualPrompt: true,
-              imageUrl: true,
               duration: true,
+              id: true,
+              imageUrl: true,
+              narrationText: true,
+              sceneNumber: true,
+              visualPrompt: true,
             },
           },
         },
@@ -226,13 +235,20 @@ export const episodesRouter = router({
           createdAt: episode.createdAt.toISOString(),
           updatedAt: episode.updatedAt.toISOString(),
         },
+        publications: episode.publications.map((pub) => ({
+          externalPostId: pub.externalPostId,
+          id: pub.id,
+          platform: pub.platform,
+          publishedAt: pub.publishedAt?.toISOString() ?? null,
+          status: pub.status,
+        })),
+        scenes: episode.scenes,
         series: {
           ...episode.series,
           captionStyleId: captionStyleIdSchema.parse(
             episode.series.captionStyleId
           ),
         },
-        scenes: episode.scenes,
       };
     }),
 

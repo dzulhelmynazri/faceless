@@ -1,5 +1,7 @@
 "use client";
 
+import type { SocialPlatform } from "@faceless/contracts";
+import { Badge } from "@faceless/ui/components/badge";
 import { Button } from "@faceless/ui/components/button";
 import { Spinner } from "@faceless/ui/components/spinner";
 import { isNonEmptyString } from "@faceless/utils";
@@ -9,21 +11,69 @@ import {
   CalendarCheck,
   CheckCircle2,
   Download,
+  ExternalLink,
   Film,
-  Globe,
   Send,
 } from "lucide-react";
 import Link from "next/link";
+import * as React from "react";
 import { toast } from "sonner";
 
 import { trpc } from "@/utils/trpc";
 
 import { useEpisodeStudioContext } from "../_context/episode-studio-context";
 
+const getSocialPostUrl = (
+  platform: SocialPlatform,
+  postId: string | null
+): string | null => {
+  if (!isNonEmptyString(postId)) {
+    return null;
+  }
+
+  switch (platform) {
+    case "YOUTUBE": {
+      return `https://youtube.com/shorts/${postId}`;
+    }
+
+    case "TIKTOK": {
+      return `https://www.tiktok.com/@/video/${postId}`;
+    }
+
+    case "INSTAGRAM": {
+      return `https://www.instagram.com/reel/${postId}`;
+    }
+
+    default: {
+      return null;
+    }
+  }
+};
+
+const PLATFORM_LABELS: Record<SocialPlatform, string> = {
+  INSTAGRAM: "Instagram",
+  TIKTOK: "TikTok",
+  YOUTUBE: "YouTube",
+};
+
 export const StudioActionBar = () => {
-  const { episode, seriesId } = useEpisodeStudioContext();
+  const { episode, seriesId, publications } = useEpisodeStudioContext();
 
   const { id: episodeId, episodeNumber, status, videoUrl, error } = episode;
+
+  const livePublications = React.useMemo(
+    () =>
+      publications
+        .map((pub) => {
+          const url = getSocialPostUrl(pub.platform, pub.externalPostId);
+
+          return isNonEmptyString(url)
+            ? { ...pub, label: PLATFORM_LABELS[pub.platform], url }
+            : null;
+        })
+        .filter((item): item is NonNullable<typeof item> => item !== null),
+    [publications]
+  );
 
   const queryClient = useQueryClient();
 
@@ -117,10 +167,31 @@ export const StudioActionBar = () => {
         )}
 
         {status === "PUBLISHED" && (
-          <Button disabled variant="default">
-            <Globe data-icon="inline-start" />
-            Published Live
-          </Button>
+          <>
+            <Badge variant="outline">
+              <span className="size-1.5 rounded-full bg-success" />
+              Published Live
+            </Badge>
+
+            {livePublications.map((pub) => (
+              <Button
+                key={pub.id}
+                nativeButton={false}
+                render={
+                  <a
+                    aria-label={`View live post on ${pub.label}`}
+                    href={pub.url}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  />
+                }
+                variant="outline"
+              >
+                View on {pub.label}
+                <ExternalLink data-icon="inline-end" />
+              </Button>
+            ))}
+          </>
         )}
 
         {/* Download MP4 button when video is available on R2 */}

@@ -131,6 +131,15 @@ describe("episodesRouter - getEpisodeById", () => {
 
     expect(findFirstMock).toHaveBeenCalledWith({
       include: {
+        publications: {
+          select: {
+            externalPostId: true,
+            id: true,
+            platform: true,
+            publishedAt: true,
+            status: true,
+          },
+        },
         scenes: {
           orderBy: { sceneNumber: "asc" },
           select: {
@@ -181,6 +190,7 @@ describe("episodesRouter - getEpisodeById", () => {
         audio: mockAudioMetadata,
         script: mockScriptPayload,
       },
+      publications: [],
       scenes: [
         {
           duration: 4,
@@ -453,6 +463,7 @@ describe("episodesRouter - updateEpisodeStatus", () => {
         description: "The Beginning - Fantasy",
         script: mockScriptPayload,
       },
+      publications: [],
       scenes: [
         {
           duration: 4,
@@ -673,6 +684,7 @@ describe("episodesRouter - renderEpisode", () => {
     const mockEpisode = {
       audioUrl: "https://r2.faceless.video/audio.mp3",
       id: "ep_rendering_123",
+      publications: [],
       scenes: [],
       series: {
         userId: "user_test_123",
@@ -711,6 +723,7 @@ describe("episodesRouter - renderEpisode", () => {
         description: "The Beginning - Fantasy",
         script: mockScriptPayload,
       },
+      publications: [],
       scenes: [
         {
           duration: 4,
