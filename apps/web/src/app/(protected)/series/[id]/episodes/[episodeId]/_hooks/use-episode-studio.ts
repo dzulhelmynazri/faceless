@@ -129,8 +129,14 @@ export const useEpisodeStudio = ({
         ...prev,
         ...partial,
       }));
+
+      const player = playerRef.current;
+
+      if (player && !player.isPlaying()) {
+        player.seekTo(player.getCurrentFrame());
+      }
     },
-    []
+    [playerRef]
   );
 
   React.useEffect(() => {

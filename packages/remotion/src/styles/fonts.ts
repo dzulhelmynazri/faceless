@@ -20,8 +20,13 @@ export const ensureCaptionFontsLoaded = (): LoadedCaptionFonts => {
     subsets: ["latin"],
   });
 
+  loadMontserrat("italic", {
+    weights: ["800", "900"],
+    subsets: ["latin"],
+  });
+
   const inter = loadInter("normal", {
-    weights: ["600", "700"],
+    weights: ["500", "600", "700", "900"],
     subsets: ["latin"],
   });
 
@@ -34,8 +39,8 @@ export const ensureCaptionFontsLoaded = (): LoadedCaptionFonts => {
     subsets: ["latin"],
   });
 
-  const cormorant = loadCormorantGaramond("italic", {
-    weights: ["700"],
+  const cormorant = loadCormorantGaramond("normal", {
+    weights: ["400", "700"],
     subsets: ["latin"],
   });
 

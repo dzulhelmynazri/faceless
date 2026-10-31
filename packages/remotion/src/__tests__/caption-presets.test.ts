@@ -34,10 +34,13 @@ describe("caption presets configuration", () => {
     expect(allHaveDistinctActiveColors).toBeTruthy();
   });
 
-  it("configures clarity preset with rounded pill wrapper backdrop", () => {
-    const clarityConfig = getCaptionStyleConfig("clarity");
+  it("configures karaoke preset with active pill highlight", () => {
+    const karaokeConfig = getCaptionStyleConfig("karaoke");
+    const activeWord = karaokeConfig.wordStyle(true);
+    const inactiveWord = karaokeConfig.wordStyle(false);
 
-    expect(clarityConfig.wrapperStyle?.borderRadius).toBe("9999px");
-    expect(clarityConfig.wrapperStyle?.backdropFilter).toBe("blur(12px)");
+    expect(activeWord.backgroundColor).toBe("#06b6d4");
+    expect(activeWord.borderRadius).toBe("16px");
+    expect(inactiveWord.backgroundColor).toBe("transparent");
   });
 });
