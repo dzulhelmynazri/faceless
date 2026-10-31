@@ -2,25 +2,13 @@ import { Files, memory } from "@faceless/storage";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { defaultVideoProps } from "../default-props";
-import {
-  CloudflareContainerRenderer,
-  createVideoRenderer,
-} from "../server/remote-renderer";
+import { CloudflareContainerRenderer } from "../server/remote-renderer";
 
 const mockStorage = new Files({ adapter: memory() });
 
-describe("VideoRenderer Factory", () => {
+describe(CloudflareContainerRenderer, () => {
   afterEach(() => {
     vi.restoreAllMocks();
-  });
-
-  it("returns CloudflareContainerRenderer when service credentials are provided", () => {
-    const renderer = createVideoRenderer({
-      serviceToken: "test-token",
-      serviceUrl: "https://render.example.com",
-    });
-
-    expect(renderer).toBeInstanceOf(CloudflareContainerRenderer);
   });
 
   it("dispatches render job with authorization header and normalized url", async () => {
@@ -33,7 +21,7 @@ describe("VideoRenderer Factory", () => {
       )
     );
 
-    const renderer = createVideoRenderer({
+    const renderer = new CloudflareContainerRenderer({
       serviceToken: "secret-token",
       serviceUrl: "https://render.example.com///",
     });
@@ -68,7 +56,7 @@ describe("VideoRenderer Factory", () => {
       })
     );
 
-    const renderer = createVideoRenderer({
+    const renderer = new CloudflareContainerRenderer({
       serviceToken: "secret-token",
       serviceUrl: "https://render.example.com",
     });

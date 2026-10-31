@@ -15,7 +15,6 @@ export interface RenderAppEnv {
 
 export interface RenderAppDependencies {
   env: RenderAppEnv;
-  fetchFn?: typeof fetch;
   renderer: VideoRendererService;
   storage: Files;
 }
@@ -30,6 +29,9 @@ export const renderJobRequestSchema = z.object({
 
 export type RenderJobRequest = z.infer<typeof renderJobRequestSchema>;
 
+const WEBHOOK_TIMEOUT_MS = 10_000;
+const textEncoder = new TextEncoder();
+
 const isAuthorized = (
   authorization: string | undefined,
   expectedToken: string
@@ -38,9 +40,8 @@ const isAuthorized = (
     return false;
   }
 
-  const encoder = new TextEncoder();
-  const actual = encoder.encode(authorization);
-  const expected = encoder.encode(`Bearer ${expectedToken}`);
+  const actual = textEncoder.encode(authorization);
+  const expected = textEncoder.encode(`Bearer ${expectedToken}`);
 
   return (
     actual.byteLength === expected.byteLength &&
@@ -50,7 +51,6 @@ const isAuthorized = (
 
 export const createRenderApp = ({
   env,
-  fetchFn = globalThis.fetch,
   renderer,
   storage,
 }: RenderAppDependencies): Hono => {
@@ -86,7 +86,11 @@ export const createRenderApp = ({
         status: "completed",
         videoUrl: result.videoUrl,
       };
-    } catch {
+    } catch (error) {
+      console.error(
+        `[render-service] Video render failed for episode ${episodeId}:`,
+        error
+      );
       payload = {
         episodeId,
         error: "Video rendering failed",
@@ -95,17 +99,20 @@ export const createRenderApp = ({
     }
 
     try {
-      await fetchFn(callbackUrl, {
+      await fetch(callbackUrl, {
         body: JSON.stringify(payload),
         headers: {
           Authorization: `Bearer ${env.RENDER_WEBHOOK_SECRET}`,
           "Content-Type": "application/json",
         },
         method: "POST",
-        signal: AbortSignal.timeout(10_000),
+        signal: AbortSignal.timeout(WEBHOOK_TIMEOUT_MS),
       });
-    } catch {
-      // Webhook delivery error ignored
+    } catch (error) {
+      console.error(
+        `[render-service] Webhook delivery failed for episode ${episodeId}:`,
+        error
+      );
     }
   };
 

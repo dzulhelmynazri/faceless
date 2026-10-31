@@ -35,6 +35,7 @@ const createMockEpisodeWithSeries = (
 ) => ({
   audioUrl: "https://storage.example.com/audio/alice1.mp3",
   createdAt: new Date(),
+  description: "Episode description",
   episodeNumber: 1,
   error: null,
   id: "ep_alice_1",

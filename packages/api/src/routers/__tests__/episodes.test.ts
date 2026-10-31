@@ -67,7 +67,9 @@ const mockAudioMetadata = {
 const createTestContext = (
   db = createPrismaClient({ DATABASE_URL: "postgresql://localhost:5432/test" }),
   sessionUserId = "user_test_123",
-  videoRenderer: VideoRendererService = new LocalRemotionRenderer()
+  videoRenderer: VideoRendererService = new LocalRemotionRenderer({
+    browserExecutable: "/usr/bin/chromium",
+  })
 ): Context => ({
   auth: createTestAuth(),
   autumn: new Autumn({ secretKey: "am_sk_test_key" }),

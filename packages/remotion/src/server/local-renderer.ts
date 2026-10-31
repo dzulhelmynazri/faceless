@@ -11,8 +11,19 @@ import type {
   VideoRendererService,
 } from "./types";
 
+const CONCURRENCY = 2;
+
+export interface LocalRemotionRendererOptions {
+  browserExecutable: string;
+}
+
 export class LocalRemotionRenderer implements VideoRendererService {
+  private readonly options: LocalRemotionRendererOptions;
   private cachedBundleLocation: string | null = null;
+
+  constructor(options: LocalRemotionRendererOptions) {
+    this.options = options;
+  }
 
   private async getBundleLocation(): Promise<string> {
     if (this.cachedBundleLocation !== null) {
@@ -36,6 +47,10 @@ export class LocalRemotionRenderer implements VideoRendererService {
     const bundleLocation = await this.getBundleLocation();
 
     const composition = await selectComposition({
+      browserExecutable: this.options.browserExecutable,
+      chromiumOptions: {
+        disableWebSecurity: true,
+      },
       id: "MainVideo",
       inputProps: params.compositionProps,
       serveUrl: bundleLocation,
@@ -48,9 +63,13 @@ export class LocalRemotionRenderer implements VideoRendererService {
 
     try {
       await renderMedia({
+        browserExecutable: this.options.browserExecutable,
+        chromiumOptions: {
+          disableWebSecurity: true,
+        },
         codec: "h264",
         composition,
-        concurrency: 4,
+        concurrency: CONCURRENCY,
         crf: 20,
         inputProps: params.compositionProps,
         outputLocation: tempOutputPath,

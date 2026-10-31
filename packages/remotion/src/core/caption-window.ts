@@ -3,21 +3,21 @@ import type { WordTimestamp } from "@faceless/contracts/series";
 import type { CaptionPhrase } from "../types";
 
 export interface BuildCaptionPhrasesInput {
+  maxWordsPerPhrase: number;
   wordTimestamps: readonly WordTimestamp[];
-  maxWordsPerPhrase?: number;
 }
 
 export interface GetCaptionPhraseAtTimeInput {
-  phrases: readonly CaptionPhrase[];
   currentTime: number;
-  pauseHoldDuration?: number;
+  phrases: readonly CaptionPhrase[];
 }
 
 const TERMINAL_PUNCTUATION_REGEX = /[.?!,]$/u;
+const PAUSE_HOLD_DURATION_SECONDS = 0.25;
 
 export const buildCaptionPhrases = ({
+  maxWordsPerPhrase,
   wordTimestamps,
-  maxWordsPerPhrase = 3,
 }: BuildCaptionPhrasesInput): CaptionPhrase[] => {
   if (wordTimestamps.length === 0) {
     return [];
@@ -70,9 +70,8 @@ export const buildCaptionPhrases = ({
 };
 
 export const getCaptionPhraseAtTime = ({
-  phrases,
   currentTime,
-  pauseHoldDuration = 0.25,
+  phrases,
 }: GetCaptionPhraseAtTimeInput): CaptionPhrase | null => {
   if (phrases.length === 0) {
     return null;
@@ -80,7 +79,7 @@ export const getCaptionPhraseAtTime = ({
 
   for (const phrase of phrases) {
     const visibleStart = phrase.start;
-    const visibleEnd = phrase.end + pauseHoldDuration;
+    const visibleEnd = phrase.end + PAUSE_HOLD_DURATION_SECONDS;
 
     if (currentTime >= visibleStart && currentTime <= visibleEnd) {
       let activeIndex = 0;

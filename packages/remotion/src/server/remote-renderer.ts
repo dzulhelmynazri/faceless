@@ -50,9 +50,3 @@ export class CloudflareContainerRenderer implements VideoRendererService {
     };
   }
 }
-
-export type CreateVideoRendererOptions = CloudflareContainerRendererOptions;
-
-export const createVideoRenderer = (
-  options: CreateVideoRendererOptions
-): VideoRendererService => new CloudflareContainerRenderer(options);

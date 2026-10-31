@@ -2,7 +2,7 @@ import { createAuth } from "@faceless/auth";
 import { createPrismaClient } from "@faceless/db";
 import type { Database } from "@faceless/db";
 import { createEmail } from "@faceless/email";
-import { createVideoRenderer } from "@faceless/remotion/server";
+import { CloudflareContainerRenderer } from "@faceless/remotion/server";
 import { createSocialClient } from "@faceless/socials";
 import { createFiles } from "@faceless/storage";
 import { Autumn } from "autumn-js";
@@ -24,7 +24,7 @@ export const socials = createSocialClient({
   webhookSecret: env.ZERNIO_WEBHOOK_SECRET,
 });
 
-export const videoRenderer = createVideoRenderer({
+export const videoRenderer = new CloudflareContainerRenderer({
   serviceToken: env.RENDER_SERVICE_TOKEN,
   serviceUrl: env.RENDER_SERVICE_URL,
 });

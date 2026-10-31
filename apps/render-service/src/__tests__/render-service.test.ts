@@ -30,18 +30,17 @@ describe("render service", () => {
     R2_SECRET_ACCESS_KEY: "mock-secret",
   });
 
-  const mockFetch = vi.fn<typeof fetch>();
+  const fetchSpy = vi.spyOn(globalThis, "fetch");
 
   const app = createRenderApp({
     env,
-    fetchFn: mockFetch,
     renderer,
     storage,
   });
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockFetch.mockResolvedValue(new Response("OK", { status: 200 }));
+    fetchSpy.mockResolvedValue(new Response("OK", { status: 200 }));
   });
 
   const validPayload = {
@@ -240,10 +239,10 @@ describe("render service", () => {
 
       await vi.waitFor(() => {
         expect(mockRenderVideo).toHaveBeenCalledOnce();
-        expect(mockFetch).toHaveBeenCalledOnce();
+        expect(fetchSpy).toHaveBeenCalledOnce();
       });
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(fetchSpy).toHaveBeenCalledWith(
         validPayload.callbackUrl,
         expect.objectContaining({
           body: JSON.stringify({
@@ -278,10 +277,10 @@ describe("render service", () => {
 
       await vi.waitFor(() => {
         expect(mockRenderVideo).toHaveBeenCalledOnce();
-        expect(mockFetch).toHaveBeenCalledOnce();
+        expect(fetchSpy).toHaveBeenCalledOnce();
       });
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(fetchSpy).toHaveBeenCalledWith(
         validPayload.callbackUrl,
         expect.objectContaining({
           body: JSON.stringify({
@@ -317,10 +316,10 @@ describe("render service", () => {
 
       await vi.waitFor(() => {
         expect(mockRenderVideo).toHaveBeenCalledOnce();
-        expect(mockFetch).toHaveBeenCalledOnce();
+        expect(fetchSpy).toHaveBeenCalledOnce();
       });
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(fetchSpy).toHaveBeenCalledWith(
         validPayload.callbackUrl,
         expect.objectContaining({
           body: JSON.stringify({
@@ -345,7 +344,7 @@ describe("render service", () => {
         videoUrl: "https://r2.faceless.video/video.mp4",
       });
 
-      mockFetch.mockRejectedValueOnce(new Error("Network timeout"));
+      fetchSpy.mockRejectedValueOnce(new Error("Network timeout"));
 
       const response = await app.request("/jobs", {
         body: JSON.stringify(validPayload),
@@ -360,7 +359,7 @@ describe("render service", () => {
 
       await vi.waitFor(() => {
         expect(mockRenderVideo).toHaveBeenCalledOnce();
-        expect(mockFetch).toHaveBeenCalledOnce();
+        expect(fetchSpy).toHaveBeenCalledOnce();
       });
     });
   });

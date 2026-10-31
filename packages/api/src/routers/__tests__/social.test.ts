@@ -49,7 +49,9 @@ const createTestContext = (
     mockScenario: "immediate-text-success",
     provider: "mock",
   }),
-  videoRenderer: new LocalRemotionRenderer(),
+  videoRenderer: new LocalRemotionRenderer({
+    browserExecutable: "/usr/bin/chromium",
+  }),
 });
 
 const createCaller = createCallerFactory(appRouter);

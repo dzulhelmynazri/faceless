@@ -4,12 +4,12 @@ import { interpolate, useCurrentFrame, useVideoConfig } from "remotion";
 import type { VideoSceneItem } from "../types";
 
 export interface GlitchShaderProps {
-  enabled?: boolean;
+  enabled: boolean;
   scenes: readonly VideoSceneItem[];
 }
 
 export const GlitchShader: React.FC<GlitchShaderProps> = ({
-  enabled = false,
+  enabled,
   scenes,
 }) => {
   const frame = useCurrentFrame();
