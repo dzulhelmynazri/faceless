@@ -47,7 +47,7 @@ const SeriesDetailLoading = () => (
               <Skeleton className="h-3 w-48" />
             </ItemContent>
             <ItemActions>
-              <Skeleton className="h-8 w-28" />
+              <Skeleton className="h-6 w-26" />
             </ItemActions>
           </Item>
         ))}

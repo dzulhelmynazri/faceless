@@ -194,7 +194,7 @@ export const LiveStyleCustomizer = () => {
             </div>
 
             {/* Glitch Effect Switch */}
-            <Item variant="outline">
+            <Item variant="outline" size="xs">
               <ItemContent>
                 <ItemTitle>
                   <Label className="cursor-pointer" htmlFor="glitch-toggle">

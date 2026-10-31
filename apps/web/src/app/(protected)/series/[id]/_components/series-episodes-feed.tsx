@@ -87,7 +87,7 @@ export const SeriesEpisodesFeed = ({
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <Video className="size-4" />
+              <Video />
             </EmptyMedia>
             <EmptyTitle>No Episodes in this View</EmptyTitle>
             <EmptyDescription>
@@ -102,7 +102,7 @@ export const SeriesEpisodesFeed = ({
             <Item key={ep.id} variant="outline">
               <ItemMedia className="size-12" variant="image">
                 {isNonEmptyString(ep.thumbnailUrl) ? (
-                  <div className="relative size-full overflow-hidden rounded-lg border border-border bg-muted">
+                  <div className="relative size-full overflow-hidden rounded-md border border-border bg-muted">
                     <Image
                       alt={`Episode #${ep.episodeNumber}`}
                       className="object-cover"
@@ -130,6 +130,7 @@ export const SeriesEpisodesFeed = ({
                     <Link href={`/series/${seriesId}/episodes/${ep.id}`} />
                   }
                   variant="outline"
+                  size="sm"
                 >
                   Open in Studio
                   <ArrowUpRight data-icon="inline-end" />
