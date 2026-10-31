@@ -4,14 +4,8 @@ import { SERIES_DURATIONS } from "@faceless/contracts";
 import type { SeriesDurationOption } from "@faceless/contracts";
 import { Alert, AlertDescription } from "@faceless/ui/components/alert";
 import { Badge } from "@faceless/ui/components/badge";
-import { Button } from "@faceless/ui/components/button";
 import { Field, FieldLabel } from "@faceless/ui/components/field";
 import { Input } from "@faceless/ui/components/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@faceless/ui/components/popover";
 import {
   Select,
   SelectContent,
@@ -26,173 +20,13 @@ import {
   TooltipTrigger,
 } from "@faceless/ui/components/tooltip";
 import { Tiktok } from "@faceless/ui/socials";
-import { Clock, Info } from "lucide-react";
+import { Info } from "lucide-react";
 import * as React from "react";
 
 import { PageHeader } from "@/components/page-header";
+import { TimePickerPopover } from "@/components/time-picker-popover";
 
 import { useSeriesWizard } from "../_context/series-wizard-context";
-
-const POPULAR_TIMES: readonly string[] = [
-  "08:00 AM",
-  "10:00 AM",
-  "12:00 PM",
-  "02:00 PM",
-  "04:00 PM",
-  "06:00 PM",
-  "08:00 PM",
-  "10:00 PM",
-];
-
-const HOURS: readonly string[] = [
-  "01",
-  "02",
-  "03",
-  "04",
-  "05",
-  "06",
-  "07",
-  "08",
-  "09",
-  "10",
-  "11",
-  "12",
-];
-
-const MINUTES: readonly string[] = ["00", "15", "30", "45"];
-
-const TimePickerPopover = ({
-  currentTime,
-  onSelectTime,
-}: {
-  currentTime: string;
-  onSelectTime: (time: string) => void;
-}) => {
-  const [open, setOpen] = React.useState(false);
-
-  // Parse "12:00 PM"
-  const [timePart, periodPart = "PM"] = currentTime.split(" ");
-  const [hourPart = "12", minutePart = "00"] = (timePart ?? "12:00").split(":");
-
-  const handleSetHour = (hour: string) => {
-    onSelectTime(`${hour}:${minutePart} ${periodPart}`);
-  };
-
-  const handleSetMinute = (minute: string) => {
-    onSelectTime(`${hourPart}:${minute} ${periodPart}`);
-  };
-
-  const handleSetPeriod = (period: "AM" | "PM") => {
-    onSelectTime(`${hourPart}:${minutePart} ${period}`);
-  };
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger
-        render={
-          <Button variant="outline">
-            <span>{currentTime}</span>
-            <Clock className="text-muted-foreground" data-icon="inline-end" />
-          </Button>
-        }
-      />
-      <PopoverContent className="w-80" align="start">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-foreground">
-              Select Publish Time
-            </span>
-            <div className="flex items-center rounded-lg border border-border/80 p-0.5">
-              <Button
-                onClick={() => {
-                  handleSetPeriod("AM");
-                }}
-                size="xs"
-                variant={periodPart === "AM" ? "default" : "ghost"}
-              >
-                AM
-              </Button>
-              <Button
-                onClick={() => {
-                  handleSetPeriod("PM");
-                }}
-                size="xs"
-                variant={periodPart === "PM" ? "default" : "ghost"}
-              >
-                PM
-              </Button>
-            </div>
-          </div>
-
-          {/* Hour & Minute selection */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <span className="mb-1 block text-xs font-medium text-muted-foreground">
-                Hour
-              </span>
-              <div className="grid grid-cols-4 gap-1">
-                {HOURS.map((hour) => (
-                  <Button
-                    key={hour}
-                    onClick={() => {
-                      handleSetHour(hour);
-                    }}
-                    size="xs"
-                    variant={hourPart === hour ? "default" : "ghost"}
-                  >
-                    {hour}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <span className="mb-1 block text-xs font-medium text-muted-foreground">
-                Minute
-              </span>
-              <div className="grid grid-cols-2 gap-1">
-                {MINUTES.map((min) => (
-                  <Button
-                    key={min}
-                    onClick={() => {
-                      handleSetMinute(min);
-                    }}
-                    size="xs"
-                    variant={minutePart === min ? "default" : "ghost"}
-                  >
-                    {min}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Quick preset buttons */}
-          <div>
-            <span className="mb-1.5 block text-xs font-medium text-muted-foreground">
-              Quick presets
-            </span>
-            <div className="flex flex-wrap gap-1.5">
-              {POPULAR_TIMES.map((popular) => (
-                <Button
-                  key={popular}
-                  onClick={() => {
-                    onSelectTime(popular);
-                    setOpen(false);
-                  }}
-                  size="xs"
-                  variant={currentTime === popular ? "default" : "secondary"}
-                >
-                  {popular}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-};
 
 export const StepEightDetails = () => {
   const {
@@ -307,6 +141,7 @@ export const StepEightDetails = () => {
             Publish time:
           </span>
           <TimePickerPopover
+            className="w-auto"
             currentTime={publishTime}
             onSelectTime={handleChangePublishTime}
           />

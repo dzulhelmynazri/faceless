@@ -30,7 +30,7 @@ import { toast } from "sonner";
 import { trpc } from "@/utils/trpc";
 
 import { SeriesEpisodesFeed } from "./_components/series-episodes-feed";
-import { SeriesSettingsDialog } from "./_components/series-settings-dialog";
+import { SeriesSettingsSheet } from "./_components/series-settings-sheet";
 import SeriesDetailLoading from "./loading";
 
 const SeriesDetailPage = ({ params }: PageProps<"/series/[id]">) => {
@@ -95,10 +95,8 @@ const SeriesDetailPage = ({ params }: PageProps<"/series/[id]">) => {
       onSuccess: () => {
         toast.success("Episode generated with voiceover and visual keyframes!");
       },
-      onError: (error) => {
-        toast.error(
-          error.message || "Failed to generate episode. Please try again."
-        );
+      onError: () => {
+        toast.error("Failed to generate episode. Please try again.");
       },
       onSettled: () => {
         void queryClient.invalidateQueries(
@@ -164,7 +162,7 @@ const SeriesDetailPage = ({ params }: PageProps<"/series/[id]">) => {
             The series you are looking for does not exist or has been deleted.
           </EmptyDescription>
         </EmptyHeader>
-        <EmptyContent className="flex-row justify-center">
+        <EmptyContent>
           <Button
             nativeButton={false}
             render={<Link href="/series" />}
@@ -232,8 +230,8 @@ const SeriesDetailPage = ({ params }: PageProps<"/series/[id]">) => {
       {/* Episodes Section */}
       <SeriesEpisodesFeed episodes={series.episodes} seriesId={series.id} />
 
-      {/* Settings Dialog */}
-      <SeriesSettingsDialog
+      {/* Settings Sheet */}
+      <SeriesSettingsSheet
         initialName={series.name}
         initialPublishTime={series.publishTime}
         isOpen={isSettingsOpen}
