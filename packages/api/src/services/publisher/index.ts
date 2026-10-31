@@ -203,13 +203,9 @@ export const publishEpisodeToSocials = async ({
 
   const targets = validAccounts.map((conn) => buildTargetForPlatform(conn));
 
-  const description = isNonEmptyString(episode.topic)
-    ? `${episode.title} - ${episode.topic}`
-    : episode.title;
-
   try {
     const publishResult = await publishVideoToSocials(socials, {
-      description,
+      description: episode.description,
       idempotencyKey: `episode_${episode.id}`,
       targets,
       title: episode.title,

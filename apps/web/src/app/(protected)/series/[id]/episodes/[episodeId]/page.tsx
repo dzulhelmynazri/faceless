@@ -2,6 +2,7 @@
 
 import { Suspense } from "react";
 
+import { EpisodeMetadataCard } from "./_components/episode-metadata-card";
 import { EpisodeStudioSkeleton } from "./_components/episode-studio-skeleton";
 import { EpisodeVideoPreview } from "./_components/episode-video-preview";
 import { LiveStyleCustomizer } from "./_components/live-style-customizer";
@@ -18,8 +19,9 @@ const EpisodeStudioContent = () => (
         <EpisodeVideoPreview />
       </div>
 
-      {/* Right Column: Style & Audio Customizer */}
-      <div className="flex min-w-0 flex-col gap-4">
+      {/* Right Column: Style Customizer & Metadata Copy */}
+      <div className="flex min-w-0 flex-col gap-6">
+        <EpisodeMetadataCard />
         <LiveStyleCustomizer />
       </div>
     </div>

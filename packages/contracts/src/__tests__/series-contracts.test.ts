@@ -11,6 +11,8 @@ import {
   publishEpisodeNowOutputSchema,
   SERIES_LANGUAGES,
   SERIES_PRESETS,
+  updateEpisodeDetailsInputSchema,
+  updateEpisodeDetailsOutputSchema,
   wordTimestampSchema,
 } from "../series";
 
@@ -230,6 +232,8 @@ describe("generatedScriptPayloadSchema contract", () => {
     ],
     targetDurationSeconds: 12,
     title: "The Antarctic Anomaly",
+    description:
+      "Deep inside Antarctica, scientists made an impossible discovery #history #mystery",
     viralityScore: 9,
   };
 
@@ -255,6 +259,77 @@ describe("generatedScriptPayloadSchema contract", () => {
     };
 
     expect(generatedScriptPayloadSchema.safeParse(invalid).success).toBeFalsy();
+  });
+
+  it("rejects payload when description is missing", () => {
+    const { description: _, ...invalid } = validScript;
+
+    expect(generatedScriptPayloadSchema.safeParse(invalid).success).toBeFalsy();
+  });
+});
+
+describe("updateEpisodeDetailsInputSchema contract", () => {
+  it("validates valid episode details payload", () => {
+    const valid = {
+      episodeId: "ep_123",
+      title: "The Mystery of Dyatlov Pass",
+      description:
+        "9 Hikers vanished under impossible conditions #mystery #coldwar",
+    };
+
+    expect(
+      updateEpisodeDetailsInputSchema.safeParse(valid).success
+    ).toBeTruthy();
+  });
+
+  it("rejects when title exceeds 100 characters", () => {
+    const invalid = {
+      episodeId: "ep_123",
+      title: "A".repeat(101),
+      description: "Valid description",
+    };
+
+    expect(
+      updateEpisodeDetailsInputSchema.safeParse(invalid).success
+    ).toBeFalsy();
+  });
+
+  it("rejects when episodeId is empty", () => {
+    const invalid = {
+      episodeId: "",
+      title: "Valid Title",
+      description: "Valid description",
+    };
+
+    expect(
+      updateEpisodeDetailsInputSchema.safeParse(invalid).success
+    ).toBeFalsy();
+  });
+
+  it("rejects when title contains forbidden brackets", () => {
+    const invalid = {
+      episodeId: "ep_123",
+      title: "Secrets <Classified>",
+      description: "Valid description",
+    };
+
+    expect(
+      updateEpisodeDetailsInputSchema.safeParse(invalid).success
+    ).toBeFalsy();
+  });
+});
+
+describe("updateEpisodeDetailsOutputSchema contract", () => {
+  it("validates valid output payload", () => {
+    const valid = {
+      success: true,
+      title: "Valid Title",
+      description: "Valid Description #tags",
+    };
+
+    expect(
+      updateEpisodeDetailsOutputSchema.safeParse(valid).success
+    ).toBeTruthy();
   });
 });
 

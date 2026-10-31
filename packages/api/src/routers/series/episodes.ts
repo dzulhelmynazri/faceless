@@ -12,6 +12,8 @@ import {
   seriesEpisodeMetadataSchema,
   updateEpisodeCustomizationInputSchema,
   updateEpisodeCustomizationOutputSchema,
+  updateEpisodeDetailsInputSchema,
+  updateEpisodeDetailsOutputSchema,
   updateEpisodeStatusInputSchema,
   updateEpisodeStatusOutputSchema,
 } from "@faceless/contracts/series";
@@ -83,6 +85,7 @@ export const episodesRouter = router({
           seriesId: series.id,
           episodeNumber: nextEpisodeNumber,
           title: script.title,
+          description: script.description,
           topic: input.topicOverride ?? script.title,
           script: script.fullNarration,
           metadata: { script },
@@ -211,6 +214,7 @@ export const episodesRouter = router({
           seriesId: episode.seriesId,
           episodeNumber: episode.episodeNumber,
           title: episode.title,
+          description: episode.description,
           topic: episode.topic,
           script: episode.script,
           status: episode.status,
@@ -279,6 +283,41 @@ export const episodesRouter = router({
       return {
         success: true,
         customization: input.customization,
+      };
+    }),
+
+  updateEpisodeDetails: protectedProcedure
+    .input(updateEpisodeDetailsInputSchema)
+    .output(updateEpisodeDetailsOutputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const episode = await ctx.db.seriesEpisode.findFirst({
+        where: {
+          id: input.episodeId,
+          series: {
+            userId: ctx.session.user.id,
+          },
+        },
+      });
+
+      if (!episode) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Episode not found",
+        });
+      }
+
+      await ctx.db.seriesEpisode.update({
+        where: { id: episode.id },
+        data: {
+          title: input.title,
+          description: input.description,
+        },
+      });
+
+      return {
+        success: true,
+        title: input.title,
+        description: input.description,
       };
     }),
 

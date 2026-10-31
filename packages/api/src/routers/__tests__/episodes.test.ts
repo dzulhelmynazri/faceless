@@ -45,6 +45,8 @@ const mockScriptPayload = {
   ],
   targetDurationSeconds: 12,
   title: "The Future of Creation",
+  description:
+    "Explore how AI and imagination build worlds in seconds #ai #creativity #future",
   viralityScore: 9,
 };
 
@@ -171,6 +173,7 @@ describe("episodesRouter - getEpisodeById", () => {
     const mockEpisode = {
       audioUrl: "https://r2.faceless.video/audio.mp3",
       createdAt: mockDate,
+      description: "The Beginning - Fantasy",
       episodeNumber: 1,
       error: null,
       id: "ep_123",
@@ -221,7 +224,7 @@ describe("episodesRouter - getEpisodeById", () => {
 
     expect(result.episode.id).toBe("ep_123");
     expect(result.episode.status).toBe("READY_FOR_REVIEW");
-    expect(result.episode.createdAt).toBe(mockDate.toISOString());
+    expect(result.episode.description).toBe("The Beginning - Fantasy");
     expect(result.series.captionStyleId).toBe("bold-stroke");
     expect(result.scenes[0]?.sceneNumber).toBe(1);
   });
@@ -339,6 +342,81 @@ describe("episodesRouter - updateEpisodeCustomization", () => {
   });
 });
 
+describe("episodesRouter - updateEpisodeDetails", () => {
+  it("rejects with NOT_FOUND when episode is missing or belongs to another user", async () => {
+    const db = createPrismaClient({
+      DATABASE_URL: "postgresql://localhost:5432/test",
+    });
+
+    Object.defineProperty(db, "seriesEpisode", {
+      configurable: true,
+      value: {
+        findFirst: vi.fn<() => Promise<null>>().mockResolvedValue(null),
+      },
+    });
+
+    const caller = createCaller(createTestContext(db, "user_test_123"));
+
+    await expect(
+      caller.series.updateEpisodeDetails({
+        description: "New description #tags",
+        episodeId: "ep_123",
+        title: "New Title",
+      })
+    ).rejects.toThrow(TRPCError);
+  });
+
+  it("updates title and description in database and metadata", async () => {
+    const db = createPrismaClient({
+      DATABASE_URL: "postgresql://localhost:5432/test",
+    });
+
+    const existingMetadata = {
+      script: mockScriptPayload,
+    };
+
+    const updateSpy = vi
+      .fn<() => Promise<{ id: string }>>()
+      .mockResolvedValue({ id: "ep_123" });
+
+    Object.defineProperty(db, "seriesEpisode", {
+      configurable: true,
+      value: {
+        findFirst: vi
+          .fn<
+            () => Promise<{ id: string; metadata: typeof existingMetadata }>
+          >()
+          .mockResolvedValue({
+            id: "ep_123",
+            metadata: existingMetadata,
+          }),
+        update: updateSpy,
+      },
+    });
+
+    const caller = createCaller(createTestContext(db, "user_test_123"));
+
+    const result = await caller.series.updateEpisodeDetails({
+      description: "Updated Viral Description #mystery #creepy",
+      episodeId: "ep_123",
+      title: "Updated Title",
+    });
+
+    expect(result.success).toBeTruthy();
+    expect(result.title).toBe("Updated Title");
+    expect(result.description).toBe(
+      "Updated Viral Description #mystery #creepy"
+    );
+    expect(updateSpy).toHaveBeenCalledWith({
+      data: {
+        description: "Updated Viral Description #mystery #creepy",
+        title: "Updated Title",
+      },
+      where: { id: "ep_123" },
+    });
+  });
+});
+
 describe("episodesRouter - updateEpisodeStatus", () => {
   it("rejects with NOT_FOUND when episode does not exist for session user", async () => {
     const db = createPrismaClient({
@@ -372,6 +450,7 @@ describe("episodesRouter - updateEpisodeStatus", () => {
       id: "ep_123",
       metadata: {
         audio: mockAudioMetadata,
+        description: "The Beginning - Fantasy",
         script: mockScriptPayload,
       },
       scenes: [
@@ -629,6 +708,7 @@ describe("episodesRouter - renderEpisode", () => {
       id: "ep_123",
       metadata: {
         audio: mockAudioMetadata,
+        description: "The Beginning - Fantasy",
         script: mockScriptPayload,
       },
       scenes: [

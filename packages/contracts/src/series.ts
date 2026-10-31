@@ -2294,8 +2294,19 @@ export const episodeSceneSchema = z.object({
 
 export type EpisodeScene = z.infer<typeof episodeSceneSchema>;
 
+export const EPISODE_MAX_TITLE_LENGTH = 100;
+export const EPISODE_MAX_DESCRIPTION_LENGTH = 2000;
+
 export const generatedScriptPayloadSchema = z.object({
-  title: z.string().min(1).max(100),
+  title: z
+    .string()
+    .min(1)
+    .max(EPISODE_MAX_TITLE_LENGTH)
+    .refine(
+      (val) => !val.includes("<") && !val.includes(">"),
+      "Title cannot contain < or >"
+    ),
+  description: z.string().min(1).max(EPISODE_MAX_DESCRIPTION_LENGTH),
   hook: z.string().min(5).max(200),
   fullNarration: z.string().min(50),
   scenes: z.array(episodeSceneSchema).min(3),
@@ -2387,6 +2398,7 @@ export const getEpisodeByIdOutputSchema = z.object({
     seriesId: z.string(),
     episodeNumber: z.number().int(),
     title: z.string(),
+    description: z.string(),
     topic: z.string().nullable(),
     script: z.string(),
     status: z.enum(EPISODE_STATUSES),
@@ -2411,6 +2423,43 @@ export const getEpisodeByIdOutputSchema = z.object({
 });
 
 export type GetEpisodeByIdOutput = z.infer<typeof getEpisodeByIdOutputSchema>;
+
+export const updateEpisodeDetailsInputSchema = z.object({
+  episodeId: z.string().min(1),
+  title: z
+    .string()
+    .trim()
+    .min(1, "Title cannot be empty")
+    .max(
+      EPISODE_MAX_TITLE_LENGTH,
+      `Title cannot exceed ${EPISODE_MAX_TITLE_LENGTH} characters`
+    )
+    .refine(
+      (val) => !val.includes("<") && !val.includes(">"),
+      "Video title cannot contain < or >"
+    ),
+  description: z
+    .string()
+    .trim()
+    .max(
+      EPISODE_MAX_DESCRIPTION_LENGTH,
+      `Description cannot exceed ${EPISODE_MAX_DESCRIPTION_LENGTH} characters`
+    ),
+});
+
+export type UpdateEpisodeDetailsInput = z.infer<
+  typeof updateEpisodeDetailsInputSchema
+>;
+
+export const updateEpisodeDetailsOutputSchema = z.object({
+  success: z.boolean(),
+  title: z.string(),
+  description: z.string(),
+});
+
+export type UpdateEpisodeDetailsOutput = z.infer<
+  typeof updateEpisodeDetailsOutputSchema
+>;
 
 export const updateEpisodeCustomizationInputSchema = z.object({
   episodeId: z.string().min(1),
