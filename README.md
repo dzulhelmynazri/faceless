@@ -1,6 +1,6 @@
 # faceless
 
-Faceless is a fullstack AI-powered video automation platform built with modern TypeScript, Next.js, Remotion, and Cloudflare Containers.
+Faceless is a fullstack AI-powered video automation platform built with modern TypeScript, Next.js, Remotion and Cloudflare Containers.
 
 ## Features
 
