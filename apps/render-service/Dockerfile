@@ -22,9 +22,13 @@ ENV LEFTHOOK=0
 
 WORKDIR /app
 
-# Copy repo files and install dependencies
+# Copy repo files and install production dependencies for render-service
 COPY . .
-RUN bun install --production --ignore-scripts && rm -rf /root/.bun/install/cache /tmp/*
+RUN bun install --filter render-service --production --ignore-scripts \
+    && rm -rf /root/.bun/install/cache /tmp/* \
+              /app/node_modules/.bun/next* /app/node_modules/.bun/@next* \
+              /app/node_modules/.bun/@prisma* /app/node_modules/.bun/prisma* \
+              /app/node_modules/.bun/autumn-js*
 
 EXPOSE 8080
 
