@@ -16,13 +16,13 @@
     "@faceless/remotion": "workspace:*",
     "@faceless/storage": "workspace:*",
     "@faceless/utils": "workspace:*",
-    "@hono/node-server": "^1.13.8",
-    "hono": "^4.7.1",
+    "@hono/node-server": "^1.19.17",
+    "hono": "^4.13.16",
     "varlock": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^5.20261028.1",
+    "@cloudflare/workers-types": "^5.20261101.1",
     "@faceless/config": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "^6.0.3",

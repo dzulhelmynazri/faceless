@@ -9,7 +9,7 @@ export default defineEval({
     );
 
     t.succeeded();
-    t.noFailedCalls();
+    t.noFailedActions();
 
     const judgments = t.judge({
       questions: {

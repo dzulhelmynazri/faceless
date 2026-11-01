@@ -14,7 +14,7 @@ import type {
 const CONCURRENCY = 2;
 
 export interface LocalRemotionRendererOptions {
-  browserExecutable: string;
+  browserExecutable?: string;
 }
 
 export class LocalRemotionRenderer implements VideoRendererService {

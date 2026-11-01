@@ -20,7 +20,7 @@
     "env:generate": "varlock codegen"
   },
   "dependencies": {
-    "@ai-sdk/gateway": "^4.0.126",
+    "@ai-sdk/gateway": "^4.0.132",
     "@faceless/agent": "workspace:*",
     "@faceless/auth": "workspace:*",
     "@faceless/contracts": "workspace:*",

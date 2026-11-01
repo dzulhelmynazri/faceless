@@ -21,7 +21,7 @@
     "eval": "eve eval"
   },
   "dependencies": {
-    "@ai-sdk/gateway": "^4.0.126",
+    "@ai-sdk/gateway": "^4.0.132",
     "@faceless/contracts": "workspace:*",
     "@faceless/utils": "workspace:*",
     "ai": "catalog:",
