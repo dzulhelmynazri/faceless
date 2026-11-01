@@ -28,7 +28,8 @@
     "@remotion/renderer": "^4.0.539",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "remotion": "^4.0.539"
+    "remotion": "^4.0.539",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@faceless/config": "workspace:*",

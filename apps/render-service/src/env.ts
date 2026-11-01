@@ -101,4 +101,16 @@ export type PublicCoercedEnvSchema = Readonly<
 >;
 
 // re-export of the runtime ENV proxy, typed to this package's schema
-export const ENV = _ENV as unknown as Readonly<CoercedEnvSchema>;
+export const ENV = new Proxy({} as Readonly<CoercedEnvSchema>, {
+  get(_target, prop) {
+    if (typeof prop !== "string") return undefined;
+    try {
+      const val = (_ENV as Record<string, unknown>)[prop];
+      if (val !== undefined) return val;
+    } catch {}
+    if (prop === "PORT") {
+      return Number(process.env.PORT ?? 8080);
+    }
+    return process.env[prop];
+  },
+});
