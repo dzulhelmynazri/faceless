@@ -12,6 +12,10 @@ node_modules
 **/.evlog
 .gemini
 **/.gemini
+apps/web
+apps/native
+.agents
+**/.eve
 *.log
 .DS_Store
 
