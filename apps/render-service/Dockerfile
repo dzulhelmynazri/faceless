@@ -14,12 +14,13 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV BROWSER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV PORT=8080
 ENV NODE_ENV=production
+ENV LEFTHOOK=0
 
 WORKDIR /app
 
 # Copy repo files and install dependencies
 COPY . .
-RUN npm install -g bun && bun install --production
+RUN npm install -g bun && bun install --production --ignore-scripts
 
 EXPOSE 8080
 

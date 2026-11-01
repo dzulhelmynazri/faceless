@@ -14,6 +14,7 @@
     {
       "class_name": "RemotionRendererContainer",
       "image": "./Dockerfile",
+      "image_build_context": "../..",
       "max_instances": 10,
     },
   ],
@@ -24,5 +25,18 @@
         "class_name": "RemotionRendererContainer",
       },
     ],
+  },
+  "exports": {
+    "RemotionRendererContainer": {
+      "type": "durable-object",
+      "storage": "sqlite",
+    },
+  },
+  "vars": {
+    "NODE_ENV": "production",
+    "PORT": "8080",
+    "R2_ACCOUNT_ID": "8f7290274ffb66f85ee1c1179f613064",
+    "R2_BUCKET": "faceless",
+    "R2_PUBLIC_BASE_URL": "https://pub-66da56cbb16047c7a2f2dc11f412a1a6.r2.dev",
   },
 }
