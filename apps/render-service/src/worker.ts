@@ -19,20 +19,23 @@ export class RemotionRendererContainer extends Container<Env> {
   enableInternet = true;
   sleepAfter = "10m";
 
-  override envVars = {
-    BROWSER_EXECUTABLE_PATH: "/usr/bin/chromium",
-    NODE_ENV: this.env.NODE_ENV,
-    PORT: this.env.PORT,
-    PUPPETEER_EXECUTABLE_PATH: "/usr/bin/chromium",
-    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true",
-    R2_ACCOUNT_ID: this.env.R2_ACCOUNT_ID,
-    R2_ACCESS_KEY_ID: this.env.R2_ACCESS_KEY_ID,
-    R2_BUCKET: this.env.R2_BUCKET,
-    R2_PUBLIC_BASE_URL: this.env.R2_PUBLIC_BASE_URL,
-    R2_SECRET_ACCESS_KEY: this.env.R2_SECRET_ACCESS_KEY,
-    RENDER_SERVICE_TOKEN: this.env.RENDER_SERVICE_TOKEN,
-    RENDER_WEBHOOK_SECRET: this.env.RENDER_WEBHOOK_SECRET,
-  };
+  constructor(ctx: ConstructorParameters<typeof Container>[0], env: Env) {
+    super(ctx, env);
+    this.envVars = {
+      BROWSER_EXECUTABLE_PATH: "/usr/bin/chromium",
+      NODE_ENV: env.NODE_ENV,
+      PORT: env.PORT,
+      PUPPETEER_EXECUTABLE_PATH: "/usr/bin/chromium",
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true",
+      R2_ACCOUNT_ID: env.R2_ACCOUNT_ID,
+      R2_ACCESS_KEY_ID: env.R2_ACCESS_KEY_ID,
+      R2_BUCKET: env.R2_BUCKET,
+      R2_PUBLIC_BASE_URL: env.R2_PUBLIC_BASE_URL,
+      R2_SECRET_ACCESS_KEY: env.R2_SECRET_ACCESS_KEY,
+      RENDER_SERVICE_TOKEN: env.RENDER_SERVICE_TOKEN,
+      RENDER_WEBHOOK_SECRET: env.RENDER_WEBHOOK_SECRET,
+    };
+  }
 }
 
 const app = new Hono<{ Bindings: Env }>();
