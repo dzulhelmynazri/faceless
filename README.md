@@ -1,115 +1,177 @@
 # faceless
 
-This project was created with [Hackhaton-Space-Stack](https://github.com/dzulhelmynazri/create-hackhaton-space-stack), a modern TypeScript stack that combines Next.js, Self, TRPC, and more.
+Faceless is a fullstack AI-powered video automation platform built with modern TypeScript, Next.js, Remotion, and Cloudflare Containers.
 
 ## Features
 
-- **TypeScript** - For type safety and improved developer experience
-- **Next.js** - Full-stack React framework
-- **React Native** - Build mobile apps using React
-- **Expo** - Tools for React Native development
-- **TailwindCSS** - Utility-first CSS for rapid UI development
-- **Shared UI package** - shadcn/ui primitives live in `packages/ui`
-- **Files SDK + R2** - Unified file storage with Cloudflare R2 adapter
-- **Email SDK + Cloudflare** - Unified transactional email with Cloudflare Email Sending adapter
-- **tRPC** - End-to-end type-safe APIs
-- **Prisma** - TypeScript-first ORM
-- **PostgreSQL** - Database engine
-- **Authentication** - better-auth
-- **evlog** - Request logging with Better Auth context and AI SDK telemetry
-- **Turborepo** - Optimized monorepo build system
+- **TypeScript** - Strict end-to-end type safety
+- **Next.js** - Full-stack React framework (App Router)
+- **React Native & Expo** - Cross-platform mobile application
+- **Remotion Video Rendering** - Server-side video rendering powered by Cloudflare Containers (Chromium + FFmpeg microVMs)
+- **Files SDK + Cloudflare R2** - Unified object storage for video assets, music, and exports
+- **Email SDK + Cloudflare** - Transactional email delivery via Cloudflare Email Sending
+- **AI Agents & Scriptwriting** - AI generation and automated script evaluation built on the Eve framework and AI SDK
+- **Social Publishing** - Automated multi-platform social media distribution via Zernio
+- **Billing & Subscriptions** - Usage-based billing and credit management with Autumn
+- **tRPC** - End-to-end type-safe API layer across client and server
+- **Prisma & PostgreSQL** - Type-safe ORM backed by Neon serverless Postgres
+- **Authentication** - Better Auth with Google SSO and email/password support
+- **evlog** - Structured wide-event logging with Better Auth context and AI telemetry
+- **Turborepo** - Fast, cached monorepo pipeline
 
 ## Getting Started
 
-First, install the dependencies:
+### 1. Install dependencies
 
 ```bash
 bun install
 ```
 
-## Database Setup
+### 2. Environment Configuration
 
-This project uses PostgreSQL with Prisma.
+Each app and package defines its typed schema in `.env.schema`. Varlock generates type-safe `src/env.ts` accessors automatically via `bun run env:generate`.
 
-1. Make sure you have a PostgreSQL database set up.
-2. Update your `apps/web/.env` file with your PostgreSQL connection details.
-
-3. Apply the schema to your database:
+1. Copy `.env.example` to `apps/web/.env` and provide your secrets (Database, Cloudflare R2, Better Auth, AI keys, Autumn).
+2. Generate typed environment accessors:
 
 ```bash
+bun run env:generate
+```
+
+### 3. Database Setup
+
+Ensure your PostgreSQL connection string is set in `apps/web/.env` (`DATABASE_URL` and `DATABASE_URL_DIRECT`).
+
+```bash
+# Push schema changes to your database
 bun run db:push
+
+# Generate Prisma Client
+bun run db:generate
 ```
 
-Then, run the development server:
+### 4. Run Development Servers
 
 ```bash
+# Start all apps and services simultaneously
 bun run dev
+
+# Or run specific applications:
+bun run dev:web     # Next.js web app (http://localhost:3010)
+bun run dev:render  # Local Remotion render service (http://localhost:8080)
+bun run dev:native  # Expo mobile app
 ```
 
-Open [http://localhost:3010](http://localhost:3010) in your browser to see the fullstack application. Use the Expo Go app to run the mobile application.
+Open [http://localhost:3010](http://localhost:3010) to access the web application.
+
+## Remotion Render Service (Cloudflare Containers)
+
+Video rendering runs as a standalone microservice in `apps/render-service`. It runs inside a Firecracker microVM on Cloudflare Containers with Chromium and FFmpeg pre-installed.
+
+### Local Development
+
+Run the render service locally on port 8080:
+
+```bash
+bun run dev:render
+```
+
+Verify service health:
+
+```bash
+curl http://localhost:8080/health
+# {"status":"ok","uptime":...}
+```
+
+### Cloudflare Deployment
+
+Deploy the container and worker to Cloudflare:
+
+```bash
+bun run --cwd apps/render-service deploy
+```
+
+#### Required Worker Secrets
+
+The following sensitive credentials must be set on the `render-service` Cloudflare Worker via `wrangler secret put` or the Cloudflare Dashboard:
+
+```bash
+bun run --cwd apps/render-service wrangler secret put R2_ACCESS_KEY_ID
+bun run --cwd apps/render-service wrangler secret put R2_SECRET_ACCESS_KEY
+bun run --cwd apps/render-service wrangler secret put RENDER_SERVICE_TOKEN
+bun run --cwd apps/render-service wrangler secret put RENDER_WEBHOOK_SECRET
+```
+
+#### Verification
+
+```bash
+curl https://render-service.dzulhelmy.workers.dev/health
+# {"status":"ok","uptime":...}
+```
+
+Point `RENDER_SERVICE_URL` in `apps/web/.env` to `https://render-service.dzulhelmy.workers.dev` to dispatch cloud render jobs.
 
 ## UI Customization
 
 React web apps in this stack share shadcn/ui primitives through `packages/ui`.
 
-- Change design tokens and global styles in `packages/ui/src/styles/globals.css`
-- Update shared primitives in `packages/ui/src/components/*`
-- Adjust shadcn aliases or style config in `packages/ui/components.json` and `apps/web/components.json`
+- Design tokens and global CSS live in `packages/ui/src/styles/globals.css`.
+- Shared components live in `packages/ui/src/components/*`.
+- Component registry configs are defined in `packages/ui/components.json` and `apps/web/components.json`.
 
-### Add more shared components
+### Add shared primitives
 
-Run this from the project root to add more primitives to the shared UI package:
+Add primitives to the shared UI package:
 
 ```bash
-npx shadcn@latest add accordion dialog popover sheet table -c packages/ui
+npx shadcn@latest add dialog popover sheet table -c packages/ui
 ```
 
-Import shared components like this:
+Import in applications:
 
 ```tsx
 import { Button } from "@faceless/ui/components/button";
 ```
-
-### Add app-specific blocks
-
-If you want to add app-specific blocks instead of shared primitives, run the shadcn CLI from `apps/web`.
-
-## Environment Configuration
-
-Each app owns its environment schema in `.env.schema`. Varlock generates `src/env.ts` during installation; run `bun run env:generate` after changing a schema. Commit schemas, and keep secrets in ignored env files or your deployment platform.
-
-Import the generated `ENV` accessor in application code. Shared database and auth packages receive configuration or initialized clients from the application. See [Varlock's monorepo guide](https://varlock.dev/guides/monorepos/).
-
-Bun's automatic env loading is disabled in `bunfig.toml`; the framework integration or server bootstrap loads Varlock. Node deployments must include Varlock and its dependencies alongside the app schema.
-
-### Production origins
-
-- Prisma + Better Auth: after the first deploy, set `BETTER_AUTH_URL` in `apps/web/.env` to the returned web URL, then deploy again.
 
 ## Project Structure
 
 ```
 faceless/
 ├── apps/
-│   └── web/         # Fullstack application (Next.js)
-│   ├── native/      # Mobile application (React Native, Expo)
+│   ├── web/             # Fullstack Next.js web application
+│   ├── native/          # Mobile application (React Native & Expo)
+│   └── render-service/  # Cloudflare Containers Remotion rendering microservice
 ├── packages/
-│   ├── ui/          # Shared shadcn/ui components and styles
-│   ├── api/         # API layer / business logic
-│   ├── auth/        # Authentication configuration & logic
-│   ├── db/          # Database schema & queries
-│   ├── storage/     # File storage (Cloudflare R2 )
-│   ├── email/       # Transactional email (Cloudflare Email Sending )
+│   ├── agent/           # AI agents and evals (Eve framework + AI SDK)
+│   ├── api/             # tRPC router and backend business logic
+│   ├── auth/            # Better Auth server configuration and client adapters
+│   ├── config/          # Shared Vitest, TypeScript, and lint configurations
+│   ├── contracts/       # Shared types, Zod schemas, and webhook payloads
+│   ├── db/              # Prisma schema, migrations, and database client
+│   ├── email/           # Transactional email client (Cloudflare Email Sending)
+│   ├── remotion/        # Remotion compositions, props schemas, and local/cloud renderers
+│   ├── socials/         # Social media publishing client (Zernio integration)
+│   ├── storage/         # Cloudflare R2 file storage client (Files SDK)
+│   ├── ui/              # Shared shadcn/ui primitives and Tailwind styling
+│   └── utils/           # Shared TypeScript helpers and utilities
 ```
 
 ## Available Scripts
 
-- `bun run dev`: Start all applications in development mode
-- `bun run build`: Build all applications
-- `bun run dev:web`: Start only the web application
-- `bun run check-types`: Check TypeScript types across all apps
-- `bun run dev:native`: Start the React Native/Expo development server
-- `bun run db:push`: Push schema changes to database
-- `bun run db:generate`: Generate database client/types
-- `bun run db:migrate`: Run database migrations
-- `bun run db:studio`: Open database studio UI
+| Command | Description |
+| --- | --- |
+| `bun run dev` | Start all applications concurrently via Turborepo |
+| `bun run dev:web` | Start only the Next.js web application |
+| `bun run dev:render` | Start the local Remotion render service |
+| `bun run dev:native` | Start the React Native / Expo development server |
+| `bun run build` | Build all applications and packages |
+| `bun run check-types` | Type check all workspaces (`tsc --noEmit`) |
+| `bun run test` | Run unit test suites with Vitest |
+| `bun run lint` | Check code standards with Ultracite (Oxlint + Oxfmt) |
+| `bun run fix` | Automatically fix linting and formatting issues |
+| `bun run env:generate` | Regenerate typed Varlock env accessors |
+| `bun run db:push` | Push Prisma schema directly to the PostgreSQL database |
+| `bun run db:generate` | Generate Prisma client types |
+| `bun run db:migrate` | Run database migrations |
+| `bun run db:studio` | Launch Prisma Studio UI |
+| `bun run autumn:setup` | Run initial setup script for Autumn billing |
