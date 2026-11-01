@@ -6,8 +6,6 @@ import { env } from "@/env.server";
 import { isBearerAuthorized } from "@/lib/is-authorized";
 import { getDb, socials } from "@/services";
 
-export const dynamic = "force-dynamic";
-
 export const GET = async (req: NextRequest) => {
   const authHeader = req.headers.get("Authorization");
 
