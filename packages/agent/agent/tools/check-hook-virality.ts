@@ -130,7 +130,7 @@ export default defineTool({
           type: "choice",
         },
       },
-      abortSignal: ctx.abortSignal,
+      signal: ctx.abortSignal,
       state,
     });
 
